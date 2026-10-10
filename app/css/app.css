@@ -102,7 +102,8 @@ select, input[type="text"] { font: inherit; font-size: .92rem; padding: 7px 9px;
 .labels input { width: 100%; padding: 4px 6px; font-size: .88rem; }
 .labels .br { grid-column: 1; font-size: 1.05rem; letter-spacing: .05em; color: var(--muted); overflow-wrap: anywhere; }
 .labels .meta { grid-column: 1 / -1; font-size: .74rem; color: var(--muted); }
-.labels .x { grid-row: 1; grid-column: 2; font: inherit; border: 1px solid var(--line); background: none; border-radius: 8px; padding: 2px 8px; cursor: pointer; color: var(--muted); }
+.labels .acts { grid-row: 1; grid-column: 2; display: flex; gap: 4px; }
+.labels .x, .labels .m { font: inherit; border: 1px solid var(--line); background: none; border-radius: 8px; padding: 2px 8px; cursor: pointer; color: var(--muted); }
 .labels li:hover, .labels li.hl { border-color: var(--accent); }
 
 .rules { width: 100%; border-collapse: collapse; font-size: .82rem; }

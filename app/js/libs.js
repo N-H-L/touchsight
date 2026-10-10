@@ -50,7 +50,10 @@ export function loadSAM() {
     T.env.allowLocalModels = true;
     T.env.localModelPath = base + 'models/';
     T.env.backends.onnx.wasm.wasmPaths = base + 'vendor/ort/';
-    const device = (await hasWebGPU()) ? 'webgpu' : 'wasm';
+    // WASM everywhere: the WebGPU path is untested across judges' GPUs and the
+    // CPU embed only costs a few seconds for this distilled model.
+    const device = 'wasm';
+    void hasWebGPU;
     const id = 'Xenova/slimsam-77-uniform';
     const model = await T.SamModel.from_pretrained(id, { dtype: 'fp32', device });
     const processor = await T.AutoProcessor.from_pretrained(id);

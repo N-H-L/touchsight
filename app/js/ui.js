@@ -90,11 +90,25 @@ async function run() {
     setStep('done');
   } catch (e) {
     console.error(e);
-    setStatus('Something went wrong: ' + (e.message || e) + '. Try another image or reload the page.', true);
+    if (byId[state.name] && await showPrecomputed(state.name)) {
+      setStatus(`This browser could not run the on-device models (${e.message || e}). Showing a result computed earlier with the same pipeline.`, true);
+    } else {
+      setStatus('Something went wrong: ' + (e.message || e) + '. Try another image or reload the page.', true);
+    }
   } finally {
     state.busy = false;
     document.body.removeAttribute('aria-busy');
   }
+}
+
+async function showPrecomputed(id) {
+  try {
+    const svg = await fetch(`precomputed/${id}.svg`).then((r) => (r.ok ? r.text() : null));
+    if (!svg) return false;
+    $('#tabs').hidden = false; $('#views').hidden = false;
+    $('#tactile').innerHTML = svg;
+    return true;
+  } catch { return false; }
 }
 
 async function relayout() {
@@ -175,12 +189,22 @@ function drawLabels() {
     const how = L.removed ? 'removed' : !p ? 'could not be placed' : p.usesKey ? `key “${p.key}” (full text on key page)` : 'full braille label';
     const part = L.mask ? 'part segmented' : 'no part found';
     li.innerHTML = `<input type="text" aria-label="Label ${i + 1} text" value="${L.text.replace(/"/g, '&quot;')}">
-      <button class="x" type="button" aria-label="${L.removed ? 'Restore' : 'Remove'} label ${i + 1}">${L.removed ? 'Undo' : '✕'}</button>
+      <span class="acts">${i > 0 && !L.removed ? `<button class="m" type="button" aria-label="Merge label ${i + 1} into the label above" title="Merge into the label above">⤒</button>` : ''}<button class="x" type="button" aria-label="${L.removed ? 'Restore' : 'Remove'} label ${i + 1}" title="${L.removed ? 'Restore' : 'Remove'}">${L.removed ? 'Undo' : '✕'}</button></span>
       <div class="br" aria-hidden="true">${toUnicode(L.text.toLowerCase())}</div>
       <div class="meta">${how} · ${L.leader ? 'leader traced' : 'label on the part'} · ${part}</div>`;
     const input = li.querySelector('input');
     input.addEventListener('change', async () => { L.text = input.value.trim() || L.text; await relayout(); });
     li.querySelector('.x').addEventListener('click', async () => { L.removed = !L.removed; await relayout(); });
+    li.querySelector('.m')?.addEventListener('click', async () => {
+      // OCR sometimes splits a two-line label ("Pulmonary" / "Artery"): join it to the one above.
+      const labels = state.analysis.labels;
+      const prev = labels[i - 1];
+      prev.text = `${prev.text} ${L.text}`.trim();
+      prev.x0 = Math.min(prev.x0, L.x0); prev.y0 = Math.min(prev.y0, L.y0); prev.x1 = Math.max(prev.x1, L.x1); prev.y1 = Math.max(prev.y1, L.y1);
+      prev.leader ??= L.leader; prev.mask ??= L.mask;
+      labels.splice(i, 1);
+      await relayout();
+    });
     li.addEventListener('mouseenter', () => { li.classList.add('hl'); if (!$('[data-view="analysis"]').hidden) drawAnalysis(i); });
     li.addEventListener('mouseleave', () => { li.classList.remove('hl'); if (!$('[data-view="analysis"]').hidden) drawAnalysis(); });
     ol.appendChild(li);
@@ -228,4 +252,9 @@ $('#print').onclick = () => {
 
 // Deep link: ?sample=heart runs a sample straight away (used for demos).
 const deep = new URLSearchParams(location.search).get('sample');
-if (deep && byId[deep]) grid.querySelectorAll('.sample')[DEMO_ORDER.filter((d) => byId[d]).indexOf(deep)]?.click();
+if (deep && byId[deep]) {
+  const btn = [...grid.querySelectorAll('.sample')][DEMO_ORDER.filter((d) => byId[d]).indexOf(deep)];
+  if (btn) btn.click();
+  else runFromURL(`samples/${byId[deep].file}`, byId[deep].title, deep);
+}
+window.__touchsight = state; // read by scripts/eval.mjs

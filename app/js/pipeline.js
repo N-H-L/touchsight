@@ -35,7 +35,8 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
   const segs = houghSegments(cv, thin);
   thin.delete();
   assignLeaders(lines, segs);
-  const labels = linesToLabels(lines);
+  // Reading order (top to bottom, then left to right) so the review list matches the page.
+  const labels = linesToLabels(lines).sort((a, b) => (a.y0 - b.y0) || (a.x0 - b.x0));
 
   const fg = foregroundMask(cv, src, labels);
 

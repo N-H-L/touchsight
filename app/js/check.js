@@ -146,7 +146,7 @@ export function checkAll(cv, analysis, layout, imageData) {
   for (const L of [ours, base]) { L.lines.delete(); L.textures.delete(); }
   const leaders = layout.labels.filter((L) => L.leader).map((L) => Math.hypot(L.leader[1][0] - L.leader[0][0], L.leader[1][1] - L.leader[0][1]));
   const rules = [
-    { id: 'print', name: 'No print text left as raised squiggles', ours: `${a.printTextLeft} of ${a.printLabels}`, base: `${b.printTextLeft} of ${b.printLabels}`, pass: a.printTextLeft === 0 },
+    { id: 'print', name: 'Print-label spots still covered by raised marks', ours: `${a.printTextLeft} of ${a.printLabels}`, base: `${b.printTextLeft} of ${b.printLabels}`, pass: a.printTextLeft === 0 },
     { id: 'braille', name: 'Labels available in braille', ours: `${a.brailleLabels} of ${a.printLabels}`, base: `0 of ${b.printLabels}`, pass: a.brailleLabels >= a.printLabels },
     { id: 'gaps', name: 'Lines closer than 3 mm (% of figure area)', ours: `${a.narrowGapPct}%`, base: `${b.narrowGapPct}%`, pass: a.narrowGapPct < 5 },
     { id: 'frags', name: 'Fragments shorter than 12.5 mm', ours: `${a.fragments}`, base: `${b.fragments}`, pass: a.fragments <= 3 },
