@@ -1,6 +1,8 @@
 // Finds the printed labels in a diagram: Tesseract word boxes -> text lines.
 // Lines are merged into multi-line labels later, once we know which lines own a leader line.
 
+import { isPhrase } from './vocab.js';
+
 const WORDISH = /[A-Za-z0-9]/;
 
 export async function recognizeWords(worker, canvas) {
@@ -89,7 +91,10 @@ export function linesToLabels(lines) {
       if (!aligned) continue;
       // Two leaders block the merge unless they are the same physical line (a leader
       // that starts between two stacked lines gets claimed by both).
-      if (a.leader && b.leader && !sameLeader(a.leader, b.leader, h)) continue;
+      // A known two-line term ("Pulmonary" / "Artery") always merges.
+      const phrase = isPhrase(`${a.lines.map((l) => l.text).join(' ')} ${b.lines.map((l) => l.text).join(' ')}`);
+      if (a.leader && b.leader && !phrase && !sameLeader(a.leader, b.leader, h)) continue;
+      if (a.lines.length + b.lines.length > 3) continue;
       items[i] = {
         lines: [...a.lines, ...b.lines], leader: longer(a.leader, b.leader),
         x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1),

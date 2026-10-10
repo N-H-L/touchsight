@@ -3,6 +3,7 @@ import { loadOpenCV, loadOCR, loadSAM } from './libs.js';
 import { recognizeWords, mergeWordSets, filterWords, wordsToLines, linesToLabels } from './ocr.js';
 import { thinStrokeMask, houghSegments, assignLeaders } from './leaders.js';
 import { embedImage, segmentPoint } from './segment.js';
+import { correctWord } from './vocab.js';
 
 export async function analyze(imageData, { onStage = () => {} } = {}) {
   const timings = {};
@@ -28,15 +29,26 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     return mergeWordSets(a, b);
   });
   const good = filterWords(words, W, H);
+  // Repair low-confidence OCR slips against a science vocabulary (shown to the teacher).
+  for (const w of good) { w.orig = w.text; w.text = correctWord(w.text, w.conf); }
   const lines = wordsToLines(good);
 
   onStage('leaders', 'Tracing leader lines to the parts they name…');
+  // Labels printed on top of the drawing name the part underneath; they get no leader.
+  const solid = solidMask(cv, src);
+  for (const l of lines) l.inside = boxFrac(solid, W, H, l) > 0.55;
   const thin = thinStrokeMask(cv, gray, good);
   const segs = houghSegments(cv, thin);
   thin.delete();
-  assignLeaders(lines, segs);
+  assignLeaders(lines.filter((l) => !l.inside), segs);
   // Reading order (top to bottom, then left to right) so the review list matches the page.
   const labels = linesToLabels(lines).sort((a, b) => (a.y0 - b.y0) || (a.x0 - b.x0));
+  for (const L of labels) {
+    L.inside = L.lines.every((l) => l.inside);
+    if (L.inside) L.leader = null;
+    const fixes = L.lines.flatMap((l) => l.words).filter((w) => w.orig !== w.text);
+    L.corrections = fixes.map((w) => `${w.orig} → ${w.text}`);
+  }
 
   const fg = foregroundMask(cv, src, labels);
 
@@ -155,6 +167,30 @@ function dilateMask(cv, mask, W, H, k) {
   for (let i = 0; i < W * H; i++) out[i] = m.data[i] ? 1 : 0;
   m.delete(); ker.delete();
   return out;
+}
+
+// The drawing as a solid shape (text and thin lines on white paper drop out; text
+// printed on a colored part stays enclosed by it).
+function solidMask(cv, src) {
+  const W = src.cols, H = src.rows, nb = nonBackground(src);
+  const m = new cv.Mat(H, W, cv.CV_8UC1);
+  for (let i = 0; i < W * H; i++) m.data[i] = nb[i] ? 255 : 0;
+  const k = Math.max(5, Math.round(0.008 * Math.hypot(W, H))) | 1;
+  const ker = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
+  cv.morphologyEx(m, m, cv.MORPH_OPEN, ker); // drop text strokes and thin lines on the paper first
+  cv.morphologyEx(m, m, cv.MORPH_CLOSE, ker);
+  ker.delete();
+  fillHoles(cv, m);
+  const out = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) out[i] = m.data[i] ? 1 : 0;
+  m.delete();
+  return out;
+}
+function boxFrac(mask, W, H, b) {
+  let n = 0, t = 0;
+  for (let y = Math.max(0, Math.floor(b.y0)); y < Math.min(H, b.y1); y += 2)
+    for (let x = Math.max(0, Math.floor(b.x0)); x < Math.min(W, b.x1); x += 2) { t++; n += mask[y * W + x]; }
+  return t ? n / t : 0;
 }
 
 function toCanvas(imageData) {
