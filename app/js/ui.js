@@ -1,30 +1,37 @@
 import { loadOpenCV } from './libs.js';
 import { analyze } from './pipeline.js';
 import { buildLayout } from './tactile.js';
-import { renderTactile, renderKeyPage } from './render.js';
+import { renderTactile, renderKeyPage, TEXTURES } from './render.js';
 import { checkAll } from './check.js';
 import { toUnicode } from './braille.js';
 
 const $ = (s) => document.querySelector(s);
-const state = { imageData: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false };
+const state = { imageData: null, original: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false, mode: 'tactile' };
 const MAX_SIDE = 1400; // keep in-browser inference fast
+const PAL = ['#e6194b', '#3cb44b', '#0082c8', '#f58230', '#911eb4', '#2fa8a8', '#f032e6', '#7f9d1f', '#008080', '#aa6e28', '#5a5aff', '#c0392b'];
 
 // ---------- samples ----------
-const DEMO_ORDER = ['heart', 'volcano', 'animal-cell', 'flower', 'mitochondrion', 'ear', 'earth-layers', 'tooth', 'eye'];
+const DEMO_ORDER = ['heart', 'volcano', 'animal-cell', 'mitochondrion', 'tooth', 'ear', 'earth-layers', 'flower', 'eye'];
 const samples = await fetch('samples/samples.json').then((r) => r.json()).catch(() => []);
 const byId = Object.fromEntries(samples.map((s) => [s.id, s]));
 const grid = $('#samples');
+const shortTitle = (t) => t.replace(/^(Diagram of the |Schematic diagram of the )/i, '').replace(/^./, (c) => c.toUpperCase());
 for (const id of DEMO_ORDER) {
   const s = byId[id]; if (!s) continue;
   const b = document.createElement('button');
-  b.className = 'sample'; b.type = 'button'; b.setAttribute('role', 'listitem'); b.setAttribute('aria-pressed', 'false');
-  const short = s.title.replace(/^(Diagram of the |Schematic diagram of the )/i, '').replace(/^./, (c) => c.toUpperCase());
-  b.innerHTML = `<img src="samples/${s.file}" alt="" loading="lazy"><span>${short}</span>`;
+  b.className = 'sample'; b.type = 'button'; b.dataset.id = id;
+  b.setAttribute('role', 'listitem'); b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<img src="samples/${s.file}" alt="" loading="lazy"><span>${shortTitle(s.title)}</span>`;
   b.title = `${s.title} — ${s.author}, ${s.license}`;
-  b.onclick = () => { selectSample(b); runFromURL(`samples/${s.file}`, short, id); };
+  b.onclick = () => runSample(id);
   grid.appendChild(b);
 }
-function selectSample(btn) { grid.querySelectorAll('.sample').forEach((x) => x.setAttribute('aria-pressed', String(x === btn))); }
+function runSample(id) {
+  const s = byId[id]; if (!s || state.busy) return;
+  grid.querySelectorAll('.sample').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.id === id)));
+  runFromURL(`samples/${s.file}`, shortTitle(s.title), id);
+}
+$('#try-heart').onclick = () => runSample('heart');
 
 // ---------- input ----------
 const drop = $('#drop'), file = $('#file');
@@ -37,9 +44,8 @@ drop.addEventListener('drop', (e) => { const f = e.dataTransfer.files[0]; if (f)
 function runFromFile(f) {
   if (!/^image\/(png|jpeg|webp)$/.test(f.type)) return setStatus('Please choose a PNG, JPG or WebP image.', true);
   if (f.size > 15 * 1024 * 1024) return setStatus('That image is over 15 MB. Please use a smaller file.', true);
-  selectSample(null);
-  const url = URL.createObjectURL(f);
-  runFromURL(url, '', f.name.replace(/\.[^.]+$/, ''));
+  grid.querySelectorAll('.sample').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+  runFromURL(URL.createObjectURL(f), '', f.name.replace(/\.[^.]+$/, ''));
 }
 
 async function runFromURL(url, title, name) {
@@ -53,6 +59,7 @@ async function runFromURL(url, title, name) {
     const ctx = c.getContext('2d', { willReadFrequently: true });
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.drawImage(img, 0, 0, W, H);
     state.imageData = ctx.getImageData(0, 0, W, H);
+    state.original = c.toDataURL('image/jpeg', 0.85);
     state.name = name || 'diagram';
     $('#opt-title').value = title || '';
     await run();
@@ -62,40 +69,58 @@ async function runFromURL(url, title, name) {
   }
 }
 
-// ---------- pipeline ----------
-const stepOrder = ['ocr', 'leaders', 'segment', 'layout', 'check'];
-function setStep(k) {
-  const i = stepOrder.indexOf(k);
-  document.querySelectorAll('.step').forEach((el) => {
-    const j = stepOrder.indexOf(el.dataset.step);
-    el.classList.toggle('done', j < i || k === 'done');
+// ---------- loading overlay ----------
+const STEPS = ['engines', 'ocr', 'leaders', 'segment', 'layout', 'check'];
+let timer = null;
+function showLoading(on) {
+  $('#loading').hidden = !on;
+  clearInterval(timer);
+  if (on) {
+    const t0 = performance.now();
+    $('#elapsed').textContent = '0 s';
+    timer = setInterval(() => { $('#elapsed').textContent = `${Math.round((performance.now() - t0) / 1000)} s`; }, 500);
+    setStep('engines', 'Loading on-device models…');
+  }
+}
+function setStep(k, msg) {
+  const i = STEPS.indexOf(k);
+  document.querySelectorAll('#steps li').forEach((el) => {
+    const j = STEPS.indexOf(el.dataset.step);
+    el.classList.toggle('done', j < i);
     el.classList.toggle('active', j === i);
   });
+  if (msg) $('#loadmsg').textContent = msg;
 }
 function setStatus(msg, err = false) { const s = $('#status'); s.textContent = msg; s.classList.toggle('error', err); }
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
+// ---------- pipeline ----------
 async function run() {
   state.busy = true;
   document.body.setAttribute('aria-busy', 'true');
+  $('#empty').hidden = true;
+  showLoading(true);
+  setStatus('Working… everything runs on this device.');
   const t0 = performance.now();
   try {
-    setStep('ocr');
     state.analysis = await analyze(state.imageData, {
-      onStage: (k, msg) => { if (k !== 'engines') setStep(k); setStatus(msg + (k === 'engines' ? ' (first run downloads ~100 MB of models; they are cached afterwards)' : '')); },
+      onStage: (k, msg) => setStep(k, k === 'engines' ? 'Loading on-device models… (first run only)' : msg),
     });
-    await relayout();
+    await relayout(true);
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     const st = state.layout.stats;
-    setStatus(`Done in ${secs} s on this device: ${state.analysis.labels.length} labels found, ${st.parts} parts segmented, ${st.fullLabels} braille labels + ${st.keyLabels} keyed labels.`);
-    setStep('done');
+    const fixes = state.analysis.labels.reduce((n, L) => n + (L.corrections?.length || 0), 0);
+    setStatus(`Done in ${secs} s on this device · ${state.analysis.labels.length} labels found · ${st.parts} parts segmented · ${st.fullLabels} full braille labels + ${st.keyLabels} keyed${fixes ? ` · ${fixes} OCR slip${fixes > 1 ? 's' : ''} auto-corrected` : ''}`);
   } catch (e) {
     console.error(e);
     if (byId[state.name] && await showPrecomputed(state.name)) {
       setStatus(`This browser could not run the on-device models (${e.message || e}). Showing a result computed earlier with the same pipeline.`, true);
     } else {
+      $('#empty').hidden = !!state.layout;
       setStatus('Something went wrong: ' + (e.message || e) + '. Try another image or reload the page.', true);
     }
   } finally {
+    showLoading(false);
     state.busy = false;
     document.body.removeAttribute('aria-busy');
   }
@@ -105,48 +130,58 @@ async function showPrecomputed(id) {
   try {
     const svg = await fetch(`precomputed/${id}.svg`).then((r) => (r.ok ? r.text() : null));
     if (!svg) return false;
-    $('#tabs').hidden = false; $('#views').hidden = false;
+    $('#views').hidden = false;
     $('#tactile').innerHTML = svg;
     return true;
   } catch { return false; }
 }
 
-async function relayout() {
+async function relayout(withSteps = false) {
   const cv = await loadOpenCV();
-  setStep('layout');
+  if (withSteps) { setStep('layout', 'Laying out the tactile page…'); await nextFrame(); }
   state.layout = buildLayout(cv, state.analysis, {
     page: $('#opt-page').value, title: $('#opt-title').value.trim(),
     textures: $('#opt-textures').checked, forceKeys: $('#opt-keys').checked,
   });
-  setStep('check');
+  if (withSteps) { setStep('check', 'Running guideline checks…'); await nextFrame(); }
   state.check = checkAll(cv, state.analysis, state.layout, state.imageData);
   draw();
 }
 
 // ---------- views ----------
 function draw() {
-  $('#tabs').hidden = false; $('#views').hidden = false; $('#side').hidden = false;
-  const preview = $('#show-print').checked;
-  $('#tactile').innerHTML = renderTactile(state.layout, { preview });
-  $('#ours-small').innerHTML = renderTactile(state.layout, { preview: false });
+  $('#tabs').hidden = false; $('#views').hidden = false; $('#side').hidden = false; $('#howto').hidden = true;
+  $('#viewmode').hidden = currentTab() !== 'tactile';
+  drawTactile();
+  $('#ours-small').innerHTML = renderTactile(state.layout);
   $('#keypage').innerHTML = state.layout.keyEntries.length
     ? renderKeyPage(state.layout, { preview: true })
-    : '<p style="padding:24px;color:#555">Every label fits as full braille, so no key page is needed.</p>';
+    : '<p>Every label fits as full braille, so no key page is needed.</p>';
   drawBaseline();
   drawAnalysis();
   drawLabels();
+  drawLegend();
   drawRules();
-  $('#tactile svg')?.setAttribute('aria-label', `Tactile graphic preview with ${state.layout.labels.length} braille labels`);
+}
+
+function drawTactile(highlight = null) {
+  const el = $('#tactile');
+  if (state.mode === 'original') {
+    el.innerHTML = `<img src="${state.original}" alt="Original diagram">`;
+    return;
+  }
+  const underlay = state.mode === 'overlay' ? { href: state.original, w: state.analysis.W, h: state.analysis.H } : null;
+  el.innerHTML = renderTactile(state.layout, { preview: true, highlight, underlay });
+  el.querySelector('svg')?.setAttribute('aria-label', `Tactile graphic preview with ${state.layout.labels.length} braille labels`);
 }
 
 function drawBaseline() {
-  // Render the same Canny tracing used by the checker, at the same page size.
+  // The same Canny tracing the checker measures, thickened to the same 0.8 mm raised line.
   const cv = window.cv, L = state.layout, img = state.imageData;
   const src = cv.matFromImageData(img), gray = new cv.Mat(), edges = new cv.Mat();
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
   cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
   cv.Canny(gray, edges, 60, 160);
-  // Same 0.8 mm raised line width the checker measures.
   const k = Math.max(1, Math.round(0.8 / L.s)) | 1;
   const ker = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
   cv.dilate(edges, edges, ker); ker.delete();
@@ -158,61 +193,105 @@ function drawBaseline() {
   $('#baseline').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${L.pageW} ${L.pageH}"><rect width="100%" height="100%" fill="#fff"/><image href="${c.toDataURL()}" x="${L.ox}" y="${L.oy}" width="${img.width * L.s}" height="${img.height * L.s}"/></svg>`;
 }
 
-const PAL = [[230, 25, 75], [60, 180, 75], [0, 130, 200], [245, 130, 48], [145, 30, 180], [70, 200, 200], [240, 50, 230], [150, 190, 40], [0, 128, 128], [170, 110, 40]];
+// Mask outlines (computed once per label) for the "What the AI saw" view.
+function maskContours(L, W, H) {
+  if (L._contours || !L.mask) return L._contours || [];
+  const cv = window.cv;
+  const m = new cv.Mat(H, W, cv.CV_8UC1);
+  for (let i = 0; i < W * H; i++) m.data[i] = L.mask[i] ? 255 : 0;
+  const cs = new cv.MatVector(), hier = new cv.Mat();
+  cv.findContours(m, cs, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+  L._contours = [];
+  for (let i = 0; i < cs.size(); i++) {
+    const c = cs.get(i);
+    if (cv.contourArea(c) > 40) { const pts = []; for (let j = 0; j < c.rows; j++) pts.push([c.data32S[j * 2], c.data32S[j * 2 + 1]]); L._contours.push(pts); }
+    c.delete();
+  }
+  m.delete(); cs.delete(); hier.delete();
+  return L._contours;
+}
+
 function drawAnalysis(highlight = -1) {
-  const a = state.analysis, img = state.imageData, c = $('#analysis');
+  const a = state.analysis, c = $('#analysis');
   c.width = a.W; c.height = a.H;
   const ctx = c.getContext('2d');
-  const ov = new ImageData(new Uint8ClampedArray(img.data), a.W, a.H);
-  const d = ov.data;
-  for (let p = 0; p < a.W * a.H; p++) { d[p * 4] = 255 - (255 - d[p * 4]) * 0.45; d[p * 4 + 1] = 255 - (255 - d[p * 4 + 1]) * 0.45; d[p * 4 + 2] = 255 - (255 - d[p * 4 + 2]) * 0.45; }
-  a.labels.forEach((L, i) => {
-    if (!L.mask || L.removed) return;
-    const [r, g, b] = PAL[i % PAL.length], al = highlight === -1 || highlight === i ? 0.55 : 0.12;
-    for (let p = 0; p < a.W * a.H; p++) if (L.mask[p]) { d[p * 4] += (r - d[p * 4]) * al; d[p * 4 + 1] += (g - d[p * 4 + 1]) * al; d[p * 4 + 2] += (b - d[p * 4 + 2]) * al; }
-  });
-  ctx.putImageData(ov, 0, 0);
-  const lw = Math.max(2, a.W / 400);
+  ctx.putImageData(state.imageData, 0, 0);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(0, 0, a.W, a.H); // fade the original
+  const lw = Math.max(2, a.W / 380);
   a.labels.forEach((L, i) => {
     if (L.removed) return;
-    const [r, g, b] = PAL[i % PAL.length];
-    ctx.strokeStyle = `rgb(${r},${g},${b})`; ctx.lineWidth = highlight === i ? lw * 2 : lw;
+    const col = PAL[i % PAL.length], on = highlight === -1 || highlight === i;
+    ctx.globalAlpha = on ? 1 : 0.18;
+    for (const poly of maskContours(L, a.W, a.H)) {
+      ctx.beginPath(); poly.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath();
+      ctx.fillStyle = col + (highlight === i ? '55' : '22'); ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = highlight === i ? lw * 2 : lw; ctx.stroke();
+    }
+    ctx.strokeStyle = col; ctx.lineWidth = lw;
+    ctx.setLineDash([lw * 3, lw * 2]);
     ctx.strokeRect(L.x0 - 3, L.y0 - 3, L.x1 - L.x0 + 6, L.y1 - L.y0 + 6);
-    if (L.leader) { ctx.beginPath(); ctx.moveTo(L.leader.x1, L.leader.y1); ctx.lineTo(L.leader.x2, L.leader.y2); ctx.stroke(); }
-    if (L.anchor) { ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(L.anchor[0], L.anchor[1], lw * 2.2, 0, 7); ctx.fill(); ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.beginPath(); ctx.arc(L.anchor[0], L.anchor[1], lw * 1.3, 0, 7); ctx.fill(); }
+    ctx.setLineDash([]);
+    if (L.leader) { ctx.lineWidth = lw * 1.4; ctx.beginPath(); ctx.moveTo(L.leader.x1, L.leader.y1); ctx.lineTo(L.leader.x2, L.leader.y2); ctx.stroke(); }
+    if (L.anchor) badge(ctx, L.anchor[0], L.anchor[1], String(i + 1), col, lw);
+    badge(ctx, L.x0 - 3, L.y0 - 3, String(i + 1), col, lw * 0.8);
+    ctx.globalAlpha = 1;
   });
+}
+function badge(ctx, x, y, text, col, lw) {
+  const r = lw * 5.5;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
+  ctx.lineWidth = lw * 0.8; ctx.strokeStyle = '#fff'; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = `700 ${r * 1.1}px "Atkinson Hyperlegible", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y + r * 0.05);
 }
 
 function drawLabels() {
   const ol = $('#labels'); ol.innerHTML = '';
-  const placedByText = new Map(state.layout.labels.map((p) => [p.text, p]));
+  const placedByText = new Map(state.layout.labels.map((p, k) => [p.text, { p, k }]));
   state.analysis.labels.forEach((L, i) => {
     const li = document.createElement('li');
     if (L.removed) li.classList.add('removed');
-    const p = placedByText.get(L.text);
-    const how = L.removed ? 'removed' : !p ? 'could not be placed' : p.usesKey ? `key “${p.key}” (full text on key page)` : 'full braille label';
-    const part = L.mask ? 'part segmented' : 'no part found';
-    li.innerHTML = `<input type="text" aria-label="Label ${i + 1} text" value="${L.text.replace(/"/g, '&quot;')}">
+    const hit = placedByText.get(L.text), p = hit?.p;
+    const how = L.removed ? 'removed' : !p ? 'could not be placed' : p.usesKey ? `key “${p.key}”` : 'full braille';
+    const fix = L.corrections?.length ? ` · <span class="fix">auto-corrected ${L.corrections.join(', ')}</span>` : '';
+    li.innerHTML = `<span class="badge" style="background:${PAL[i % PAL.length]}">${i + 1}</span>
+      <input type="text" aria-label="Label ${i + 1} text" value="${L.text.replace(/"/g, '&quot;')}">
       <span class="acts">${i > 0 && !L.removed ? `<button class="m" type="button" aria-label="Merge label ${i + 1} into the label above" title="Merge into the label above">⤒</button>` : ''}<button class="x" type="button" aria-label="${L.removed ? 'Restore' : 'Remove'} label ${i + 1}" title="${L.removed ? 'Restore' : 'Remove'}">${L.removed ? 'Undo' : '✕'}</button></span>
       <div class="br" aria-hidden="true">${toUnicode(L.text.toLowerCase())}</div>
-      <div class="meta">${how} · ${L.leader ? 'leader traced' : 'label on the part'} · ${part}</div>`;
+      <div class="meta">${how} · ${L.leader ? 'leader traced' : 'label sits on the part'} · ${L.mask ? 'part segmented' : 'no part found'}${fix}</div>`;
     const input = li.querySelector('input');
-    input.addEventListener('change', async () => { L.text = input.value.trim() || L.text; await relayout(); });
+    input.addEventListener('change', async () => { L.text = input.value.trim() || L.text; L.corrections = []; await relayout(); });
     li.querySelector('.x').addEventListener('click', async () => { L.removed = !L.removed; await relayout(); });
     li.querySelector('.m')?.addEventListener('click', async () => {
-      // OCR sometimes splits a two-line label ("Pulmonary" / "Artery"): join it to the one above.
-      const labels = state.analysis.labels;
-      const prev = labels[i - 1];
+      // OCR sometimes splits a two-line label: join it to the one above.
+      const labels = state.analysis.labels, prev = labels[i - 1];
       prev.text = `${prev.text} ${L.text}`.trim();
       prev.x0 = Math.min(prev.x0, L.x0); prev.y0 = Math.min(prev.y0, L.y0); prev.x1 = Math.max(prev.x1, L.x1); prev.y1 = Math.max(prev.y1, L.y1);
       prev.leader ??= L.leader; prev.mask ??= L.mask;
       labels.splice(i, 1);
       await relayout();
     });
-    li.addEventListener('mouseenter', () => { li.classList.add('hl'); if (!$('[data-view="analysis"]').hidden) drawAnalysis(i); });
-    li.addEventListener('mouseleave', () => { li.classList.remove('hl'); if (!$('[data-view="analysis"]').hidden) drawAnalysis(); });
+    li.addEventListener('mouseenter', () => { li.classList.add('hl'); hover(i, hit?.k); });
+    li.addEventListener('mouseleave', () => { li.classList.remove('hl'); hover(-1, null); });
     ol.appendChild(li);
   });
+}
+function hover(i, k) {
+  if (currentTab() === 'analysis') drawAnalysis(i);
+  else if (currentTab() === 'tactile' && state.mode !== 'original') drawTactile(k ?? null);
+}
+
+function drawLegend() {
+  const ul = $('#legend'); ul.innerHTML = '';
+  const parts = state.layout.parts.filter((p) => p.texture != null);
+  $('#legend-card').hidden = !parts.length;
+  for (const p of parts) {
+    const names = state.analysis.labels.filter((L) => !L.removed && L.partId === p.id).map((L) => L.text);
+    const li = document.createElement('li');
+    li.innerHTML = `<svg viewBox="0 0 12 12" aria-hidden="true"><defs>${TEXTURES[p.texture].svg.replace(`id="tx${p.texture}"`, `id="lg${p.texture}"`)}</defs><rect width="12" height="12" fill="url(#lg${p.texture})"/></svg>
+      <span><b>${TEXTURES[p.texture].name}</b> · ${names.join(', ') || p.labelText}</span>`;
+    ul.appendChild(li);
+  }
 }
 
 function drawRules() {
@@ -224,16 +303,22 @@ function drawRules() {
   }
 }
 
-// ---------- tabs & options ----------
+// ---------- tabs, view mode & options ----------
+const currentTab = () => $('#tabs button[aria-selected="true"]')?.dataset.tab;
 $('#tabs').addEventListener('click', (e) => {
   const b = e.target.closest('button[role=tab]'); if (!b) return;
   document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
   document.querySelectorAll('.view').forEach((v) => { v.hidden = v.dataset.view !== b.dataset.tab; });
+  $('#viewmode').hidden = b.dataset.tab !== 'tactile';
   if (b.dataset.tab === 'analysis') drawAnalysis();
 });
-$('#show-print').addEventListener('change', () => state.layout && ($('#tactile').innerHTML = renderTactile(state.layout, { preview: $('#show-print').checked })));
-for (const id of ['#opt-page', '#opt-textures', '#opt-keys']) $(id).addEventListener('change', () => state.analysis && !state.busy && relayout());
-$('#opt-title').addEventListener('change', () => state.analysis && !state.busy && relayout());
+$('#viewmode').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b || !state.layout) return;
+  state.mode = b.dataset.mode;
+  $('#viewmode').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  drawTactile();
+});
+for (const id of ['#opt-page', '#opt-textures', '#opt-keys', '#opt-title']) $(id).addEventListener('change', () => state.analysis && !state.busy && relayout());
 
 // ---------- export ----------
 function download(name, text, type = 'image/svg+xml') {
@@ -254,11 +339,10 @@ $('#print').onclick = () => {
   w.document.close();
 };
 
-// Deep link: ?sample=heart runs a sample straight away (used for demos).
+// Deep link: ?sample=heart runs a sample straight away (demos and the eval harness).
 const deep = new URLSearchParams(location.search).get('sample');
 if (deep && byId[deep]) {
-  const btn = [...grid.querySelectorAll('.sample')][DEMO_ORDER.filter((d) => byId[d]).indexOf(deep)];
-  if (btn) btn.click();
+  if (DEMO_ORDER.includes(deep)) runSample(deep);
   else runFromURL(`samples/${byId[deep].file}`, byId[deep].title, deep);
 }
 window.__touchsight = state; // read by scripts/eval.mjs
