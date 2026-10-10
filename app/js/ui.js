@@ -146,12 +146,16 @@ function drawBaseline() {
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
   cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
   cv.Canny(gray, edges, 60, 160);
+  // Same 0.8 mm raised line width the checker measures.
+  const k = Math.max(1, Math.round(0.8 / L.s)) | 1;
+  const ker = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
+  cv.dilate(edges, edges, ker); ker.delete();
   const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
   const id = new ImageData(img.width, img.height);
   for (let i = 0; i < img.width * img.height; i++) { const v = edges.data[i] ? 0 : 255; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; }
   c.getContext('2d').putImageData(id, 0, 0);
   src.delete(); gray.delete(); edges.delete();
-  $('#baseline').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${L.pageW} ${L.pageH}"><rect width="100%" height="100%" fill="#fff"/><image href="${c.toDataURL()}" x="${L.ox}" y="${L.oy}" width="${img.width * L.s}" height="${img.height * L.s}" style="filter:contrast(2)"/></svg>`;
+  $('#baseline').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${L.pageW} ${L.pageH}"><rect width="100%" height="100%" fill="#fff"/><image href="${c.toDataURL()}" x="${L.ox}" y="${L.oy}" width="${img.width * L.s}" height="${img.height * L.s}"/></svg>`;
 }
 
 const PAL = [[230, 25, 75], [60, 180, 75], [0, 130, 200], [245, 130, 48], [145, 30, 180], [70, 200, 200], [240, 50, 230], [150, 190, 40], [0, 128, 128], [170, 110, 40]];
