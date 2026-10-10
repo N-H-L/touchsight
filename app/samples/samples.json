@@ -1,0 +1,178 @@
+[
+  {
+    "id": "animal-cell",
+    "file": "animal-cell.png",
+    "title": "Animal cell structure",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Animal_cell_structure_en.svg",
+    "author": "Mariana Ruiz Villarreal (LadyofHats)",
+    "license": "Public domain",
+    "license_url": "https://en.wikipedia.org/wiki/Public_domain",
+    "notes": "~20 labels with leader lines; colored organelles."
+  },
+  {
+    "id": "heart",
+    "file": "heart.png",
+    "title": "Diagram of the human heart",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Diagram_of_the_human_heart_(cropped).svg",
+    "author": "Wapcaplet (Wikimedia Commons)",
+    "license": "CC BY-SA 3.0",
+    "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "notes": "~20 labels incl. chambers, valves, vessels; leader lines."
+  },
+  {
+    "id": "flower",
+    "file": "flower.png",
+    "title": "Mature flower anatomy",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Mature_flower_diagram.svg",
+    "author": "Mariana Ruiz Villarreal (LadyofHats)",
+    "license": "Public domain",
+    "license_url": "https://en.wikipedia.org/wiki/Public_domain",
+    "notes": "~12 labels with leader lines and grouping brackets (stamen/pistil)."
+  },
+  {
+    "id": "eye",
+    "file": "eye.png",
+    "title": "Schematic diagram of the human eye",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Schematic_diagram_of_the_human_eye_en.svg",
+    "author": "Rhcastilhos and Jmarchn",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "notes": "~20 labels, leader lines; moderately dense."
+  },
+  {
+    "id": "ear",
+    "file": "ear.png",
+    "title": "Anatomy of the human ear",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Anatomy_of_the_Human_Ear.svg",
+    "author": "Lars Chittka; Axel Brockmann",
+    "license": "CC BY 2.5",
+    "license_url": "https://creativecommons.org/licenses/by/2.5",
+    "notes": "13 labels with leader lines; one label rotated vertically (Auricle)."
+  },
+  {
+    "id": "mitochondrion",
+    "file": "mitochondrion.png",
+    "title": "Animal mitochondrion",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Animal_mitochondrion_diagram_en.svg",
+    "author": "Mariana Ruiz Villarreal (LadyofHats)",
+    "license": "Public domain",
+    "license_url": "https://en.wikipedia.org/wiki/Public_domain",
+    "notes": "~10 labels with leader lines."
+  },
+  {
+    "id": "tooth",
+    "file": "tooth.png",
+    "title": "Human tooth cross-section",
+    "category": "bio",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Human_tooth_diagram-en.svg",
+    "author": "KDS4444",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "notes": "~15 labels; some bracket labels (crown/root)."
+  },
+  {
+    "id": "earth-layers",
+    "file": "earth-layers.png",
+    "title": "Earth cutaway: internal layers",
+    "category": "earth",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Earth_cutaway_schematic-en.svg",
+    "author": "derivative work by Srimadhav (from USGS public-domain original)",
+    "license": "Public domain",
+    "license_url": "https://en.wikipedia.org/wiki/Public_domain",
+    "notes": "~10 layer labels plus depth annotations (2900 km, 5100 km, 6378 km); arrows and braces."
+  },
+  {
+    "id": "volcano",
+    "file": "volcano.png",
+    "title": "Structure of a volcano",
+    "category": "earth",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Structure_volcano-en.svg",
+    "author": "Medium69",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "notes": "13 labels with leader lines; clean colored cutaway. Good primary demo."
+  },
+  {
+    "id": "ohms-law-circuit",
+    "file": "ohms-law-circuit.png",
+    "title": "Simple circuit: voltage source and resistor",
+    "category": "physics",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Ohm%27s_Law_with_Voltage_source_TeX.svg",
+    "author": "GorillaWarfare",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "notes": "Line drawing, 3 italic math labels (v, i, R) plus +/- signs."
+  },
+  {
+    "id": "pulley-lever",
+    "file": "pulley-lever.png",
+    "title": "Fixed pulley as a first-class lever",
+    "category": "physics",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Fixed-pulley-as-first-class-lever.svg",
+    "author": "MikeRun",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "notes": "Line/flat drawing, 5 symbolic labels (F1, F2, r1, r2, D) with subscripts; force arrows."
+  },
+  {
+    "id": "australia-states",
+    "file": "australia-states.png",
+    "title": "Australia: states and territories",
+    "category": "map",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Australia_states_and_territories_labelled.svg",
+    "author": "Lasunncty",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "notes": "Orthographic map, ~17 labels (8 states/territories + external territories); some leader lines."
+  },
+  {
+    "id": "solar-system",
+    "file": "solar-system.png",
+    "title": "Planets of the Solar System (size comparison)",
+    "category": "chart",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Planets2013.svg",
+    "author": "WP (Wikimedia user)",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "notes": "8 rotated white labels on black background; photo-like planets. Chart-like row; contrast/rotation test."
+  },
+  {
+    "id": "plant-cell",
+    "file": "plant-cell.png",
+    "title": "Plant cell structure",
+    "category": "stress",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Plant_cell_structure-en.svg",
+    "author": "Mariana Ruiz Villarreal (LadyofHats)",
+    "license": "Public domain",
+    "license_url": "https://en.wikipedia.org/wiki/Public_domain",
+    "notes": "Dense: ~20+ labels, small text, many overlapping organelles."
+  },
+  {
+    "id": "water-cycle-usgs",
+    "file": "water-cycle-usgs.png",
+    "title": "The water cycle (USGS)",
+    "category": "stress",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Water_cycle.png",
+    "author": "John M. Evans / USGS",
+    "license": "Public domain",
+    "license_url": "https://en.wikipedia.org/wiki/Public_domain",
+    "notes": "Raster only (860x589, native size; not upscaled). Painted landscape, ~20 small labels in boxes/arrows. Hard stress test."
+  },
+  {
+    "id": "skin-layers",
+    "file": "skin-layers.png",
+    "title": "Layers of human skin",
+    "category": "stress",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Skin_layers.svg",
+    "author": "Madhero88 and M. Komorniczak",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "notes": "Detailed anatomical rendering, ~15 labels incl. bracketed layer names; dense texture."
+  }
+]
