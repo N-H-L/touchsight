@@ -5,6 +5,19 @@ import { renderTactile, renderKeyPage, TEXTURES } from './render.js';
 import { checkAll } from './check.js';
 import { toUnicode } from './braille.js';
 
+let reliefMod = null, relief = null, reliefFor = null;
+async function showRelief() {
+  try {
+    reliefMod ??= await import('./relief.js');
+    relief ??= new reliefMod.ReliefView($('#relief'));
+    if (reliefFor !== state.layout) { await relief.build(state.layout); reliefFor = state.layout; }
+    else relief.start();
+  } catch (e) {
+    console.error(e);
+    $('#relief').innerHTML = `<p style="color:#eee;padding:24px">3D preview needs WebGL, which this browser could not start (${e.message}).</p>`;
+  }
+}
+
 const $ = (s) => document.querySelector(s);
 const state = { imageData: null, original: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false, mode: 'tactile' };
 const MAX_SIDE = 1400; // keep in-browser inference fast
@@ -162,6 +175,7 @@ function draw() {
   drawLabels();
   drawLegend();
   drawRules();
+  if (currentTab() === 'relief') showRelief();
 }
 
 function drawTactile(highlight = null) {
@@ -311,6 +325,7 @@ $('#tabs').addEventListener('click', (e) => {
   document.querySelectorAll('.view').forEach((v) => { v.hidden = v.dataset.view !== b.dataset.tab; });
   $('#viewmode').hidden = b.dataset.tab !== 'tactile';
   if (b.dataset.tab === 'analysis') drawAnalysis();
+  if (b.dataset.tab === 'relief') showRelief(); else relief?.stop();
 });
 $('#viewmode').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b || !state.layout) return;
@@ -327,6 +342,21 @@ function download(name, text, type = 'image/svg+xml') {
   a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
+$('#relief-light').onclick = (e) => {
+  if (!relief) return;
+  relief.sweep = !relief.sweep;
+  e.currentTarget.setAttribute('aria-pressed', String(relief.sweep));
+  e.currentTarget.textContent = relief.sweep ? 'Pause light' : 'Move light';
+};
+$('#dl-stl').onclick = async () => {
+  const btn = $('#dl-stl'); btn.disabled = true; btn.textContent = 'Building STL…';
+  try {
+    reliefMod ??= await import('./relief.js');
+    const blob = await reliefMod.buildSTL(state.layout);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${state.name}-tactile.stl`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } finally { btn.disabled = false; btn.textContent = 'Download STL for 3D printing'; }
+};
 $('#dl-svg').onclick = () => download(`${state.name}-tactile.svg`, renderTactile(state.layout));
 $('#dl-key').onclick = () => download(`${state.name}-key.svg`, renderKeyPage(state.layout, { preview: true }));
 $('#print').onclick = () => {

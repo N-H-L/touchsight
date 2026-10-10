@@ -41,6 +41,11 @@ for (const f of ['ort-wasm-simd-threaded.asyncify.wasm', 'ort-wasm-simd-threaded
   await cp(join(nm, 'onnxruntime-web/dist', f), join(out, 'ort', f));
 }
 
+// three.js for the 3D relief preview (OrbitControls imports 'three' via the page's import map)
+for (const f of ['build/three.module.js', 'build/three.core.js', 'examples/jsm/controls/OrbitControls.js']) {
+  await cp(join(nm, 'three', f), join(out, 'three', f.split('/').pop()));
+}
+
 // SlimSAM (Segment Anything, distilled) weights
 const hf = 'https://huggingface.co/Xenova/slimsam-77-uniform/resolve/main/';
 for (const f of ['config.json', 'preprocessor_config.json', 'onnx/vision_encoder.onnx', 'onnx/prompt_encoder_mask_decoder.onnx']) {

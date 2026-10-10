@@ -24,7 +24,7 @@ function brailleSVG(cells, x, y) {
 // Approximate print-text width (mm) for the screen preview font.
 const textW = (s, size) => s.length * size * 0.55;
 
-export function renderTactile(layout, { preview = false, highlight = null, underlay = null } = {}) {
+export function renderTactile(layout, { preview = false, highlight = null, underlay = null, braille = true } = {}) {
   const { pageW, pageH } = layout;
   const out = [];
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${f(pageW)}mm" height="${f(pageH)}mm" viewBox="0 0 ${f(pageW)} ${f(pageH)}">`);
@@ -77,11 +77,11 @@ export function renderTactile(layout, { preview = false, highlight = null, under
   out.push('</g>');
 
   out.push('<g id="braille" fill="#000">');
-  if (layout.title) {
+  if (braille && layout.title) {
     const w = brailleWidth(layout.title.cells.length);
     out.push(brailleSVG(layout.title.cells, (pageW - w) / 2, layout.margin));
   }
-  layout.labels.forEach((L, i) => out.push(`<g data-label="${i}">${brailleSVG(L.cells, L.rect.x, L.rect.y)}</g>`));
+  if (braille) layout.labels.forEach((L, i) => out.push(`<g data-label="${i}">${brailleSVG(L.cells, L.rect.x, L.rect.y)}</g>`));
   out.push('</g>');
 
   if (preview) {
