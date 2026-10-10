@@ -17,54 +17,38 @@ Live: https://n-h-l.github.io/touchsight/ · Repo: https://github.com/N-H-L/touc
 - https://n-h-l.github.io/touchsight/
 - https://github.com/N-H-L/touchsight
 
-### Description (paste into "About the project", ~480 words)
+### Description (paste into "About the project"; under 500 words)
 
 ## Inspiration
-Blind students learn biology from the same heart diagrams as everyone else, but only after a teacher redraws each one as a *tactile graphic*:
-- clutter removed
-- print swapped for braille
-- lines kept at least 3 mm apart so fingers can separate them
-
-A science assignment with graphics can take up to 10 hours to transcribe, and a 2023 survey found almost half of these teachers had no training in making tactile graphics. We wanted image AI that does the boring 90% so the teacher can spend their time on the judgement calls.
+Blind students learn biology from the same diagrams as everyone else, but only after a teacher redraws each one as a *tactile graphic*: clutter removed, print swapped for braille, lines at least 3 mm apart. A science assignment with graphics can take up to 10 hours to transcribe, and almost half of these teachers report no training in making tactile graphics. We wanted image AI to do the tedious 90% so teachers keep the judgement calls.
 
 ## What it does
-Upload a labeled diagram, or pick a sample. In about 10–30 seconds TouchSight:
-1. **Reads the diagram's own labels.** OCR runs in two passes and repairs slips like "Atriym" → "Atrium".
-2. **Follows every leader line to the part it names.** A Hough-segment tracer chains even dotted leaders.
-3. **Segments that part with Segment Anything.** The leader tip is the prompt. We call this *label-guided simplification*: the tactile version keeps exactly what the diagram's author thought worth naming, and drops shading and decoration.
-4. **Lays out a page in real millimetres** following BANA tactile-graphics guidelines:
-   - bold outlines
-   - at most 5 textures instead of colours
-   - Spec-800 braille dots
-   - 2-letter keys when a word won't fit
-   - 3 mm clearance around every label
-5. **Checks itself** against the same guideline measurements as naive edge tracing, and lets the teacher fix any label.
+Upload a labeled diagram or pick a sample. In 10–30 seconds TouchSight:
+1. **Reads the diagram's own labels.** OCR, with slips like "Atriym" → "Atrium" repaired.
+2. **Follows every leader line to the part it names.** This works even when the leader is dotted.
+3. **Segments that part with Segment Anything,** using the leader tip as the prompt. This *label-guided simplification* keeps exactly what the author thought worth naming and drops shading and decoration.
+4. **Lays out a page in real millimetres** following BANA tactile guidelines: bold outlines, at most 5 textures instead of colours, Spec-800 braille dots, letter keys when a word won't fit, and 3 mm clearance.
+5. **Checks itself** with guideline measurements and lets the teacher fix any label.
 6. **Exports** a pure-black SVG for swell paper, a braille key page, or an **STL to 3D-print**. A 3D relief view shows how it will feel.
 
 ## How we built it
-- Everything runs **in the browser**: Tesseract.js, SlimSAM through transformers.js/ONNX Runtime (in a worker), OpenCV.js, and three.js, all vendored.
-- **No server, no uploads, no API bill:** free for schools, and school material stays private.
-- A Playwright harness runs the real app on 16 Wikimedia Commons diagrams and scores every output.
+Everything runs **in the browser**: Tesseract.js, SlimSAM via transformers.js/ONNX Runtime, OpenCV.js and three.js. There's no server, no uploads and no API bill, so it is free and private for schools. A Playwright harness scores the real app on 16 Wikimedia Commons diagrams.
 
 ## Results (same checker for every method)
-- **Fragments too short to feel (<12.5 mm):** 11 for TouchSight vs 763 for edge tracing, or 329 even after erasing the print text first.
-- **Area where lines crowd closer than 3 mm:** 1.4% vs 6.4%.
-- **Print labels:** every label found becomes braille. 77% of placed labels keep full 3 mm clearance.
+- **Fragments too short to feel (<12.5 mm):** 11, vs 763 for edge tracing, or 329 for edge tracing with the print text erased first.
+- **Figure area where lines crowd closer than 3 mm:** 1.4% vs 6.4%.
+- **Labels:** every label found becomes braille, and 77% of them keep full 3 mm clearance.
 
-## Challenges
+## Challenges and lessons
 - Dotted leader lines.
-- Labels printed *on* the drawing, which must not get a leader.
+- Labels printed *on* the drawing.
 - OCR on coloured fills.
-- Making braille fit: real braille is about 3× wider than print.
+- Braille being ~3× wider than print.
 
-## What we learned
-Tactile design is mostly about what to *leave out*. A segmentation model becomes useful when the diagram itself tells it where to look.
+Tactile design is mostly about what to leave out, and segmentation becomes useful when the diagram itself says where to look.
 
 ## Limitations and what's next
-These are automated checks, not a replacement for a qualified transcriber, and we have not yet tested with blind readers or on physical swell paper. That's the next step.
-- **Labels:** uncontracted braille only. Next: contracted UEB (liblouis).
-- **Unlabeled photos:** not handled yet. Next: generative redraw.
-- **Missed labels:** OCR misses some, and they can't be added by hand yet. Next: click-to-add parts with SAM.
+These are automated checks, not a replacement for a qualified transcriber. We haven't yet tested with blind readers or on physical swell paper, and that comes next. Labels are uncontracted braille, and OCR misses some labels that can't be added by hand yet. Next: contracted UEB, click-to-add parts, and generative redraws of unlabeled photos.
 
 **AI disclosure:** built with extensive help from Claude Code (Anthropic) for research, code and docs. The product itself uses only the open models listed, running locally.
 
