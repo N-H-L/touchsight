@@ -1,23 +1,47 @@
 # STATE
 
-Updated: 2026-10-11 04:30 SGT (Sat Oct 10 20:30 EDT)
+Updated: 2026-10-11 08:45 SGT (Sat Oct 10 20:45 EDT)
 
 **Hard deadline: Sun Oct 11 23:59 EDT = Mon Oct 12 11:59 SGT.** Internal target: submit by Mon 09:00 SGT.
+Time check: `python -c "from datetime import *; n=datetime.now(timezone.utc); print(datetime(2026,10,12,3,59,tzinfo=timezone.utc)-n)"`. Git Bash's `TZ=` conversion is unreliable on this machine.
 
 ## Stage
-Stage 1 (research + idea shortlist) is complete. **Waiting for the user to pick an idea.** Nothing has been built yet.
+**Stage 2: checkpoint 2.** A working product is live and waiting for the user's review.
 
-## Done
-- Official Devpost and site pages were read and saved to `sources/`. The brief is in BRIEF.md.
-- Local environment checked: RTX 4080 16 GB. PyTorch CUDA wheels exist for Python 3.14 (cu128, torch 2.11).
-- Competitor scan for the shortlisted ideas is in IDEAS.md.
-- Precedent research is in IDEAS.md (subagent).
+## Decisions / approvals
+- Idea: TouchSight (user, 04:30 SGT).
+- Eligibility: the user is 18, enrolled, and registered on Devpost.
+- Public repo https://github.com/N-H-L/touchsight is authorized and created. GitHub Pages is deployed via Actions.
+- Hosting: static in-browser app so the user's PC can stay off. All models are vendored (no runtime CDN, except the Google Font).
+- Commits use the user's git identity from global config (N-H-L, school email).
 
-## Open questions for the user
-See the checkpoint message and IDEAS.md "Questions".
+## Live
+- App: https://n-h-l.github.io/touchsight/ (deep link `?sample=heart`)
+- Verified live at 08:05 SGT (EVIDENCE.md).
 
-## Next action
-Once the user picks an idea, write PLAN.md (milestones with SGT times), create the app scaffold, and run the cheapest feasibility test for the chosen idea first.
+## Done (M0–M3)
+- Pipeline:
+  - OCR (2-pass) → leader tracing → SlimSAM parts → mm layout (BANA params) → UEB Grade 1 braille + keys → SVG
+  - checker vs Canny baseline
+- UI:
+  - samples, upload, progress steps
+  - 4 tabs (tactile / what the AI saw / vs edge tracing / key page)
+  - label editor (edit / merge / remove)
+  - exports (SVG, key, print/PDF)
+  - precomputed fallback
+- Eval on 16 samples is in EVIDENCE.md. README has full credits.
 
-## Approvals
-- None yet. No public repo has been created. No spending.
+## Next actions (after user feedback)
+1. Apply the user's feedback.
+2. Fixes from the skeptical-judge review (subagent running at 08:45).
+3. Improve braille clearance (71% → higher), e.g. try more candidate positions and shorter keys.
+4. Optional wow feature (3D relief preview / audio description) if time allows.
+5. Devpost write-up (≤500 words) + video script + shot list → user records the video (target Sun evening SGT).
+6. Submit by Mon 09:00 SGT. Requires the user: YouTube upload + Devpost submit.
+
+## Commands
+- `npm run vendor`: fetch runtimes + models into app/ (gitignored)
+- `npm run serve`: local server on :5173
+- `node scripts/shot.mjs <id> [tab]`: screenshot the real app (BASE= for live)
+- `node scripts/qa.mjs`: interaction QA
+- `npm run eval`: full evaluation → eval-out/eval.md + app/precomputed/*.svg
