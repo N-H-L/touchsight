@@ -22,7 +22,7 @@ for (const s of samples) {
     const r = await page.evaluate(() => {
       const st = window.__touchsight;
       if (!st?.check) return null;
-      return { ours: st.check.ours, base: st.check.base, stats: st.layout.stats, timings: st.analysis.timings,
+      return { ours: st.check.ours, base: st.check.base, base2: st.check.base2, stats: st.layout.stats, timings: st.analysis.timings,
         labels: st.analysis.labels.map((L) => L.text), svg: null };
     });
     const svg = await page.evaluate(() => document.querySelector('#ours-small').innerHTML);
@@ -39,16 +39,18 @@ await browser.close();
 await writeFile('eval-out/eval.json', JSON.stringify(rows, null, 1));
 
 const ok = rows.filter((r) => r.ours);
-const md = ['| Sample | Cat. | Labels found | Braille labels | Print text left (TS / edge) | Lines <3 mm, % of figure (TS / edge) | Short fragments (TS / edge) | Braille clear 3 mm | Run time (s) |', '|---|---|---|---|---|---|---|---|---|'];
+const md = ['| Sample | Cat. | Labels found | Braille labels | Print-label spots still marked (TS / edge) | Lines <3 mm, % of figure (TS / edge / edge−text) | Short fragments (TS / edge / edge−text) | Braille clear 3 mm | Run time (s) |', '|---|---|---|---|---|---|---|---|---|'];
 for (const r of rows) {
   if (!r.ours) { md.push(`| ${r.id} | ${r.category} | error | | | | | | |`); continue; }
   const t = r.timings, run = ((t.ocr + t.sam_embed + t.sam_parts) / 1000).toFixed(1);
-  md.push(`| ${r.id} | ${r.category} | ${r.ours.printLabels} | ${r.ours.brailleLabels} | ${r.ours.printTextLeft} / ${r.base.printTextLeft} | ${r.ours.narrowGapPct} / ${r.base.narrowGapPct} | ${r.ours.fragments} / ${r.base.fragments} | ${r.ours.brailleClear}/${r.ours.brailleLabels} | ${run} |`);
+  const truth = samples.find((x) => x.id === r.id)?.labels_true;
+  md.push(`| ${r.id} | ${r.category} | ${r.ours.printLabels}${truth ? ` of ${truth}` : ''} | ${r.ours.brailleLabels} | ${r.ours.printTextLeft} / ${r.base.printTextLeft} | ${r.ours.narrowGapPct} / ${r.base.narrowGapPct} / ${r.base2.narrowGapPct} | ${r.ours.fragments} / ${r.base.fragments} / ${r.base2.fragments} | ${r.ours.brailleClear}/${r.ours.brailleLabels} | ${run} |`);
 }
 const sum = (f) => ok.reduce((a, r) => a + f(r), 0);
 md.push('', `Totals over ${ok.length} samples: print labels left as raised text ${sum((r) => r.ours.printTextLeft)} (TouchSight) vs ${sum((r) => r.base.printTextLeft)} (edge tracing) of ${sum((r) => r.ours.printLabels)}; ` +
   `short fragments ${sum((r) => r.ours.fragments)} vs ${sum((r) => r.base.fragments)}; ` +
-  `mean narrow-gap area ${(sum((r) => r.ours.narrowGapPct) / ok.length).toFixed(1)}% vs ${(sum((r) => r.base.narrowGapPct) / ok.length).toFixed(1)}%; ` +
+  `short fragments vs text-erased tracing ${sum((r) => r.ours.fragments)} vs ${sum((r) => r.base2.fragments)}; ` +
+  `mean narrow-gap area ${(sum((r) => r.ours.narrowGapPct) / ok.length).toFixed(1)}% vs ${(sum((r) => r.base.narrowGapPct) / ok.length).toFixed(1)}% (text-erased tracing ${(sum((r) => r.base2.narrowGapPct) / ok.length).toFixed(1)}%); ` +
   `braille labels with 3 mm clearance ${sum((r) => r.ours.brailleClear)} of ${sum((r) => r.ours.brailleLabels)}.`);
 await writeFile('eval-out/eval.md', md.join('\n'));
 console.log(md.join('\n'));

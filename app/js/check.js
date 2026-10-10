@@ -46,11 +46,13 @@ function layersFromLayout(cv, layout) {
 
 // Baseline: what "just trace the picture" gives — Canny edges at the same scale,
 // thickened to a raisable 0.8 mm line.
-function layersFromBaseline(cv, imageData, layout) {
+function layersFromBaseline(cv, imageData, layout, eraseText = null) {
   const src = cv.matFromImageData(imageData), gray = new cv.Mat(), edges = new cv.Mat();
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
   cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
   cv.Canny(gray, edges, 60, 160);
+  // Stronger baseline: the same tracing with every OCR'd print label erased.
+  if (eraseText) for (const L of eraseText) cv.rectangle(edges, new cv.Point(L.x0 - 3, L.y0 - 3), new cv.Point(L.x1 + 3, L.y1 + 3), new cv.Scalar(0), -1);
   const w = Math.ceil(layout.pageW * RES), h = Math.ceil(layout.pageH * RES);
   const out = cv.Mat.zeros(h, w, cv.CV_8UC1);
   const W = imageData.width, H = imageData.height;
@@ -143,7 +145,9 @@ export function checkAll(cv, analysis, layout, imageData) {
   const base = layersFromBaseline(cv, imageData, layout);
   const a = measure(cv, ours, layout, analysis, 'touchsight');
   const b = measure(cv, base, layout, analysis, 'baseline');
-  for (const L of [ours, base]) { L.lines.delete(); L.textures.delete(); }
+  const base2 = layersFromBaseline(cv, imageData, layout, analysis.labels.filter((L) => !L.removed));
+  const b2 = measure(cv, base2, layout, analysis, 'baseline_text_erased');
+  for (const L of [ours, base, base2]) { L.lines.delete(); L.textures.delete(); }
   const leaders = layout.labels.filter((L) => L.leader).map((L) => Math.hypot(L.leader[1][0] - L.leader[0][0], L.leader[1][1] - L.leader[0][1]));
   const rules = [
     { id: 'print', name: 'Print-label spots still covered by raised marks', ours: `${a.printTextLeft} of ${a.printLabels}`, base: `${b.printTextLeft} of ${b.printLabels}`, pass: a.printTextLeft === 0 },
@@ -154,5 +158,5 @@ export function checkAll(cv, analysis, layout, imageData) {
     { id: 'tex', name: 'Textures used (max 5)', ours: `${a.textures}`, base: '0', pass: a.textures <= 5 },
     { id: 'lead', name: 'Leader lines 20–37.5 mm long', ours: `${leaders.filter((d) => d >= 20 && d <= 37.5).length} of ${leaders.length}`, base: '—', pass: null },
   ];
-  return { ours: a, base: b, rules };
+  return { ours: a, base: b, base2: b2, rules };
 }

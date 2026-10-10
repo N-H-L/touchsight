@@ -19,7 +19,8 @@
     "author": "Wapcaplet (Wikimedia Commons)",
     "license": "CC BY-SA 3.0",
     "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "notes": "~20 labels incl. chambers, valves, vessels; leader lines."
+    "notes": "~20 labels incl. chambers, valves, vessels; leader lines.",
+    "labels_true": 14
   },
   {
     "id": "flower",
@@ -96,7 +97,8 @@
     "author": "Medium69",
     "license": "CC BY-SA 4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
-    "notes": "13 labels with leader lines; clean colored cutaway. Good primary demo."
+    "notes": "13 labels with leader lines; clean colored cutaway. Good primary demo.",
+    "labels_true": 13
   },
   {
     "id": "ohms-law-circuit",
