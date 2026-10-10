@@ -1,8 +1,8 @@
 # TouchSight
 
-**Textbook diagram in, tactile graphic out.** TouchSight turns a labeled science diagram into a swell-paper-ready tactile graphic with braille labels, in under a minute. It runs entirely in the browser: no uploads, no accounts, no server.
+**Textbook diagram in, tactile graphic out.** TouchSight turns a labeled science diagram into a first-draft tactile graphic designed for swell paper, with braille labels, in under a minute. It runs entirely in the browser: no uploads, no accounts, no server.
 
-**Live demo:** https://n-h-l.github.io/touchsight/ (desktop Chrome or Edge recommended; the first run downloads ~90 MB of models, which are cached afterwards)
+**Live demo:** https://n-h-l.github.io/touchsight/ (desktop Chrome or Edge recommended; the first run downloads ~90 MB of models and takes ~20–30 s, later runs ~10–15 s)
 
 Built solo for [Banana Hacks 2026](https://banana-hacks-1111.devpost.com/).
 
@@ -25,31 +25,34 @@ A science assignment with graphics can take up to ~10 hours to transcribe. A 202
    - uncontracted UEB braille drawn as Spec 800 dots
    - full words where they fit, otherwise 2-letter keys on a key page (keys avoid aa/ac/cc/ca and contain dot 3 or 6)
    - 3 mm clearance around braille, with knockouts where a label must sit on the drawing
-5. **Checks the result.** The same automated checks run on TouchSight's output and on naive edge tracing at the same page size.
-6. **Lets the teacher fix it.** Edit OCR text, merge split labels, or remove labels. The layout updates instantly.
-7. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
+5. **Repairs OCR slips** (e.g. "Atriym" → "Atrium") against a small science vocabulary. This happens only for words OCR was unsure about, and every correction is shown to the teacher.
+6. **Checks the result.** The same automated checks run on TouchSight's output and on naive edge tracing at the same page size.
+7. **Lets the teacher fix it.** Edit OCR text, merge split labels, or remove labels. The layout updates instantly.
+8. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
 
-## Results (16 Wikimedia Commons diagrams, same checker for both)
-| | TouchSight | Edge tracing |
-|---|---|---|
-| Labels available in braille | 204 of 205 | 0 of 205 |
-| Short fragments (< 12.5 mm, too small to identify by touch) | 20 | 763 |
-| Mean figure area where lines are < 3 mm apart | 1.4% | 6.4% |
-| Braille labels with full 3 mm clearance | 144 of 204 | n/a |
+## Results (16 Wikimedia Commons diagrams, same checker for all)
+| | TouchSight | Edge tracing | Edge tracing with print text erased |
+|---|---|---|---|
+| Print labels turned into braille | 194 of 194 found | 0 | 0 |
+| Short fragments (< 12.5 mm, too small to identify by touch) | 11 | 763 | 329 |
+| Mean figure area where lines are < 3 mm apart | 1.4% | 6.4% | 5.0% |
+| Braille labels with full 3 mm clearance | 150 of 194 (77%) | n/a | n/a |
+
+**Label recall.** "Found" means found by OCR. On the two diagrams where we hand-counted every label, TouchSight found 11 of 14 (heart: it misses Left Atrium and Left/Right Ventricle, printed faintly on coloured fills) and 12 of 13 (volcano).
 
 Per-diagram numbers, method and limitations are in [docs/hackathon/EVIDENCE.md](docs/hackathon/EVIDENCE.md). Reproduce with `npm run serve` and `npm run eval`.
 
-**Limitations.** These are automated checks, not a substitute for a qualified transcriber. TouchSight has not yet been tested with blind readers or on physical swell paper.
+**Limitations.** These are automated checks derived from BANA guidelines, not a substitute for a qualified transcriber. TouchSight has not yet been tested with blind readers or printed on physical swell paper.
 - Labels are uncontracted braille.
-- Diagrams without print labels, or with math-symbol labels, get outlines only.
-- OCR misses some text on busy fills.
+- Diagrams without print labels (or with only math symbols) get outlines only.
+- OCR misses some text on busy fills. Teachers can fix wrong words, but cannot yet add a missed label.
 
 ## Why on-device
 - **Free for schools:** no API bills.
 - **Private:** school materials never leave the computer.
 - **Easy to try:** judges and teachers can test it without an account.
 
-The models are small enough (SlimSAM ~40 MB, Tesseract LSTM) to run on a laptop CPU in about 10 seconds per diagram.
+The models are small enough (SlimSAM ~40 MB, Tesseract LSTM) to run on a laptop CPU: analysis takes about 8–10 s per diagram once the models are loaded.
 
 ## Run locally
 ```
@@ -76,7 +79,7 @@ npm run eval     # runs every sample in headless Chromium (needs: npx playwright
   - [SlimSAM](https://huggingface.co/Xenova/slimsam-77-uniform) (Apache-2.0), a distilled [Segment Anything](https://segment-anything.com/)
   - [transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0) and ONNX Runtime Web (MIT)
   - [OpenCV.js](https://opencv.org/) (Apache-2.0)
-  - [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) font by the Braille Institute (OFL)
+  - [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) font by the Braille Institute (OFL), self-hosted
   - Playwright for evaluation
 - **Standards:**
   - BANA *Guidelines and Standards for Tactile Graphics* (2022)
