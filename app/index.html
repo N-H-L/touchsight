@@ -6,45 +6,44 @@
 <title>TouchSight</title>
 <meta name="description" content="Turn a textbook diagram into a print-ready tactile graphic with braille labels. Runs entirely in your browser.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<a class="skip" href="#main">Skip to main content</a>
+<a class="skip" href="#stage">Skip to the result</a>
 <header class="top">
   <div class="brand">
     <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><g><circle cx="11" cy="9" r="2.6"/><circle cx="11" cy="16" r="2.6"/><circle cx="21" cy="16" r="2.6"/><circle cx="21" cy="23" r="2.6"/></g></svg>
     <div>
       <h1>TouchSight</h1>
-      <p class="tag">Textbook diagram in, tactile graphic out.</p>
+      <p class="tag">Textbook diagram in, tactile graphic out</p>
     </div>
   </div>
-  <p class="privacy" title="OCR, segmentation and layout all run on this device.">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/></svg>
-    Runs in your browser. Nothing is uploaded.
-  </p>
+  <div class="topright">
+    <p class="privacy" title="OCR, segmentation and layout all run on this device.">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/></svg>
+      Runs in your browser · nothing is uploaded
+    </p>
+    <a class="gh" href="https://github.com/N-H-L/touchsight" target="_blank" rel="noopener">Source</a>
+  </div>
 </header>
 
-<main id="main">
-  <section class="intro" id="intro">
-    <h2>Make a diagram readable by touch in under a minute</h2>
-    <p>Teachers of blind students redraw science diagrams by hand: removing clutter, swapping print for braille, keeping lines far enough apart to feel. TouchSight reads the diagram's own labels, follows each leader line to the part it names, segments that part, and lays out a <strong>swell-paper-ready</strong> graphic with <strong>braille labels</strong> following BANA tactile graphics guidelines.</p>
-  </section>
-
-  <div class="workspace">
-    <aside class="panel input" aria-label="Choose a diagram">
-      <h2 class="ph">1. Choose a diagram</h2>
+<main class="app">
+  <!-- Left rail: input -->
+  <aside class="rail left" aria-label="Choose a diagram">
+    <section class="card">
+      <h2 class="ph"><span class="num">1</span> Choose a diagram</h2>
       <label class="drop" id="drop" tabindex="0">
         <input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-        <span><strong>Upload a labeled diagram</strong><br>or drop a PNG / JPG here</span>
+        <span><strong>Upload a labeled diagram</strong><br><small>or drop a PNG / JPG here</small></span>
       </label>
-      <p class="hint">Works best on labeled diagrams with leader lines (biology, earth science, simple physics, maps).</p>
+      <p class="hint">Best with labeled diagrams that use leader lines: biology, earth science, simple physics.</p>
+    </section>
+    <section class="card">
       <h3 class="sub">Or try a sample</h3>
       <div class="samples" id="samples" role="list"></div>
-
+    </section>
+    <section class="card">
       <details class="opts" open>
         <summary>Output options</summary>
         <label>Paper
@@ -54,80 +53,125 @@
             <option value="braille">Braille page, 11.5×11 in</option>
           </select>
         </label>
-        <label>Title (braille, optional)
+        <label>Title (in braille, optional)
           <input id="opt-title" type="text" placeholder="e.g. Human heart" maxlength="40">
         </label>
         <label class="check"><input id="opt-textures" type="checkbox" checked> Fill parts with textures</label>
         <label class="check"><input id="opt-keys" type="checkbox"> Use letter keys for every label</label>
       </details>
-    </aside>
+    </section>
+  </aside>
 
-    <section class="panel result" aria-live="polite">
-      <div class="steps" id="steps" aria-label="Progress">
-        <div class="step" data-step="ocr"><span>1</span>Read labels</div>
-        <div class="step" data-step="leaders"><span>2</span>Trace leaders</div>
-        <div class="step" data-step="segment"><span>3</span>Segment parts</div>
-        <div class="step" data-step="layout"><span>4</span>Tactile layout</div>
-        <div class="step" data-step="check"><span>5</span>Guideline check</div>
-      </div>
-      <p class="status" id="status">Pick a sample or upload a diagram to start.</p>
-
+  <!-- Centre stage: result -->
+  <section class="stage" id="stage" aria-live="polite">
+    <div class="stagebar">
       <div class="tabs" role="tablist" id="tabs" hidden>
         <button role="tab" aria-selected="true" data-tab="tactile">Tactile graphic</button>
         <button role="tab" aria-selected="false" data-tab="analysis">What the AI saw</button>
         <button role="tab" aria-selected="false" data-tab="compare">vs. edge tracing</button>
         <button role="tab" aria-selected="false" data-tab="key">Key page</button>
       </div>
+      <div class="seg" id="viewmode" role="group" aria-label="Tactile view" hidden>
+        <button type="button" data-mode="tactile" aria-pressed="true">Tactile</button>
+        <button type="button" data-mode="overlay" aria-pressed="false">Overlay</button>
+        <button type="button" data-mode="original" aria-pressed="false">Original</button>
+      </div>
+    </div>
+
+    <div class="canvasarea">
+      <!-- Empty state -->
+      <div class="empty" id="empty">
+        <div class="hero-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h2>Make a diagram readable by touch in under a minute</h2>
+        <p>Teachers of blind students redraw science diagrams by hand: removing clutter, swapping print for braille, keeping lines far enough apart to feel. TouchSight does the first draft for them.</p>
+        <button class="btn primary big" id="try-heart" type="button">Try it on a heart diagram</button>
+        <p class="hint">Or pick any sample on the left, or upload your own.</p>
+      </div>
 
       <div class="views" id="views" hidden>
         <div class="view" data-view="tactile">
-          <div class="viewbar">
-            <label class="check"><input type="checkbox" id="show-print" checked> Show print labels (screen only, never printed)</label>
-          </div>
-          <div class="paper" id="tactile"></div>
+          <div class="paper fit" id="tactile"></div>
         </div>
         <div class="view" data-view="analysis" hidden>
-          <p class="legend">Boxes: printed labels found by OCR · lines: leader lines traced to their tips · colored areas: parts segmented by Segment Anything from each tip.</p>
-          <div class="canvaswrap"><canvas id="analysis"></canvas></div>
+          <div class="fitbox"><canvas id="analysis"></canvas></div>
         </div>
         <div class="view" data-view="compare" hidden>
           <div class="compare">
-            <figure><figcaption>Naive edge tracing (Canny), same page size</figcaption><div class="paper small" id="baseline"></div></figure>
-            <figure><figcaption>TouchSight</figcaption><div class="paper small" id="ours-small"></div></figure>
+            <figure><figcaption>Naive edge tracing (Canny), same page</figcaption><div class="paper fit" id="baseline"></div></figure>
+            <figure><figcaption>TouchSight</figcaption><div class="paper fit" id="ours-small"></div></figure>
           </div>
         </div>
         <div class="view" data-view="key" hidden>
-          <div class="paper" id="keypage"></div>
+          <div class="paper fit" id="keypage"></div>
         </div>
       </div>
+
+      <!-- Loading overlay -->
+      <div class="loading" id="loading" hidden>
+        <div class="loadcard" role="status">
+          <div class="spinner" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="loadmsg" id="loadmsg">Starting…</p>
+          <ol class="loadsteps" id="steps">
+            <li data-step="engines">Load on-device models</li>
+            <li data-step="ocr">Read the printed labels</li>
+            <li data-step="leaders">Trace leader lines</li>
+            <li data-step="segment">Segment each labeled part</li>
+            <li data-step="layout">Lay out the tactile page</li>
+            <li data-step="check">Run guideline checks</li>
+          </ol>
+          <p class="elapsed" id="elapsed">0 s</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="status" id="status">Pick a sample or upload a diagram to start.</p>
+  </section>
+
+  <!-- Right rail: review / explain -->
+  <aside class="rail right" aria-label="Review and export">
+    <section class="card" id="howto">
+      <h2 class="ph">How it works</h2>
+      <ol class="how">
+        <li><b>Reads the labels</b> printed on the diagram (OCR).</li>
+        <li><b>Follows each leader line</b> to the part it names.</li>
+        <li><b>Segments that part</b> with Segment Anything.</li>
+        <li><b>Redraws it for touch</b>: bold outlines, textures instead of colours, braille labels, 3 mm spacing (BANA guidelines).</li>
+        <li><b>Checks the result</b> and lets you fix any label before printing.</li>
+      </ol>
+      <p class="hint">Everything runs on your computer. The first run downloads about 90 MB of models, which your browser then caches.</p>
     </section>
 
-    <aside class="panel side" id="side" hidden>
-      <h2 class="ph">2. Review labels</h2>
-      <p class="hint">Fix OCR mistakes or remove a label. The layout updates instantly.</p>
-      <ol class="labels" id="labels"></ol>
-
-      <h2 class="ph">3. Guideline check</h2>
-      <table class="rules" id="rules">
-        <thead><tr><th>Check</th><th>TouchSight</th><th>Edge tracing</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <p class="hint small">Automated checks derived from BANA <cite>Guidelines and Standards for Tactile Graphics</cite> (2022). They do not replace review by a qualified transcriber.</p>
-
-      <h2 class="ph">4. Export</h2>
-      <div class="exports">
-        <button class="btn primary" id="dl-svg">Download tactile SVG</button>
-        <button class="btn" id="dl-key">Download key page</button>
-        <button class="btn" id="print">Print / save as PDF</button>
-      </div>
-      <p class="hint small">Print on plain paper, then photocopy onto swell paper and run it through a fuser (e.g. PIAF). Braille dots are drawn at Library of Congress Spec 800 spacing.</p>
-    </aside>
-  </div>
+    <div id="side" hidden>
+      <section class="card">
+        <h2 class="ph"><span class="num">2</span> Review labels</h2>
+        <p class="hint">Fix a word, merge a split label (⤒) or remove one (✕). The page updates instantly.</p>
+        <ol class="labels" id="labels"></ol>
+      </section>
+      <section class="card" id="legend-card">
+        <h2 class="ph">What the patterns mean</h2>
+        <p class="hint">Colour can't be felt, so each part gets a distinct texture of raised dots or lines instead.</p>
+        <ul class="legend" id="legend"></ul>
+      </section>
+      <section class="card">
+        <h2 class="ph"><span class="num">3</span> Guideline check</h2>
+        <table class="rules" id="rules">
+          <thead><tr><th>Check</th><th>TouchSight</th><th>Edge tracing</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="hint small">Automated checks derived from the BANA <cite>Guidelines and Standards for Tactile Graphics</cite> (2022). They do not replace review by a qualified transcriber.</p>
+      </section>
+      <section class="card">
+        <h2 class="ph"><span class="num">4</span> Export</h2>
+        <div class="exports">
+          <button class="btn primary" id="dl-svg">Download tactile SVG</button>
+          <button class="btn" id="dl-key">Key page</button>
+          <button class="btn" id="print">Print / PDF</button>
+        </div>
+        <p class="hint small">Print on plain paper, photocopy onto swell paper, then run it through a fuser (e.g. PIAF). The printed version is pure black: the grey label pills appear on screen only.</p>
+      </section>
+    </div>
+  </aside>
 </main>
-
-<footer class="foot">
-  <p>TouchSight is a hackathon prototype for Banana Hacks 2026. Uses Tesseract.js (OCR), SlimSAM via transformers.js (segmentation) and OpenCV.js, all running locally. Labels use uncontracted UEB braille. <a href="https://github.com/N-H-L/touchsight">Source and credits</a>.</p>
-</footer>
 
 <script type="module" src="js/ui.js"></script>
 </body>

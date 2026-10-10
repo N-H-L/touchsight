@@ -21,7 +21,10 @@ function brailleSVG(cells, x, y) {
   return cellDots(cells, x, y).map(([cx, cy]) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${r}"/>`).join('');
 }
 
-export function renderTactile(layout, { preview = false, highlight = null } = {}) {
+// Approximate print-text width (mm) for the screen preview font.
+const textW = (s, size) => s.length * size * 0.55;
+
+export function renderTactile(layout, { preview = false, highlight = null, underlay = null } = {}) {
   const { pageW, pageH } = layout;
   const out = [];
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${f(pageW)}mm" height="${f(pageH)}mm" viewBox="0 0 ${f(pageW)} ${f(pageH)}">`);
@@ -42,13 +45,29 @@ export function renderTactile(layout, { preview = false, highlight = null } = {}
   for (const p of layout.parts) if (p.outline.length) out.push(`<path d="${pathD(p.outline)}" stroke-width="${SPEC.partLine}" data-part="${p.id}"/>`);
   out.push('</g>');
 
-  // Knockouts: blank space around labels that had to sit on top of the drawing.
+  if (preview && underlay) {
+    // Original diagram blended over the tactile lines so parts can be matched up.
+    out.push(`<image href="${underlay.href}" x="${f(layout.ox)}" y="${f(layout.oy)}" width="${f(underlay.w * layout.s)}" height="${f(underlay.h * layout.s)}" opacity="${underlay.opacity ?? 0.45}" style="mix-blend-mode:multiply"/>`);
+  }
+  // Knockouts: pill-shaped blank space around labels that had to sit on the drawing.
+  // (Always white in the tactile output: grey toner would swell on capsule paper.)
   out.push('<g id="knockouts" fill="#fff">');
   for (const L of layout.labels) if (L.knockout) {
-    const g = SPEC.clearance, r = L.rect;
-    out.push(`<rect x="${f(r.x - g)}" y="${f(r.y - g)}" width="${f(r.w + 2 * g)}" height="${f(r.h + 2 * g)}" rx="1.5"/>`);
+    const g = SPEC.clearance, r = L.rect, h = r.h + 2 * g;
+    out.push(`<rect x="${f(r.x - g)}" y="${f(r.y - g)}" width="${f(r.w + 2 * g)}" height="${f(h)}" rx="${f(h / 2)}"/>`);
   }
   out.push('</g>');
+  if (preview) {
+    // Screen-only: a light grey pill behind each label (braille + print) so it reads clearly.
+    out.push('<g id="label-pills" fill="#e8e5dc" stroke="#d3cfc3" stroke-width="0.25">');
+    layout.labels.forEach((L, i) => {
+      const r = L.rect, ts = highlight === i ? 3.6 : 3.0;
+      const txt = L.usesKey ? `${L.key} = ${L.text}` : L.text;
+      const w = Math.max(r.w, textW(txt, ts)) + 5, h = r.h + ts + 5.2;
+      out.push(`<rect x="${f(r.x - 2.5)}" y="${f(r.y - ts - 2.6)}" width="${f(w)}" height="${f(h)}" rx="${f(Math.min(h, w) / 2)}"${highlight === i ? ' fill="#f6d77a"' : ''}/>`);
+    });
+    out.push('</g>');
+  }
 
   out.push(`<g id="leaders" stroke="#000" stroke-width="${SPEC.leaderLine}" stroke-linecap="round">`);
   for (const L of layout.labels) if (L.leader) {
@@ -67,10 +86,10 @@ export function renderTactile(layout, { preview = false, highlight = null } = {}
 
   if (preview) {
     // Print layer for sighted teachers (not part of the tactile export).
-    out.push('<g id="print-preview" font-family="system-ui, sans-serif" fill="#2563eb">');
+    out.push('<g id="print-preview" font-family="Atkinson Hyperlegible, system-ui, sans-serif" fill="#1e3a8a">');
     layout.labels.forEach((L, i) => {
       const hl = highlight === i;
-      out.push(`<text x="${f(L.rect.x)}" y="${f(L.rect.y - 1.6)}" font-size="${hl ? 4 : 3.2}" font-weight="${hl ? 700 : 500}">${esc(L.usesKey ? `${L.key} = ${L.text}` : L.text)}</text>`);
+      out.push(`<text x="${f(L.rect.x)}" y="${f(L.rect.y - 1.7)}" font-size="${hl ? 3.6 : 3.0}" font-weight="700">${esc(L.usesKey ? `${L.key} = ${L.text}` : L.text)}</text>`);
     });
     out.push('</g>');
   }
