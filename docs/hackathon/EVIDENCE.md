@@ -9,6 +9,7 @@ This file records only claims backed by an actual test or measurement, with the 
 | 2026-10-11 08:05 | Live site https://n-h-l.github.io/touchsight/ runs the heart sample end to end in a fresh headless Chromium: 19.2 s including model download | `BASE=https://n-h-l.github.io/touchsight node scripts/shot.mjs heart` | Pages run 38090885517 (commit 1a8c498) |
 | 2026-10-11 08:00 | Guideline-check comparison on all 16 samples (table below) | `npm run serve` + `node scripts/eval.mjs` | 47c5fd5 (metrics unchanged by later UI-only edits) |
 | 2026-10-11 07:40 | Re-run after in-figure-label fix, vocabulary OCR repair and phrase merge. Heart now 11 of 14 labels with correct leaders; "Right Atriym"→"Right Atrium" and "ein"→"vein" auto-corrected | `node scripts/lab.mjs heart volcano`, `npm run eval` | 51dc1b4 |
+| 2026-10-11 ~08:30 | Live site (after redesign + 3D): heart runs end to end; label list, legend, overlay and analysis tabs render; 3D relief renders (SwiftShader); STL export 24.6 MB in <1 s | `BASE=https://n-h-l.github.io/touchsight node scripts/qa.mjs heart` and `scripts/shot3d.mjs heart` | live deploy of "Trim write-up" commit |
 | 2026-10-11 08:20 | Merge control joins split OCR labels ("Pulmonary" + "Artery" → "Pulmonary Artery") | `node scripts/qa.mjs` | 47c5fd5 + baseline-display fix |
 
 ## Guideline-check evaluation (16 Wikimedia Commons diagrams), re-run 2026-10-11 ~07:40 SGT, commit 51dc1b4

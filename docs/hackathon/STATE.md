@@ -17,8 +17,8 @@ Stage 2+: applying user feedback (received ~06:55 SGT). The live site is updated
 - [x] Review fixes: vocabulary OCR repair, phrase merge, numbered outline analysis view, text-erased baseline, label recall, honest README, self-hosted font
 
 ## Next actions
-1. 3D relief preview + STL export (three.js), new tab. Cut if it is not working by ~11:00 SGT.
-2. Devpost write-up (≤500 words, docs/hackathon/SUBMISSION.md) + video script/shot list.
+1. [x] 3D relief preview + STL export (done, live).
+2. [x] Devpost write-up (444 words + disclosure) + video script/shot list + user checklist: docs/hackathon/SUBMISSION.md
 3. Final QA on the live site; re-run eval if the pipeline changes.
 4. The user records the video, uploads it to YouTube (public), and submits on Devpost. Target: Sun evening SGT. Hard deadline Mon 11:59 SGT.
 
