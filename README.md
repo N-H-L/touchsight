@@ -28,7 +28,8 @@ A science assignment with graphics can take up to ~10 hours to transcribe. A 202
 5. **Repairs OCR slips** (e.g. "Atriym" → "Atrium") against a small science vocabulary. This happens only for words OCR was unsure about, and every correction is shown to the teacher.
 6. **Checks the result.** The same automated checks run on TouchSight's output and on naive edge tracing at the same page size.
 7. **Lets the teacher fix it.** Edit OCR text, merge split labels, or remove labels. The layout updates instantly.
-8. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
+8. **Shows how it will feel.** A 3D relief view (three.js) renders raised lines and braille dots under a sweeping raking light. The same plate exports as an **STL for 3D printing**.
+9. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
 
 ## Results (16 Wikimedia Commons diagrams, same checker for all)
 | | TouchSight | Edge tracing | Edge tracing with print text erased |
