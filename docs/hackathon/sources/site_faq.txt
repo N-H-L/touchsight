@@ -1,0 +1,55 @@
+Banana Hacks 2026 FAQ | Eligibility, Teams, Tools & Submissions
+Skip to contentBanana HacksAboutSchedulePrizesFAQSponsorsConductRegister
+Home
+/
+FAQ
+Frequently Asked Questions
+The questions people ask before signing up for Banana Hacks 2026: who can enter, what it costs, how big teams can be, which AI tools are allowed, how judging works, and what you submit at the end.
+Who can participate?
++
+Students aged 14 to 24 who are currently enrolled at a school or educational institution (high school, college, university, or similar), in any country. The workshops and mentoring assume you have never done this before, so first-time hackers are especially welcome. All you need is an internet connection. If you're under 18, read the Code of Conduct with a parent or guardian first.
+Is it free to enter?
++
+Yes. It costs nothing to enter. We're also lining up free compute credits so you can train and run models without paying for GPU time.
+Do I need a team?
++
+No. Hack alone or bring up to three other people. If you want teammates and don't have any yet, come to the team formation hour on opening night. Solo hackers and full teams are judged in the same pool.
+What tech stack can I use?
++
+Whatever you want. Stable Diffusion, DALL-E, the Midjourney API, Flux, ControlNet, ComfyUI, A1111, Hugging Face Diffusers, or a model you trained yourself. If it helps you build the thing, use it. Open source is very welcome.
+How are projects judged?
++
+Judges score five things equally, 1 to 5 each: technical execution and difficulty, innovation and creativity, use of the image AI theme, impact and usefulness, and design, presentation, and demo. The full rubric is on the Prizes page.
+Can I use pre-trained models?
++
+Yes, and most projects do. What you build on top is the part that gets judged: the app around the model, how you fine-tuned it, your prompting, or the way you wired several tools together.
+What should I submit?
++
+A working demo, either a live URL or a recorded video, a link to your GitHub repo, and a write-up of 500 words or less covering what you built and why. Judges will poke at live demos where they can.
+Will there be prizes?
++
+There is $500 in cash for the top project, plus licenses and domains from our sponsors: CodeCrafters VIP memberships for the winning teams, 50 Interview Cake licenses, and free .xyz domains. See the Prizes page for the full list.
+Where does hacking happen?
++
+Wherever you are. Banana Hacks runs entirely online. Discord is the community hub, workshops and ceremonies run on Zoom, and we record every session so people outside North American hours can catch up on their own schedule.
+I've never done a hackathon before. Is this beginner-friendly?
++
+Yes, that's who we built it for. There are beginner workshops, mentors on call all weekend, and we go out of our way to celebrate people shipping their first project. You need curiosity and an internet connection.
+Still have a question?
+The about page covers the event in more depth, the schedule has exact timings, and prizes & judging explains how projects are scored. For anything else, ask in our Discord once you've registered.
+Banana Hacks 2026
+A free online weekend for building with generative AI. October 9 to 12, 2026. 218 people registered so far.
+Event
+Home
+About
+Schedule
+Prizes
+FAQ
+Sponsors
+Conduct
+Register
+Contact
+team@bananahacks.techGeneral & participant questions
+sponsorships@bananahacks.techSponsorship
+Instagram
+

@@ -1,0 +1,198 @@
+
+    Banana Hacks: Build apps, games, and tools that solve real problems in a weekend around Image AI.  - Devpost
+      We've detected that you are using an unsupported browser.  Please
+      upgrade your browser
+      to Internet Explorer 10 or higher.
+      Log in
+        Sign up
+    Join a hackathon
+      Devpost
+      Participate in our public hackathons
+      Hackathons 
+      Projects 
+      Devpost for Teams
+      Access your company's private hackathons
+      Login 
+    Host a hackathon
+      Devpost
+      Grow your developer ecosystem and promote your platform
+      Host a public hackathon 
+      Devpost for Teams
+      Drive innovation, collaboration, and retention within your organization
+      Host an internal hackathon 
+    By use case
+        AI hackathons 
+        Customer hackathons 
+        Employee hackathons 
+        Public hackathons 
+    Resources
+        Blog
+        Insights into hackathon planning and participation
+        Customer stories
+        Inspiration from peers and other industry leaders
+        Planning guides
+        Best practices for planning online and in-person hackathons
+        Webinars & events
+        Upcoming events and on-demand recordings
+        Help desk
+        Common questions and support documentation
+    Join a hackathon
+      Devpost
+      Participate in our public hackathons
+      Hackathons 
+      Projects 
+      Devpost for Teams
+      Access your company's private hackathons
+      Login 
+    Host a hackathon
+      Devpost
+      Grow your developer ecosystem and promote your platform
+      Host a public hackathon 
+      Devpost for Teams
+      Drive innovation, collaboration, and retention within your organization
+      Host an internal hackathon 
+    By use case
+        AI hackathons 
+        Customer hackathons 
+        Employee hackathons 
+        Public hackathons 
+    Resources
+        Blog
+        Insights into hackathon planning and participation
+        Customer stories
+        Inspiration from peers and other industry leaders
+        Planning guides
+        Best practices for planning online and in-person hackathons
+        Webinars & events
+        Upcoming events and on-demand recordings
+        Help desk
+        Common questions and support documentation
+      Log in
+        Sign up
+            Banana Hacks
+            Deadline: Oct 12, 2026 @ 12:00am EDT
+            Join hackathon
+            Descend
+              Overview
+                  My projects
+              Participants (480)
+              Resources
+              Rules
+                Project gallery
+                Updates
+                Discussions
+      Banana Hacks
+      Build apps, games, and tools that solve real problems in a weekend around Image AI. 
+  Join hackathon
+            Who can participate
+    Ages 14 to 24 only
+    Students only
+    Companies/professional organizations excluded from participation
+        All countries/territories, excluding
+          standard exceptions 
+            View full rules
+          October 12 at 12:00am EDT to deadline
+        View schedule
+        Deadline: Oct 12, 2026 @ 12:00am EDT
+            Apple
+            Google
+            Outlook
+                Online
+                Public
+              $500 in cash
+            480
+            participants
+                n/a
+                  Beginner Friendly
+                  Machine Learning/AI
+                  Web
+  What is Banana Hacks 2026?
+Banana Hacks 2026 is the very first iteration of an Image AI hackathon for high schoolers and any college student enrolled in an institution. Our goal is to expose students of all backgrounds to the field of Image Artifical Intelligence Machine Learning and processing and inspire students to pursue computer science in their careers. Banana Hacks is a weekend-long invention competition where you come together with a team and build a software project that integrates Image Classification, Synthetic Generation and more (possibilities are endless) that and may or may not solve a scientific or social problem.
+Interested in getting involved? Please visit https://www.bananahacks.tech to fill out one of the registration forms linked at the top of the page (we accept both devpost and website submissions)! Note that website submissions are much prefered!
+          Requirements
+A Project Name
+Team members listed
+A ≤3 minute (3 minutes or less) YOUTUBE public video (time constraints for the video are STRICT), if you cannot upload a youtube video due to technical troubles or any other issue no matter what you try; please contact a organizer for an alternative. 
+A description of your project must be submitted to Devpost. 
+The description and the video should both cover and include your brainstorming, inspiration, design process, resources, and the final product, among other details.
+A Github link to your source code is required for all projects. All projects must be created solely within the time period of Banana Hacks 2026.
+Cross-submission is not allowed with other hackathons and teams may be disqualified if they are found violating these requirements.
+      Hackathon Sponsors
+      Prizes
+      $500+ in prizes
+      + other prizes
+                n8n Pro licenses
+              200 winners
+            200x n8n Pro Licenses for all participants.
+                Code Crafters's Membership
+              3 winners
+            1st Prize: 2-year VIP membership
+2nd Prize: 1-year VIP membership
+3rd Prize: 6-month VIP membership
+Each VIP membership unlocks all CodeCrafters challenges (Git, Redis, SQLite, and more). If you have a team structure, each winning team member receives their own prize.
+                XYZ Domains
+              300 winners
+            Participants can use the domains to hone their skills creating websites: 300 .xyz domains that are free for the first year participants.
+                Money
+              $500 in cash
+              1 winner
+                Kariaa Credits
+              300 winners
+            40 in Kariaa credits for every participant. The best platform for leading capable engineers to the jobs that they deserve.
+      Devpost Achievements
+  Submitting to this hackathon could earn you:
+      Judges
+                Chakri Cherukuri
+                Quant @ Bloomberg
+                Rajveer Dharkar
+                SWE @ Maximor AI
+                Amit Panda
+                SWE @ Linkedin
+                Nandish Nanjappa
+                SWE @ Attentive
+                Fenil Shah
+                SWE @ Amazon
+                Kariaa Team
+      Judging Criteria
+        Technical Execution and Difficulty
+        How technically impressive is the build? Did the team tackle real engineering challenges with image AI, computer vision, or generative models, with thoughtful model choice and non-trivial integration? Thin API wrappers should score lower.
+        Innovation and Creativity
+        How original is the idea? Does the project take a fresh angle, combine tools unexpectedly, or explore a use case that feels genuinely new? Generic clones of well-known apps score lower than projects that surprise the judge.
+        Use of the Image AI Theme
+        Is image AI, computer vision, or a generative visual model a core part of the project, not a cosmetic add-on? How fully does it embrace the "image everything" theme? If the image AI could be removed without breaking the core experience, score lower.
+        Impact and Usefulness
+        Does the project address a real problem or serve a real need? Is there a clear user, a clear benefit, and a plausible path to someone actually using this beyond the hackathon weekend? Score higher for projects that make "who cares" easy to answer.
+        Design, Presentation, and Demo
+        Is the interface clean and the visual output polished? Does the demo video (3 min or less) and Devpost write-up clearly communicate what the project is, what problem it solves, and how it works? A great project buried under a confusing demo scores lower.
+      Questions?
+      Email the hackathon manager
+      Invite others to compete
+    Hackathon sponsors
+    This site is protected by reCAPTCHA and the Google
+    Privacy Policy and
+    Terms of Service apply.
+        Devpost
+          About
+          Careers
+          Contact
+          Help
+        Hackathons
+          Browse hackathons
+          Explore projects
+          Host a hackathon
+          Hackathon guides
+        Portfolio
+          Your projects
+          Your hackathons
+          Settings
+        Connect
+                Twitter
+                Discord
+                Facebook
+                LinkedIn
+          © 2026 Devpost, Inc. All rights reserved.
+            Community guidelines
+            Security
+            CA notice
+            Privacy policy
+            Terms of service

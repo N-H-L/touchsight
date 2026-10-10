@@ -1,0 +1,56 @@
+Banana Hacks 2026 Prizes & Judging Criteria
+Skip to contentBanana HacksAboutSchedulePrizesFAQSponsorsConductRegister
+Home
+/
+Prizes
+Prizes & Judging
+Every submitted project gets judged. There is $500 in cash for the top project, plus licenses and domains from our sponsors. Here is everything you can win and what the judges look for.
+Prizes
+$500 in cash for the top project, plus licenses and domains from our sponsors. Here is everything on the table:
+◆$500 cash · Banana Hacks
+Cash prize for the top project of the weekend.
+◆CodeCrafters VIP memberships · CodeCrafters
+Every member of the winning teams gets VIP access: 2 years for 1st place, 1 year for 2nd, and 6 months for 3rd.
+◆50 Interview Cake licenses · Interview Cake
+Full-access licenses to Interview Cake's coding interview course.
+◆Free .xyz domains · XYZ
+A .xyz domain, free for the first year, to put your project on the web.
+Award categories
+Category awards call out projects that do one thing especially well. You do not need to apply for them; every submission is considered.
+Best Creative Tool
+The project that most usefully puts generative AI in the hands of someone making something.
+Best Fine-tune
+The most impressive custom model, LoRA adapter, or training pipeline built during the weekend.
+Most Surprising Output
+The project that produced something nobody expected, its own authors included.
+People's Choice
+Voted on by participants during demo day.
+How projects are judged
+Every project is scored 1 to 5 on each of five equally weighted criteria:
+Technical Execution and Difficulty
+How technically impressive is the build? Did the team tackle real engineering challenges with image AI, computer vision, or generative models, with thoughtful model choice and non-trivial integration? Thin API wrappers should score lower.
+Innovation and Creativity
+How original is the idea? Does the project take a fresh angle, combine tools unexpectedly, or explore a use case that feels genuinely new? Generic clones of well-known apps score lower than projects that surprise the judge.
+Use of the Image AI Theme
+Is image AI, computer vision, or a generative visual model a core part of the project, not a cosmetic add-on? How fully does it embrace the "image everything" theme? If the image AI could be removed without breaking the core experience, score lower.
+Impact and Usefulness
+Does the project address a real problem or serve a real need? Is there a clear user, a clear benefit, and a plausible path to someone actually using this beyond the hackathon weekend? Score higher for projects that make "who cares" easy to answer.
+Design, Presentation, and Demo
+Is the interface clean and the visual output polished? Does the demo video (3 min or less) and Devpost write-up clearly communicate what the project is, what problem it solves, and how it works? A great project buried under a confusing demo scores lower.
+What you submit
+Send us a working demo (a live URL or video), your GitHub repository, and no more than 500 words on what you built and why. A working link is better than a polished video. Submissions close at 11:59 PM AoE on Sunday, October 11, 2026. See the full schedule or the FAQ for details.
+Banana Hacks 2026
+A free online weekend for building with generative AI. October 9 to 12, 2026. 218 people registered so far.
+Event
+Home
+About
+Schedule
+Prizes
+FAQ
+Sponsors
+Conduct
+Register
+Contact
+team@bananahacks.techGeneral & participant questions
+sponsorships@bananahacks.techSponsorship
+Instagram

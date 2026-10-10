@@ -1,0 +1,72 @@
+Banana Hacks 2026 Code of Conduct & Submission Rules
+Skip to contentBanana HacksAboutSchedulePrizesFAQSponsorsConductRegister
+Home
+/
+Conduct
+Code of Conduct & Rules
+This Code of Conduct covers everyone at Banana Hacks: participants, mentors, judges, and organizers. It applies in Discord, on Zoom, in submitted work, and anywhere else the event happens. Read it before you register.
+Reporting a problem
+If something happens that this document says should not, tell us. You can use the #help channel in Discord, or email the organizers directly. Reports are read only by the organizing team.
+Email team@bananahacks.techWho this applies to
+Open to students aged 14 to 24 who are enrolled at a school or educational institution, in any country and at any experience level. First-time hackers are especially welcome. If you are under 18, please read this page with a parent or guardian before registering.
+Code of Conduct
+Banana Hacks is a virtual event, and conduct online is held to the same standard as an in-person one.
+Online hackathon standards
+◆Banana Hacks happens online, and we hold your conduct here to the same standard as an in-person event. That covers screen shares, Discord messages, project demos, video calls, and anything you submit.
+◆Do not record, screenshot, or share another participant's video feed or private messages without asking them first.
+◆Do not try to disrupt the event infrastructure. That includes the submission platform, the judging portal, our Discord bots, and organizer tooling.
+Be excellent to each other
+◆Everyone gets a harassment-free experience here, whatever their gender, gender identity, age, sexual orientation, disability, appearance, race, ethnicity, nationality, or religion.
+◆Harassment covers offensive comments, deliberate intimidation, unwanted attention, following someone around the event, and repeatedly interrupting other people's work.
+◆Keep sexualised language, imagery, and jokes out of every channel, DM, and submission.
+Privacy and safety online
+◆Do not post another participant's personal information anywhere, in any form.
+◆Phishing, social engineering, malware, or any attack aimed at participants or organizers gets you removed immediately.
+◆Found a security hole in our infrastructure? Tell the organizers privately. Do not exploit it and do not post about it.
+Academic integrity
+◆Everything you submit has to be your team's own work, made during the hacking window.
+◆Credit the open-source libraries, datasets, and pre-trained models your project depends on.
+◆Generative AI tools are allowed and encouraged. Just say which ones you used when you submit.
+Enforcement
+◆Depending on what happened, organizers may give you a warning, remove you from the event, or disqualify you from prizes.
+◆Report anything that worries you in the #help channel on Discord, or email team@bananahacks.tech. Only the organizing team reads those reports.
+◆We also follow the MLH Code of Conduct (mlh.io/code-of-conduct). Banana Hacks is not an MLH member event.
+Submission rules
+What counts as an eligible project, and what you need to hand in.
+Teams
+◆Teams are 1 to 4 people. Team up with anyone you like; you don't need to go to the same school or live in the same country.
+◆You can only be on one team.
+◆Tell the organizers about any team changes before hacking starts.
+Hacking window
+◆Hacking starts at the opening ceremony and stops at the deadline, Sun Oct 11 at 11:59 PM AoE.
+◆Anything you started before the opening ceremony is not eligible for judging.
+◆Your code goes in a public GitHub repo, committed inside the hacking window. We check commit timestamps.
+What you can build on
+◆Open-source libraries, public APIs, and pre-trained models are all fair game. Cite them in your README.
+◆We reveal the theme and the challenge details at the opening ceremony, and your project has to address the theme.
+◆You don't need hardware. Every project should be demoable over a screen share or at a hosted link.
+Submissions
+◆Submit through the official portal before the deadline. We don't accept late entries.
+◆You'll need a project name, a one-paragraph description, a GitHub link, and a demo video of three minutes or less.
+◆Judges score five equally weighted criteria: technical execution and difficulty, innovation and creativity, use of the image AI theme, impact and usefulness, and design, presentation, and demo. The full rubric is on the Prizes page.
+Prizes and eligibility
+◆If you win, be available for a short demo call with sponsors after the event.
+◆Organizers and judges cannot win prizes.
+◆Submitting gives Banana Hacks permission to feature your project in promotional material.
+Ready?
+Register for Banana Hacks, read about the event, or check the FAQ.
+Banana Hacks 2026
+A free online weekend for building with generative AI. October 9 to 12, 2026. 218 people registered so far.
+Event
+Home
+About
+Schedule
+Prizes
+FAQ
+Sponsors
+Conduct
+Register
+Contact
+team@bananahacks.techGeneral & participant questions
+sponsorships@bananahacks.techSponsorship
+Instagram

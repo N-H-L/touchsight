@@ -1,0 +1,66 @@
+Banana Hacks 2026 Schedule | Workshops, Deadlines & Ceremonies
+Skip to contentBanana HacksAboutSchedulePrizesFAQSponsorsConductRegister
+Home
+/
+Schedule
+Banana Hacks 2026 Schedule
+Here is the plan for October 9 to 12, 2026, from kickoff to the awards. All times are EDT. Live sessions happen on Discord and Zoom, and recordings are shared afterward.
+Fri, Oct 9
+8:00 – 8:45 PM EDTOpening Ceremony
+Virtual via Discord + Zoom
+Kickoff
+8:45 PM EDTHacking Begins
+Kickoff
+9:00 – 10:00 PM EDTPython Workshop (Run 1)
+Virtual via Discord + Zoom
+Workshop
+Sat, Oct 10
+8:00 – 9:00 AM EDTMachine Learning Workshop (Run 1)
+Virtual via Discord + Zoom
+Workshop
+9:00 – 10:00 AM EDTPython Workshop (Run 2)
+Virtual via Discord + Zoom
+Workshop
+10:30 – 11:30 AM EDTHTML/CSS Workshop (Run 1)
+Virtual via Discord + Zoom
+Workshop
+7:00 – 8:00 PM EDTHTML/CSS Workshop (Run 2)
+Virtual via Discord + Zoom
+Workshop
+8:30 – 9:30 PM EDTMachine Learning Workshop (Run 2)
+Virtual via Discord + Zoom
+Workshop
+10:00 – 11:00 PM EDTTrain a Custom Classifier Workshop (Run 1)
+Virtual via Discord + Zoom
+Workshop
+Sun, Oct 11
+10:00 – 11:00 AM EDTTrain a Custom Classifier Workshop (Run 2)
+Virtual via Discord + Zoom
+Workshop
+11:59 PM EDTSubmissions Close
+Deadline
+Mon, Oct 12
+6:00 – 7:00 PM EDTClosing Ceremony & Winners Announced
+Virtual via Discord + Zoom
+Ceremony
+Notes on timing
+Submissions close at 11:59 PM EDT on Sunday, October 11.
+Every workshop runs twice, once in the EDT morning and once in the evening, so you can catch one wherever you are. Open the Schedule window on the homepage to see every time converted to your time zone.
+All workshops are recorded, and links go out to registered participants.
+Judging criteria and award categories are on the prizes page.
+Banana Hacks 2026
+A free online weekend for building with generative AI. October 9 to 12, 2026. 218 people registered so far.
+Event
+Home
+About
+Schedule
+Prizes
+FAQ
+Sponsors
+Conduct
+Register
+Contact
+team@bananahacks.techGeneral & participant questions
+sponsorships@bananahacks.techSponsorship
+Instagram
+

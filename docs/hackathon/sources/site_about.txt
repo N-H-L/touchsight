@@ -1,0 +1,59 @@
+About Banana Hacks 2026 | Free Online Generative AI Hackathon
+Skip to contentBanana HacksAboutSchedulePrizesFAQSponsorsConductRegister
+Home
+/
+About
+About Banana Hacks 2026
+Banana Hacks is four days of building with generative AI. Join from anywhere, work by yourself or with a team, and finish the weekend with a project you can demo. It is free, and beginners are welcome.
+At a glance
+4
+Days
+Oct 9-12, 2026
+218
+Registered
+So far
+$0
+Entry fee
+Free for everyone
+$500
+Prizes
+Plus licenses & domains
+What is Banana Hacks?
+Banana Hacks is a place to try the generative AI idea you have not had time to build. From October 9 to 12, 2026, participants around the world will make image tools, train small models, and put together working demos.
+There is no venue, travel, or entry fee. We use Discord for the community and Zoom for workshops and ceremonies. Sessions are recorded, so you do not have to be awake for every live event. You can see the full breakdown on the schedule page.
+Who it's for: Open to students aged 14 to 24 who are enrolled at a school or educational institution, in any country and at any experience level. First-time hackers are especially welcome.If you're under 18, read the Code of Conduct with a parent or guardian before you register.
+If this is your first hackathon, you will not be left to figure it out alone. We have beginner workshops, mentors during the weekend, and a team-forming session on opening night.
+What you'll build
+These are suggestions, not boxes you have to fit into. Start with one or ignore them and make something else.
+Image generators
+Text-to-image tools, style transfer, and inpainting
+Model workflows
+Fine-tuned models, LoRA adapters, and ControlNet setups
+Creative tools
+Drawing apps, prompt interfaces, and editing tools
+Mixed media
+Projects that bring images, text, and audio together
+Who can participate
+◆Open to participants aged 14 to 24, in any country
+◆Must be a student currently enrolled at a school or educational institution
+◆First-time hackers especially welcome
+◆Teams of 1 to 4 people
+◆Under 18? Read the Code of Conduct with a parent or guardian
+◆Must submit by Oct 11, 2026 at 11:59 PM AoE
+Want in?
+218 people have already registered. The form is free and takes about a minute. The FAQ covers eligibility, team rules, allowed tools, and how judging works.
+Register for Banana Hacks 2026Banana Hacks 2026
+A free online weekend for building with generative AI. October 9 to 12, 2026. 218 people registered so far.
+Event
+Home
+About
+Schedule
+Prizes
+FAQ
+Sponsors
+Conduct
+Register
+Contact
+team@bananahacks.techGeneral & participant questions
+sponsorships@bananahacks.techSponsorship
+Instagram
