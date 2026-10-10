@@ -50,6 +50,7 @@ export function loadSAM() {
     T.env.allowLocalModels = true;
     T.env.localModelPath = base + 'models/';
     T.env.backends.onnx.wasm.wasmPaths = base + 'vendor/ort/';
+    T.env.backends.onnx.wasm.proxy = true; // run inference in a worker so the page stays responsive
     // WASM everywhere: the WebGPU path is untested across judges' GPUs and the
     // CPU embed only costs a few seconds for this distilled model.
     const device = 'wasm';
