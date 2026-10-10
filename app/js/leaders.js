@@ -46,7 +46,7 @@ export function assignLeaders(textLines, segs) {
       for (const [px, py, qx, qy] of [[s.x1, s.y1, s.x2, s.y2], [s.x2, s.y2, s.x1, s.y1]]) {
         const dp = distToBox(px, py, L);
         const dq = distToBox(qx, qy, L);
-        if (dp > Math.max(8, 0.9 * h) || dq < 1.5 * h) continue;
+        if (dp > Math.max(10, 1.3 * h) || dq < 1.5 * h) continue;
         // The segment must head away from the label, not run along its edge.
         const away = angDiff(angleOf(qx - px, qy - py), angleOf(px - cx, py - cy));
         if (away > Math.PI / 2.6) continue;

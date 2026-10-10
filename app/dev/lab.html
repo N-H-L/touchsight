@@ -1,64 +1,47 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>TouchSight lab</title>
-<style>body{font:13px system-ui;margin:8px} canvas{max-width:100%;border:1px solid #ccc}</style></head>
+<style>body{font:13px system-ui;margin:8px;background:#ddd} #out{display:flex;gap:8px;align-items:flex-start} #out>*{background:#fff;max-width:49%} svg{width:100%;height:auto}</style></head>
 <body>
 <div id="status">starting</div>
-<canvas id="c"></canvas>
+<div id="out"><canvas id="c"></canvas><div id="svg"></div></div>
 <script type="module">
-import { loadOpenCV, loadOCR, loadSAM } from '../js/libs.js';
-import { recognizeWords, filterWords, wordsToLines, linesToLabels } from '../js/ocr.js';
-import { thinStrokeMask, houghSegments, assignLeaders } from '../js/leaders.js';
-import { embedImage, segmentPoint } from '../js/segment.js';
+import { loadOpenCV } from '../js/libs.js';
+import { analyze } from '../js/pipeline.js';
+import { buildLayout } from '../js/tactile.js';
+import { renderTactile, renderKeyPage } from '../js/render.js';
 
 const q = new URLSearchParams(location.search);
 const id = q.get('s') || 'heart';
 const st = document.getElementById('status');
 const log = (m) => { st.textContent = m; console.log(m); };
-const t = {};
-const time = async (k, f) => { const t0 = performance.now(); const r = await f(); t[k] = Math.round(performance.now() - t0); return r; };
 window.__lab = { done: false };
 try {
   const img = new Image(); img.src = `../samples/${id}.png`; await img.decode();
   const W = img.naturalWidth, H = img.naturalHeight;
   const c = document.getElementById('c'); c.width = W; c.height = H;
-  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.drawImage(img, 0, 0);
+  const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.drawImage(img, 0, 0);
   const imageData = ctx.getImageData(0, 0, W, H);
-  const cv = await time('load_cv', loadOpenCV);
-  log('loading ocr'); const worker = await time('load_ocr', () => loadOCR((m) => log('ocr: ' + m.status + ' ' + (m.progress ?? ''))));
-  log('loading sam'); const sam = await time('load_sam', loadSAM);
-  log('ocr');
-  const words = await time('ocr', () => recognizeWords(worker, c));
-  const good = filterWords(words, W, H);
-  const lines = wordsToLines(good);
-  const src = cv.matFromImageData(imageData); const gray = new cv.Mat(); cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  const thin = await time('thin', () => thinStrokeMask(cv, gray, good));
-  const segs = houghSegments(cv, thin);
-  assignLeaders(lines, segs);
-  const labels = linesToLabels(lines);
-  log('sam embed');
-  const emb = await time('sam_embed', () => embedImage(sam, imageData));
+  const a = await analyze(imageData, { onStage: (k, m) => log(m) });
+  const cv = await loadOpenCV();
   const t0 = performance.now();
-  for (const L of labels) {
-    const [x, y] = L.leader ? [L.leader.x2, L.leader.y2] : [(L.x0 + L.x1) / 2, (L.y0 + L.y1) / 2];
-    L.anchor = [x, y];
-    const r = await segmentPoint(sam, emb, x, y);
-    L.mask = r;
-  }
-  t.sam_decode_total = Math.round(performance.now() - t0);
-  // overlay
+  const layout = buildLayout(cv, a, { page: q.get('page') || 'letter', title: q.get('title') || '' });
+  a.timings.layout = Math.round(performance.now() - t0);
+  const svg = renderTactile(layout, { preview: q.has('preview') });
+  document.getElementById('svg').innerHTML = svg;
+  // overlay of analysis on the canvas
   const ov = ctx.getImageData(0, 0, W, H);
   const pal = [[230,25,75],[60,180,75],[0,130,200],[245,130,48],[145,30,180],[70,240,240],[240,50,230],[210,245,60],[0,128,128],[170,110,40]];
-  labels.forEach((L, i) => { if (!L.mask) return; const [r,g,b] = pal[i % pal.length];
-    for (let p = 0; p < W * H; p++) if (L.mask.mask[p]) { ov.data[p*4] = (ov.data[p*4]+r)/2; ov.data[p*4+1] = (ov.data[p*4+1]+g)/2; ov.data[p*4+2] = (ov.data[p*4+2]+b)/2; } });
+  a.labels.forEach((L, i) => { if (!L.mask) return; const [r,g,b] = pal[i % pal.length];
+    for (let p = 0; p < W * H; p++) if (L.mask[p]) { ov.data[p*4] = (ov.data[p*4]+r)/2; ov.data[p*4+1] = (ov.data[p*4+1]+g)/2; ov.data[p*4+2] = (ov.data[p*4+2]+b)/2; } });
   ctx.putImageData(ov, 0, 0);
-  ctx.lineWidth = 3; ctx.font = '14px sans-serif';
-  labels.forEach((L, i) => { const [r,g,b] = pal[i % pal.length]; ctx.strokeStyle = `rgb(${r},${g},${b})`;
+  ctx.lineWidth = 3;
+  a.labels.forEach((L, i) => { const [r,g,b] = pal[i % pal.length]; ctx.strokeStyle = `rgb(${r},${g},${b})`;
     ctx.strokeRect(L.x0, L.y0, L.x1 - L.x0, L.y1 - L.y0);
     if (L.leader) { ctx.beginPath(); ctx.moveTo(L.leader.x1, L.leader.y1); ctx.lineTo(L.leader.x2, L.leader.y2); ctx.stroke(); }
     ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(L.anchor[0], L.anchor[1], 6, 0, 7); ctx.fill(); });
-  window.__lab = { done: true, id, W, H, timings: t, sam_device: sam.device, nWords: words.length, nGood: good.length, nSegs: segs.length,
-    labels: labels.map((L) => ({ text: L.text, box: [L.x0, L.y0, L.x1, L.y1], leader: !!L.leader, anchor: L.anchor.map(Math.round), maskArea: L.mask?.area ?? 0, maskScore: L.mask ? +L.mask.score.toFixed(3) : 0 })) };
+  window.__lab = { done: true, id, W, H, timings: a.timings, device: a.device, stats: layout.stats, svg, keySvg: renderKeyPage(layout, { preview: true }),
+    labels: a.labels.map((L) => ({ text: L.text, leader: !!L.leader, mask: !!L.mask, score: +L.maskScore.toFixed(3) })),
+    placed: layout.labels.map((L) => ({ text: L.text, key: L.usesKey ? L.key : null, knockout: L.knockout })) };
   log('done');
-  src.delete(); gray.delete(); thin.delete();
 } catch (e) { console.error(e); window.__lab = { done: true, error: String(e.stack || e) }; log('error ' + e); }
 </script></body></html>

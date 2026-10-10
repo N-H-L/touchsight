@@ -29,17 +29,16 @@ for (const f of ['tesseract.esm.min.js', 'tesseract.min.js', 'worker.min.js']) {
   await cp(join(nm, 'tesseract.js/dist', f), join(out, 'tesseract', f));
 }
 for (const f of await readdir(join(nm, 'tesseract.js-core'))) {
-  if (/\.(js|wasm)$/.test(f) && f !== 'index.js') await cp(join(nm, 'tesseract.js-core', f), join(out, 'tesseract/core', f));
+  // OEM 1 (LSTM only) loads one of the *-lstm.wasm.js builds (wasm embedded).
+  if (/-lstm\.wasm\.js$/.test(f)) await cp(join(nm, 'tesseract.js-core', f), join(out, 'tesseract/core', f));
 }
 await fetchTo('https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int/eng.traineddata.gz', join(out, 'tesseract/lang/eng.traineddata.gz'));
 
 // transformers.js + onnxruntime-web wasm
 await cp(join(nm, '@huggingface/transformers/dist/transformers.min.js'), join(out, 'transformers/transformers.min.js'));
-for (const f of await readdir(join(nm, 'onnxruntime-web/dist'))) {
-  if (/^ort-wasm.*\.(wasm|mjs)$/.test(f)) await cp(join(nm, 'onnxruntime-web/dist', f), join(out, 'ort', f));
-}
-for (const f of await readdir(join(nm, '@huggingface/transformers/dist'))) {
-  if (/^ort-wasm.*\.(wasm|mjs)$/.test(f)) await cp(join(nm, '@huggingface/transformers/dist', f), join(out, 'ort', f));
+// The bundled transformers.min.js only requests the asyncify build of ORT.
+for (const f of ['ort-wasm-simd-threaded.asyncify.wasm', 'ort-wasm-simd-threaded.asyncify.mjs']) {
+  await cp(join(nm, 'onnxruntime-web/dist', f), join(out, 'ort', f));
 }
 
 // SlimSAM (Segment Anything, distilled) weights

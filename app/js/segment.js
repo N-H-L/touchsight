@@ -10,12 +10,13 @@ export async function embedImage(sam, imageData) {
 }
 
 // Returns a Uint8Array mask (1 = part) at image resolution, or null.
-export async function segmentPoint(sam, emb, x, y, { minFrac = 0.0008, maxFrac = 0.45, negatives = [] } = {}) {
+// `positives` is a list of [x, y] image points that should all be inside the part.
+export async function segmentPoint(sam, emb, positives, { minFrac = 0.0008, maxFrac = 0.45, negatives = [] } = {}) {
   const { T, model, processor } = sam;
   const [rh, rw] = emb.inputs.reshaped_input_sizes[0];
   const sx = rw / emb.width, sy = rh / emb.height;
-  const pts = [[x * sx, y * sy], ...negatives.map(([nx, ny]) => [nx * sx, ny * sy])];
-  const labels = [1, ...negatives.map(() => 0)];
+  const pts = [...positives, ...negatives].map(([x, y]) => [x * sx, y * sy]);
+  const labels = [...positives.map(() => 1), ...negatives.map(() => 0)];
   const input_points = new T.Tensor('float32', pts.flat(), [1, 1, pts.length, 2]);
   const input_labels = new T.Tensor('int64', labels.map(BigInt), [1, 1, labels.length]);
   const out = await model({ ...emb.embeddings, input_points, input_labels });
@@ -23,16 +24,20 @@ export async function segmentPoint(sam, emb, x, y, { minFrac = 0.0008, maxFrac =
   const m = masks[0]; // [1, 3, H, W]
   const scores = out.iou_scores.data;
   const plane = emb.width * emb.height;
-  let best = null;
+  const cands = [];
   for (let k = 0; k < 3; k++) {
     const data = m.data.subarray(k * plane, (k + 1) * plane);
     let area = 0;
     for (let i = 0; i < plane; i++) area += data[i] ? 1 : 0;
     const frac = area / plane;
     if (frac < minFrac || frac > maxFrac) continue;
-    if (!best || scores[k] > best.score) best = { k, score: scores[k], area, data };
+    cands.push({ k, score: scores[k], area, data });
   }
-  if (!best) return null;
+  if (!cands.length) return null;
+  // A label names a specific part, so prefer the tightest mask that SAM is nearly as
+  // confident about over the "whole object" mask.
+  const top = Math.max(...cands.map((c) => c.score));
+  const best = cands.filter((c) => c.score >= top - 0.06).sort((a, b) => a.area - b.area)[0];
   const mask = new Uint8Array(plane);
   for (let i = 0; i < plane; i++) mask[i] = best.data[i] ? 1 : 0;
   return { mask, score: best.score, area: best.area };

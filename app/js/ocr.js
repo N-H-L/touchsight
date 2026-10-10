@@ -7,11 +7,28 @@ export async function recognizeWords(worker, canvas) {
   const { data } = await worker.recognize(canvas, {}, { blocks: true });
   const words = [];
   for (const b of data.blocks ?? []) for (const p of b.paragraphs) for (const l of p.lines) for (const w of l.words) {
-    const text = w.text.trim();
+    const text = w.text.trim().replace(/^[^A-Za-z0-9(]+|[^A-Za-z0-9)]+$/g, '');
     const { x0, y0, x1, y1 } = w.bbox;
     words.push({ text, conf: w.confidence, x0, y0, x1, y1 });
   }
   return words;
+}
+
+// Union of words from several OCR passes; overlapping boxes keep the more confident word.
+export function mergeWordSets(...sets) {
+  const out = [];
+  const iou = (a, b) => {
+    const ix = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0));
+    const iy = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+    const inter = ix * iy;
+    return inter / ((a.x1 - a.x0) * (a.y1 - a.y0) + (b.x1 - b.x0) * (b.y1 - b.y0) - inter);
+  };
+  for (const set of sets) for (const w of set) {
+    const i = out.findIndex((o) => iou(o, w) > 0.3);
+    if (i < 0) out.push(w);
+    else if (w.conf > out[i].conf) out[i] = w;
+  }
+  return out;
 }
 
 export function filterWords(words, W, H) {
@@ -22,6 +39,7 @@ export function filterWords(words, W, H) {
     const alnum = w.text.replace(/[^A-Za-z0-9]/g, '').length;
     // Short tokens need high confidence; drawings often produce 1-2 char garbage.
     if (alnum <= 2) return w.conf >= 80 && /^[A-Za-z0-9]{1,2}$/.test(w.text.replace(/[()]/g, ''));
+    if (alnum === 3) return w.conf >= 75;
     return w.conf >= 55 && alnum / w.text.length >= 0.6;
   });
 }
@@ -69,10 +87,11 @@ export function linesToLabels(lines) {
       const aligned = hov > 0 || Math.abs(a.x0 - b.x0) < h || Math.abs(a.x1 - b.x1) < h ||
         Math.abs((a.x0 + a.x1) / 2 - (b.x0 + b.x1) / 2) < h;
       if (!aligned) continue;
-      const leaders = (a.leader ? 1 : 0) + (b.leader ? 1 : 0);
-      if (leaders > 1) continue;
+      // Two leaders block the merge unless they are the same physical line (a leader
+      // that starts between two stacked lines gets claimed by both).
+      if (a.leader && b.leader && !sameLeader(a.leader, b.leader, h)) continue;
       items[i] = {
-        lines: [...a.lines, ...b.lines], leader: a.leader || b.leader,
+        lines: [...a.lines, ...b.lines], leader: longer(a.leader, b.leader),
         x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1),
       };
       items.splice(j, 1);
@@ -84,4 +103,13 @@ export function linesToLabels(lines) {
     text: it.lines.map((l) => l.text).join(' ').replace(/\s+/g, ' ').trim(),
     x0: it.x0, y0: it.y0, x1: it.x1, y1: it.y1, leader: it.leader ?? null, lines: it.lines,
   }));
+}
+
+const len = (l) => Math.hypot(l.x2 - l.x1, l.y2 - l.y1);
+function longer(a, b) { if (!a) return b; if (!b) return a; return len(a) >= len(b) ? a : b; }
+function sameLeader(a, b, h) {
+  const ds = Math.hypot(a.x1 - b.x1, a.y1 - b.y1);
+  let da = Math.abs(Math.atan2(a.y2 - a.y1, a.x2 - a.x1) - Math.atan2(b.y2 - b.y1, b.x2 - b.x1));
+  if (da > Math.PI) da = 2 * Math.PI - da;
+  return ds < 1.6 * h && da < 0.2;
 }
