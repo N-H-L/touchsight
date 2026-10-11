@@ -37,7 +37,7 @@ export function filterWords(words, W, H) {
   return words.filter((w) => {
     const h = w.y1 - w.y0, wd = w.x1 - w.x0;
     if (!WORDISH.test(w.text)) return false;
-    if (h < 7 || h > H * 0.09 || wd > W * 0.6) return false;
+    if (!w.vertical && (h < 7 || h > H * 0.09 || wd > W * 0.6)) return false;
     const alnum = w.text.replace(/[^A-Za-z0-9]/g, '').length;
     // Short tokens need high confidence; drawings often produce 1-2 char garbage.
     if (alnum <= 2) return w.conf >= 80 && /^[A-Za-z0-9]{1,2}$/.test(w.text.replace(/[()]/g, ''));

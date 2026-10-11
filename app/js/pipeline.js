@@ -4,6 +4,7 @@ import { recognizeWords, mergeWordSets, filterWords, wordsToLines, linesToLabels
 import { thinStrokeMask, houghSegments, assignLeaders } from './leaders.js';
 import { embedImage, segmentPoint } from './segment.js';
 import { correctWord } from './vocab.js';
+import { loadPaddle, detectText } from './paddle.js';
 
 export async function analyze(imageData, { onStage = () => {} } = {}) {
   const timings = {};
@@ -11,14 +12,25 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
   const W = imageData.width, H = imageData.height;
 
   onStage('engines', 'Loading on-device models…');
-  const [cv, worker, sam] = await timed('load', () => Promise.all([loadOpenCV(), loadOCR(), loadSAM()]));
+  const [cv, sam] = await timed('load', () => Promise.all([loadOpenCV(), loadSAM(), loadPaddle({ proxy: true }).catch(() => null)]));
 
   onStage('ocr', 'Reading the printed labels…');
   const canvas = toCanvas(imageData);
   const src = cv.matFromImageData(imageData);
   const gray = new cv.Mat();
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  let ocrEngine = 'paddle';
   const words = await timed('ocr', async () => {
+    // PaddleOCR (text detector + recognizer) finds labels on coloured fills and small
+    // text far better than Tesseract; Tesseract stays as the fallback.
+    try {
+      await loadPaddle({ proxy: true });
+      return await detectText(imageData, { cv, level: 'word' });
+    } catch (e) {
+      console.warn('PaddleOCR unavailable, falling back to Tesseract', e);
+      ocrEngine = 'tesseract';
+    }
+    const worker = await loadOCR();
     const a = await recognizeWords(worker, canvas);
     // Second pass on a locally-binarized copy recovers dark text printed on colored fills.
     const bin = new cv.Mat();
@@ -84,7 +96,7 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     }
   });
   src.delete(); gray.delete();
-  return { W, H, labels, words: good, fg, lineArt, timings, device: sam.device };
+  return { W, H, labels, words: good, fg, lineArt, timings, device: sam.device, ocrEngine };
 }
 
 // Non-background pixels minus text and thin strokes (leader lines), holes filled.
