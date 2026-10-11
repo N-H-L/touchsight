@@ -40,6 +40,7 @@ export function renderTactile(layout, { preview = false, highlight = null, under
   }
   out.push('</g>');
 
+  if (layout.lineArt?.length) out.push(`<path id="lineart" d="${pathD(layout.lineArt)}" fill="#000" fill-rule="evenodd"/>`);
   out.push(`<g id="outlines" fill="none" stroke="#000" stroke-linejoin="round" stroke-linecap="round">`);
   out.push(`<path d="${pathD(layout.silhouette)}" stroke-width="${SPEC.outline}"/>`);
   for (const p of layout.parts) if (p.outline.length) out.push(`<path d="${pathD(p.outline)}" stroke-width="${SPEC.partLine}" data-part="${p.id}"/>`);

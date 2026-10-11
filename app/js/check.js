@@ -29,6 +29,7 @@ function layersFromLayout(cv, layout) {
   const l = lc.getContext('2d'), t = tc.getContext('2d');
   l.lineJoin = 'round'; l.lineCap = 'round'; l.strokeStyle = '#000';
   l.lineWidth = SPEC.outline * RES; polyPath(l, layout.silhouette); l.stroke();
+  if (layout.lineArt?.length) { l.fillStyle = '#000'; polyPath(l, layout.lineArt); l.fill('evenodd'); }
   l.lineWidth = SPEC.partLine * RES;
   for (const p of layout.parts) if (p.outline.length) { polyPath(l, p.outline); l.stroke(); }
   t.fillStyle = '#000';

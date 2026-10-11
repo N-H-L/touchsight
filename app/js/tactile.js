@@ -1,6 +1,6 @@
 // Stage 2 — turn the analysis into a tactile layout in millimetres, following the
 // BANA-derived parameters in docs/hackathon/TACTILE_SPEC.md.
-import { fillHoles } from './pipeline.js';
+import { fillHoles, removeSmall } from './pipeline.js';
 import { toCells, makeKeys, brailleWidth, brailleHeight, BRAILLE } from './braille.js';
 
 export const SPEC = {
@@ -38,6 +38,33 @@ export function buildLayout(cv, analysis, opts = {}) {
   const fgMat = maskToMat(cv, analysis.fg, W, H);
   const silhouette = contoursOf(cv, fgMat, px(0.5)).filter((p) => perimeter(p) * s >= SPEC.minLine).map((p) => p.map(toMM));
 
+  // Structure lines from the original (outlines + colour boundaries), thickened to a
+  // raisable 1 mm, with fragments too small to identify by touch removed.
+  let lineArtMat = null, lineArt = [];
+  if (analysis.lineArt && opts.lineArt !== false) {
+    lineArtMat = maskToMat(cv, analysis.lineArt, W, H);
+    const lw = Math.max(1, Math.round(px(SPEC.partLine))) | 1;
+    const kk = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(lw, lw));
+    cv.dilate(lineArtMat, lineArtMat, kk);
+    kk.delete();
+    // Where many lines merge into a solid blob (> ~2.4 mm thick), keep only its outline:
+    // a solid raised patch can't be read by touch.
+    const r = Math.max(1, Math.round(px(1.2)));
+    const kb = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2 * r + 1, 2 * r + 1));
+    const core = new cv.Mat(); cv.erode(lineArtMat, core, kb);
+    if (cv.countNonZero(core)) {
+      const blob = new cv.Mat(); cv.dilate(core, blob, kb);
+      const ki = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(lw + 2, lw + 2));
+      const inner = new cv.Mat(); cv.erode(blob, inner, ki);
+      cv.bitwise_not(inner, inner);
+      cv.bitwise_and(lineArtMat, inner, lineArtMat);
+      blob.delete(); inner.delete(); ki.delete();
+    }
+    core.delete(); kb.delete();
+    removeSmall(cv, lineArtMat, (SPEC.minLine * SPEC.partLine * 1.2) / (s * s));
+    lineArt = contoursOf(cv, lineArtMat, px(0.25), 1).map((p) => p.map(toMM));
+  }
+
   // Parts: one per labeled SAM mask, cleaned up and deduplicated.
   const parts = [];
   const fgArea = countOnes(analysis.fg);
@@ -73,19 +100,30 @@ export function buildLayout(cv, analysis, opts = {}) {
   const insetKer = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2 * inset + 1, 2 * inset + 1));
   for (const p of parts) {
     p.outline = p.whole || p.areaMM < 25 ? [] : contoursOf(cv, p.mat, px(0.9)).filter((c) => perimeter(c) * s >= SPEC.minLine * 0.6).map((c) => c.map(toMM));
+    if (lineArt.length) p.outline = []; // the original's own lines replace blobby mask outlines
     if (p.texture != null) {
       const er = new cv.Mat();
       cv.erode(p.mat, er, insetKer);
+      if (lineArtMat) {
+        // Keep a blank gap between textures and the structure lines.
+        const gap = new cv.Mat();
+        cv.dilate(lineArtMat, gap, insetKer);
+        cv.bitwise_not(gap, gap);
+        cv.bitwise_and(er, gap, er);
+        gap.delete();
+      }
       p.fill = contoursOf(cv, er, px(0.4)).map((c) => c.map(toMM));
       er.delete();
     }
   }
   insetKer.delete();
   fgMat.delete();
+  lineArtMat?.delete();
 
   // Occupancy grid (2 cells/mm) of drawn ink, used to keep braille 3 mm clear of lines.
   const grid = new Grid(pageW, pageH, 2);
   for (const poly of silhouette) grid.strokePoly(poly, SPEC.outline / 2 + SPEC.clearance);
+  for (const poly of lineArt) grid.fillPoly(poly, SPEC.clearance);
   for (const p of parts) {
     for (const poly of p.outline) grid.strokePoly(poly, SPEC.partLine / 2 + SPEC.clearance);
     if (p.fill) for (const poly of p.fill) grid.fillPoly(poly, SPEC.clearance);
@@ -143,6 +181,7 @@ export function buildLayout(cv, analysis, opts = {}) {
   return {
     pageW, pageH, s, ox, oy, margin, title,
     silhouette,
+    lineArt,
     parts: parts.map(({ mat, ...p }) => p),
     labels: placed,
     keyEntries,
@@ -182,7 +221,7 @@ function iouMat(cv, a, b) {
 }
 
 // Contours (outer + holes) simplified with Douglas–Peucker then Chaikin-smoothed.
-function contoursOf(cv, m, eps) {
+function contoursOf(cv, m, eps, smooth = 2) {
   const cs = new cv.MatVector(), h = new cv.Mat();
   const tmp = m.clone();
   cv.findContours(tmp, cs, h, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE);
@@ -190,10 +229,10 @@ function contoursOf(cv, m, eps) {
   for (let i = 0; i < cs.size(); i++) {
     const c = cs.get(i);
     const ap = new cv.Mat();
-    cv.approxPolyDP(c, ap, Math.max(0.8, eps), true);
+    cv.approxPolyDP(c, ap, Math.max(0.6, eps), true);
     const pts = [];
     for (let j = 0; j < ap.rows; j++) pts.push([ap.data32S[j * 2], ap.data32S[j * 2 + 1]]);
-    if (pts.length >= 3) out.push(chaikin(chaikin(pts)));
+    if (pts.length >= 3) { let q = pts; for (let k = 0; k < smooth; k++) q = chaikin(q); out.push(q); }
     c.delete(); ap.delete();
   }
   cs.delete(); h.delete(); tmp.delete();

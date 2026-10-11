@@ -94,6 +94,15 @@ export function correctLabel(text) {
   return { text: out, changed };
 }
 
+// A line that is already a complete science term on its own ("Nucleus", "Nuclear pore").
+export function isKnownLabel(text) {
+  const t = text.toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  if (PHRASES.includes(t)) return true;
+  const words = t.split(' ');
+  return words.length <= 3 && words.every((w) => SET.has(w)) && !(words.length === 1 && ['left', 'right', 'superior', 'inferior', 'upper', 'lower', 'inner', 'outer', 'main', 'free', 'smooth', 'rough', 'secondary', 'primary', 'pulmonary', 'nuclear', 'volcanic', 'mitral', 'aortic', 'tricuspid'].includes(w)));
+}
+
 export function isPhrase(text) {
   return PHRASES.includes(text.toLowerCase().replace(/\s+/g, ' ').trim());
 }
