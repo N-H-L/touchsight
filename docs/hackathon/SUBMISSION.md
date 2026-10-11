@@ -35,7 +35,7 @@ Upload a labeled diagram or pick a sample. In 10–30 seconds TouchSight:
 Everything runs **in the browser**: PaddleOCR (ONNX), SlimSAM via transformers.js/ONNX Runtime, OpenCV.js and three.js. There's no server, no uploads and no API bill, so it is free and private for schools. A Playwright harness scores the real app on 16 Wikimedia Commons diagrams.
 
 ## Results (same checker for every method)
-- **Fragments too short to feel (<12.5 mm):** 15, vs 763 for edge tracing, or 336 for edge tracing with the print text erased first.
+- **Fragments too short to feel (<12.5 mm):** 14, vs 763 for edge tracing, or 336 for edge tracing with the print text erased first.
 - **Figure area where lines crowd closer than 3 mm:** 1.0% vs 6.4% (4.8% with text erased).
 - **Labels:** 98% of hand-counted labels found, and every one becomes braille.
 
