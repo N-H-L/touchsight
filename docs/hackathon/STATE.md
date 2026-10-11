@@ -1,6 +1,6 @@
 # STATE
 
-Updated: 2026-10-11 evening SGT.
+Updated: 2026-10-11 ~18:30 SGT.
 
 **Hard deadline: Sun Oct 11 23:59 EDT = Mon Oct 12 11:59 SGT.** Internal target: submit by Mon 09:00 SGT.
 Time check: `python -c "from datetime import *; n=datetime.now(timezone.utc); print(datetime(2026,10,12,3,59,tzinfo=timezone.utc)-n)"`. Git Bash's `TZ=` conversion is unreliable on this machine.
@@ -31,10 +31,17 @@ Stage 2+: applying user feedback (received ~06:55 SGT). The live site is updated
 ## Feedback round 4 (user preferred the faithful edge-traced look, plus braille)
 - [x] Outline style option: Detailed (default) = Canny edges, text + leaders erased, specks <4 mm dropped, 0.8 mm lines; Simplified = lineart.js tracer with 3 mm merge. Eval for both in EVIDENCE/README. Live verified.
 
+## Stage 3 finish (11 Oct ~16:10-18:30 SGT)
+- [x] Devpost rechecked 16:10 SGT: no updates; deadline Oct 12 12:00am EDT; 497 participants.
+- [x] Independent judge review (subagent). Fixed: SAM now shapes the default output (bold named-part edges); "Leff Atrium" phrase repair; no green ticks on empty pages; no-label hint; docs reconciled; sources, prior work and three.js credit added; precomputed licence note; write-up 467 words.
+- [x] Not fixed (accepted): many 2-letter keys on dense diagrams; Detailed has more close lines than Simplified (documented).
+- [x] Edge-case QA on live (scripts/edge.mjs): all pass, 0 page errors.
+- [x] Video: C:/Users/Admin/Videos/touchsight-demo.mp4 (2:10, 1080p, captions, waits shortened and disclosed), made with scripts/record.mjs + ffmpeg (imageio-ffmpeg in the scratch venv).
+- [x] Thumbnail: docs/hackathon/thumbnail.png. Pitch notes: docs/hackathon/PITCH.md.
+
 ## Next actions
-1. Get the user's review of the new build. 
-2. Re-check the video script against the new UI (SUBMISSION.md).
-3. The user records the video and submits. Hard deadline Mon 11:59 SGT.
+1. User: watch the video, upload it to YouTube as Public, then submit on Devpost (SUBMISSION.md checklist) by Mon 09:00 SGT (hard deadline 11:59).
+2. After submission: record the Devpost URL here.
 
 ## Commands
 - `npm run vendor`: fetch runtimes + models into app/ (gitignored)
