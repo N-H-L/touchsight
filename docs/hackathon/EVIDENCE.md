@@ -2,8 +2,22 @@
 
 This file records only claims backed by an actual test or measurement, with the commit or artifact that was checked.
 
+## Claim-to-evidence map (final, 11 Oct evening SGT)
+Environment for all measurements: Windows 11, i9-14900KF, headless Chromium (Playwright), CPU/WASM only; 16 Wikimedia Commons diagrams (10 with hand-counted labels). Small sample; not a user study.
+
+| Criterion / requirement | Feature | How a judge can observe it | Evidence | Remaining limitation |
+|---|---|---|---|---|
+| Technical execution | In-browser pipeline: PaddleOCR (ONNX), leader tracing (Hough + chaining), SlimSAM in a worker, mm layout, UEB braille, STL | Live site → any sample; "What the AI saw" tab | `npm run eval` table below; edge-case QA `scripts/edge.mjs` (corrupt file, wrong type, unlabeled image, all options, all 3 downloads, phone width) passed on live, 0 page errors | First run downloads ~90 MB; 10–50 s per diagram on CPU |
+| Image AI is core | OCR finds labels; SAM masks (prompted at leader tips) decide which edges are bold; textures fill SAM parts | Tactile view: bold edges around named parts, explained in the legend; "What the AI saw" shows each SAM mask | Without OCR there are no labels/braille; without SAM there is no bold hierarchy or textures (`tactile.js` `namedPartBands`) | Edges themselves come from Canny (Detailed) or colour regions (Simplified), not from a generative model |
+| Accuracy of label reading | PaddleOCR + vocabulary/phrase repair | Label list shows "auto-corrected …" | 148/151 hand-counted labels (98%), `scripts/recall.mjs`; heart 14/14 with "Leff Atrium" → "Left Atrium" (live, 11 Oct ~17:45) | 3 long multi-line labels missed; can't add a missed label by hand |
+| Better than a simple baseline | Text removal, braille, speck removal, line hierarchy | "vs. edge tracing" tab + Guideline check | 233/233 print labels traced as squiggles by edge tracing vs none; short fragments 66 (Detailed) / 14 (Simplified) vs 763 raw / 336 text-erased | Detailed still has 3.5% of figure area with lines < 3 mm apart (Simplified 1.0%) |
+| BANA-derived layout | 3 mm clearance, Spec 800 dots, keys, leader rules | Key page tab; Guideline check | 165/232 (71%) braille labels with full 3 mm clearance (Detailed) | Automated proxy checks only; not reviewed by a certified transcriber; no swell-paper print |
+| Usefulness | Teacher review and export | Edit/merge/remove labels; Download SVG/key/STL | Downloads verified on live (`scripts/edge.mjs`) | Not tested with teachers or blind readers |
+| Deliverables | Public repo, video ≤3 min, ≤500-word write-up, citations, AI disclosure | GitHub; SUBMISSION.md | Repo public; all commits after the window opened; write-up 467 words; video 2:10 (`touchsight-demo.mp4`); README credits + AI disclosure | YouTube upload and Devpost submission are done by the user |
+
 | Date (SGT) | Claim | How verified | Commit/artifact |
 |---|---|---|---|
+| 2026-10-11 17:45 | Live (commit after docs pass): heart 14/14 with auto-correction "Leff Atrium → Left Atrium"; bold named-part edges; edge cases pass with 0 page errors | `scripts/edge.mjs`, `scripts/shot.mjs`, `scripts/record.mjs` | live Pages deploy |
 | 2026-10-11 04:15 | RTX 4080 16 GB available; CUDA wheels exist for Python 3.14 | `nvidia-smi`; download.pytorch.org cu128 index | — |
 | 2026-10-11 06:00 | OCR + leader tracing + SlimSAM run fully in-browser (headless Chromium, WASM, no GPU) | `node scripts/lab.mjs heart volcano` | 99cb32f |
 | 2026-10-11 08:05 | Live site https://n-h-l.github.io/touchsight/ runs the heart sample end to end in a fresh headless Chromium: 19.2 s including model download | `BASE=https://n-h-l.github.io/touchsight node scripts/shot.mjs heart` | Pages run 38090885517 (commit 1a8c498) |

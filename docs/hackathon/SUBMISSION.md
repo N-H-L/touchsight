@@ -48,38 +48,46 @@ These are automated checks, not a qualified transcriber. It has not been tested 
 
 ---
 
-## Video (≤3:00, aim for 2:30–2:50)
+## Video (ready): `C:\Users\Admin\Videos\touchsight-demo.mp4`
+- 2:10, 1920×1080, H.264, no audio (captions on screen). It is a real screen capture of the live site (recorded by `scripts/record.mjs` with headless Chromium). The only edits: captions/title cards are overlaid, and three processing waits are shortened. On-screen captions say "processing shortened".
+- Optional: add your own voice in Clipchamp (Windows) by reading the captions. Not required.
+- Upload to YouTube with visibility **Public** (not Unlisted, not Private).
 
-**Record:**
-- Windows: **Win + Alt + R** (Xbox Game Bar) records the active window. Or use OBS.
-- Use Chrome, full screen (F11), zoom 100%, on the live site.
-- Run every sample once **before** recording so the models are cached and each run takes ~10–15 s.
-- Record the voiceover separately if that's easier, then combine in Clipchamp (built into Windows).
-- **Upload:** YouTube, visibility **Public**. Check that the length is under 3:00.
+**YouTube title:** TouchSight: textbook diagrams to tactile graphics with braille (Banana Hacks 2026)
 
-| Time | Screen | Say (roughly) |
-|---|---|---|
-| 0:00–0:15 | The original heart diagram (Original view) | "This is a heart diagram from a biology class. A blind student can't use it, until a teacher spends hours redrawing it by hand as a tactile graphic." |
-| 0:15–0:30 | Empty state, then click **Try it on a heart diagram**; the spinner runs | "TouchSight does that first draft in seconds, entirely in the browser. Nothing is uploaded, so it's free and private for schools." |
-| 0:30–0:55 | **What the AI saw** tab; hover labels 1→4 in the list so each part lights up | "First it reads the diagram's own labels. Then it follows every leader line to its tip, and uses that tip to prompt Segment Anything, so it segments exactly the parts the author named. In-figure labels like Right Atrium are handled too." |
-| 0:55–1:20 | **Tactile graphic** tab; switch **Overlay** → **Tactile** | "Then it redraws for touch, following the braille authority's guidelines: bold outlines traced from the diagram itself, real braille with letter keys when a word doesn't fit, and three millimetres of space so fingers can tell things apart." |
-| 1:20–1:35 | Right rail: point at an auto-corrected label, then edit one label's text and show the braille updating | "OCR slips are fixed automatically, and the teacher stays in control: edit any label and the braille updates instantly." |
-| 1:35–1:55 | **vs. edge tracing** tab, then the Guideline check table | "Compare with just tracing the picture: every word becomes raised blobs. Across 16 diagrams, TouchSight left 14 fragments too small to feel; tracing left 763." |
-| 1:55–2:20 | **3D relief** tab, light sweeping; drag to tilt | "Here's how it will feel. The same file exports for swell paper, or as an STL to 3D print." |
-| 2:20–2:35 | Click the **Volcano** sample, show its result quickly | "It works across biology and earth-science diagrams." |
-| 2:35–2:50 | README or the Tactile view | "Next we want to test it with blind students and their teachers. TouchSight: diagrams everyone can read." |
+**YouTube description (paste):**
+TouchSight turns a labeled science diagram into a first-draft tactile graphic with braille labels, entirely in the browser (PaddleOCR + Segment Anything + OpenCV.js + three.js). Built solo for Banana Hacks 2026.
+Live demo: https://n-h-l.github.io/touchsight/
+Code: https://github.com/N-H-L/touchsight
+Real screen capture of the live site; processing waits shortened. Built with help from Claude Code (AI disclosure).
+Diagrams: "Diagram of the human heart" by Wapcaplet (CC BY-SA 3.0) and the volcano diagram from Wikimedia Commons; full credits in app/samples/CREDITS.md in the repo.
+
+| Time (approx.) | Scene |
+|---|---|
+| 0:00–0:15 | Title card, then the problem card (10-hour transcription, sources) |
+| 0:15–0:30 | Empty state, then the heart sample runs (loading steps visible) |
+| 0:30–0:45 | Original vs Tactile; caption explains the bold edges of named parts while labels are hovered |
+| 0:45–1:00 | Overlay; "What the AI saw" with segmented parts |
+| 1:00–1:12 | Auto-corrected "Leff Atrium" → "Left Atrium"; editing a label updates the braille |
+| 1:12–1:30 | vs. edge tracing; Guideline check; Key page |
+| 1:30–1:40 | 3D relief under raking light (SVG / STL export) |
+| 1:40–1:50 | Volcano sample |
+| 1:50–2:10 | "How it was built" card (inspiration, design, resources), then the results card with limitations and links |
+
+**Thumbnail:** `docs/hackathon/thumbnail.png` (1500×1000). The heart is by Wapcaplet (CC BY-SA 3.0).
 
 ---
 
 ## Your checklist (things only you can do)
-1. [ ] Watch the live site once and tell Claude about anything wrong (optional).
-2. [ ] Record the video with the script above. Upload to YouTube as **Public**. Copy the link.
-3. [ ] Devpost: open the hackathon, then **Enter a submission / Create project**:
-   - name, tagline, description (paste from above)
-   - "Built with" tags
-   - try-it links (live site + GitHub)
+1. [ ] Watch `C:\Users\Admin\Videos\touchsight-demo.mp4` once.
+2. [ ] Upload it to YouTube as **Public**, using the title and description above. Copy the link.
+3. [ ] Devpost: open https://banana-hacks-1111.devpost.com/ and use **Join hackathon / Enter a submission**:
+   - name **TouchSight**, the tagline, "Built with" tags
+   - description: paste everything from "## Inspiration" to the AI disclosure
+   - links: live site + GitHub
    - YouTube link
+   - thumbnail `docs/hackathon/thumbnail.png`
    - team: just you
-4. [ ] Upload a thumbnail image. Claude can produce one: `eval-out/qa-heart-relief.png` or a fresh screenshot.
-5. [ ] Answer any eligibility questions truthfully (age 18, student) and **Submit**. The rules say website submissions are "preferred", so also check bananahacks.tech for a submission form.
-6. [ ] Tell Claude when it's submitted so the docs record it.
+4. [ ] Answer the eligibility questions truthfully (18, enrolled student) and press **Submit** before **Mon 12 Oct, 11:59 SGT** (aim for 09:00).
+5. [ ] Check Discord / bananahacks.tech for any separate submission form, and use the same text if there is one.
+6. [ ] Tell Claude when it's submitted.
