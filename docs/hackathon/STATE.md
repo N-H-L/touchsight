@@ -1,6 +1,6 @@
 # STATE
 
-Updated: 2026-10-11 ~18:30 SGT.
+Updated: 2026-10-12 ~04:20 SGT.
 
 **Hard deadline: Sun Oct 11 23:59 EDT = Mon Oct 12 11:59 SGT.** Internal target: submit by Mon 09:00 SGT.
 Time check: `python -c "from datetime import *; n=datetime.now(timezone.utc); print(datetime(2026,10,12,3,59,tzinfo=timezone.utc)-n)"`. Git Bash's `TZ=` conversion is unreliable on this machine.
@@ -39,9 +39,15 @@ Stage 2+: applying user feedback (received ~06:55 SGT). The live site is updated
 - [x] Video: C:/Users/Admin/Videos/touchsight-demo.mp4 (2:10, 1080p, captions, waits shortened and disclosed), made with scripts/record.mjs + ffmpeg (imageio-ffmpeg in the scratch venv).
 - [x] Thumbnail: docs/hackathon/thumbnail.png. Pitch notes: docs/hackathon/PITCH.md.
 
+## SUBMITTED (Mon 12 Oct ~04:20 SGT)
+- Devpost: https://devpost.com/software/touchsight-nc967a ("Submitted to Banana Hacks"; verified public: About text with AI disclosure, Built With tags, both links, 6 gallery images + thumbnail, video embedded).
+- Video (user's own voiceover, 2:59, Public): https://youtu.be/nWTViDgIyHM
+- Judge zip uploaded: touchsight-submission.zip (git archive of the repo incl. JUDGES.md).
+
 ## Next actions
-1. User: watch the video, upload it to YouTube as Public, then submit on Devpost (SUBMISSION.md checklist) by Mon 09:00 SGT (hard deadline 11:59).
-2. After submission: record the Devpost URL here.
+1. Keep the live site stable: no risky pushes during judging (Oct 12 09:00-17:00 EDT = Mon 21:00 to Tue 05:00 SGT). Winners: Oct 12 18:00-19:00 EDT = Tue 06:00-07:00 SGT.
+2. User: register on bananahacks.tech if still possible (or email team@bananahacks.tech with the Devpost link).
+3. If a winner demo call happens, use docs/hackathon/PITCH.md.
 
 ## Commands
 - `npm run vendor`: fetch runtimes + models into app/ (gitignored)
