@@ -95,10 +95,14 @@ export function linesToLabels(lines) {
       const phrase = isPhrase(`${a.lines.map((l) => l.text).join(' ')} ${b.lines.map((l) => l.text).join(' ')}`);
       if (a.leader && b.leader && !phrase && !sameLeader(a.leader, b.leader, h)) continue;
       if (a.lines.length + b.lines.length > 3) continue;
-      // Stacked list of separate labels ("Nucleus" / "Nuclear pore" / "Chromatin"):
-      // two lines that are each a complete term stay apart unless they form a phrase.
       const at = a.lines.map((l) => l.text).join(' '), bt = b.lines.map((l) => l.text).join(' ');
-      if (!phrase && !/^\(/.test(bt) && isKnownLabel(at) && isKnownLabel(bt)) continue;
+      const continuation = phrase || /^\(/.test(bt) || (at.split('(').length > at.split(')').length);
+      // A column of 3+ evenly stacked lines is a list of separate labels
+      // ("Nucleus" / "Nuclear pore" / "Chromatin"); an isolated pair is one label.
+      if (!continuation && inColumn(items, a, b, h)) {
+        const lowerCont = /^[a-z]/.test(bt) && /^[A-Z]/.test(at) && !isKnownLabel(bt);
+        if (!lowerCont) continue;
+      }
       items[i] = {
         lines: [...a.lines, ...b.lines], leader: longer(a.leader, b.leader),
         x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1),
@@ -112,6 +116,15 @@ export function linesToLabels(lines) {
     text: it.lines.map((l) => l.text).join(' ').replace(/\s+/g, ' ').trim(),
     x0: it.x0, y0: it.y0, x1: it.x1, y1: it.y1, leader: it.leader ?? null, lines: it.lines,
   }));
+}
+
+// Is there another line stacked directly above `a` or below `b` with a similar gap?
+function inColumn(items, a, b, h) {
+  const gap = b.y0 - a.y1;
+  const near = (x, y) => Math.abs(x.x0 - y.x0) < 1.2 * h || Math.abs(x.x1 - y.x1) < 1.2 * h || Math.abs((x.x0 + x.x1) / 2 - (y.x0 + y.x1) / 2) < 1.2 * h;
+  return items.some((c) => c !== a && c !== b && (
+    (near(c, a) && Math.abs((a.y0 - c.y1) - gap) < 0.6 * h && a.y0 - c.y1 > -0.3 * h) ||
+    (near(c, b) && Math.abs((c.y0 - b.y1) - gap) < 0.6 * h && c.y0 - b.y1 > -0.3 * h)));
 }
 
 const len = (l) => Math.hypot(l.x2 - l.x1, l.y2 - l.y1);
