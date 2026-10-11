@@ -72,8 +72,12 @@ function matchCase(src, word) {
 // Returns { text, changed } with close OCR misspellings replaced. `conf` (0-100) is
 // Tesseract's word confidence: confident words are never changed.
 export function correctWord(tok, conf = 0) {
-  if (conf >= 90) return tok;
-  return correctLabel(tok).text;
+  if (conf < 90) return correctLabel(tok).text;
+  // Even confident reads get a one-letter fix ("Leff" -> "Left") for longer unknown words.
+  const w = tok.replace(/[^A-Za-z]/g, '').toLowerCase();
+  if (w.length < 4 || SET.has(w) || STOP.has(w)) return tok;
+  const out = correctLabel(tok).text;
+  return lev(out.replace(/[^A-Za-z]/g, '').toLowerCase(), w, 1) <= 1 ? out : tok;
 }
 
 export function correctLabel(text) {

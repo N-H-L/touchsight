@@ -42,27 +42,36 @@ export function buildLayout(cv, analysis, opts = {}) {
   // raisable 1 mm, with fragments too small to identify by touch removed.
   let lineArtMat = null, lineArt = [];
   if (analysis.lineArt && opts.lineArt !== false) {
-    lineArtMat = maskToMat(cv, analysis.lineArt, W, H);
-    const lw = Math.max(1, Math.round(px(SPEC.partLine))) | 1;
-    const kk = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(lw, lw));
-    cv.dilate(lineArtMat, lineArtMat, kk);
-    kk.delete();
-    // Where many lines merge into a solid blob (> ~2.4 mm thick), keep only its outline:
-    // a solid raised patch can't be read by touch.
-    const r = Math.max(1, Math.round(px(1.2)));
-    const kb = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2 * r + 1, 2 * r + 1));
-    const core = new cv.Mat(); cv.erode(lineArtMat, core, kb);
-    if (cv.countNonZero(core)) {
-      const blob = new cv.Mat(); cv.dilate(core, blob, kb);
-      const ki = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(lw + 2, lw + 2));
-      const inner = new cv.Mat(); cv.erode(blob, inner, ki);
-      cv.bitwise_not(inner, inner);
-      cv.bitwise_and(lineArtMat, inner, lineArtMat);
-      blob.delete(); inner.delete(); ki.delete();
-    }
-    core.delete(); kb.delete();
-    removeSmall(cv, lineArtMat, (SPEC.minLine * SPEC.partLine * 1.2) / (s * s));
-    lineArt = contoursOf(cv, lineArtMat, px(0.25), 1).map((p) => p.map(toMM));
+    // Work on a page raster at 4 px/mm so every threshold below is in real millimetres.
+    const R = 4, f = s * R;
+    const ww = Math.max(1, Math.round(W * f)), wh = Math.max(1, Math.round(H * f));
+    const raw = maskToMat(cv, analysis.lineArt, W, H);
+    const work = new cv.Mat();
+    cv.resize(raw, work, new cv.Size(ww, wh), 0, 0, cv.INTER_AREA);
+    cv.threshold(work, work, 0, 255, cv.THRESH_BINARY);
+    raw.delete();
+    // Lines closer than 3 mm can't be told apart by touch: merge them, then thin to
+    // one centreline so the result is a single clean stroke.
+    const kc = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(SPEC.clearance * R) | 1, Math.round(SPEC.clearance * R) | 1));
+    cv.morphologyEx(work, work, cv.MORPH_CLOSE, kc);
+    kc.delete();
+    thin(work);
+    // Drop fragments shorter than the 12.5 mm minimum line length.
+    const lab = new cv.Mat(), st = new cv.Mat(), ce = new cv.Mat();
+    const n = cv.connectedComponentsWithStats(work, lab, st, ce, 8, cv.CV_32S);
+    const keep = new Uint8Array(n);
+    for (let c = 1; c < n; c++) keep[c] = Math.hypot(st.intAt(c, cv.CC_STAT_WIDTH), st.intAt(c, cv.CC_STAT_HEIGHT)) / R >= SPEC.minLine ? 1 : 0;
+    for (let q = 0; q < ww * wh; q++) if (work.data[q] && !keep[lab.data32S[q]]) work.data[q] = 0;
+    lab.delete(); st.delete(); ce.delete();
+    // Raise to a 1 mm line.
+    const kd = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(SPEC.partLine * R) | 1, Math.round(SPEC.partLine * R) | 1));
+    cv.dilate(work, work, kd);
+    kd.delete();
+    lineArt = contoursOf(cv, work, 0.6, 1).map((p) => p.map(([x, y]) => [ox + x / R, oy + y / R]));
+    // Image-resolution copy for keeping textures clear of the lines.
+    lineArtMat = new cv.Mat();
+    cv.resize(work, lineArtMat, new cv.Size(W, H), 0, 0, cv.INTER_NEAREST);
+    work.delete();
   }
 
   // Parts: one per labeled SAM mask, cleaned up and deduplicated.
@@ -270,6 +279,35 @@ function rectExitPoint(r, target, gap) {
   const t = Math.min(Math.abs(dx) > 1e-6 ? hw / Math.abs(dx) : Infinity, Math.abs(dy) > 1e-6 ? hh / Math.abs(dy) : Infinity);
   if (t >= 1) return null; // target is inside the clearance zone
   return [cx + dx * t, cy + dy * t];
+}
+
+// Zhang–Suen thinning (in place): reduces strokes to one-pixel centrelines.
+function thin(m) {
+  const w = m.cols, h = m.rows, a = m.data;
+  for (let i = 0; i < a.length; i++) a[i] = a[i] ? 1 : 0;
+  let pts = [];
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) if (a[y * w + x]) pts.push(y * w + x);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let pass = 0; pass < 2; pass++) {
+      const del = [];
+      for (const i of pts) {
+        if (!a[i]) continue;
+        const p2 = a[i - w], p3 = a[i - w + 1], p4 = a[i + 1], p5 = a[i + w + 1], p6 = a[i + w], p7 = a[i + w - 1], p8 = a[i - 1], p9 = a[i - w - 1];
+        const B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+        if (B < 2 || B > 6) continue;
+        const A = (!p2 && p3) + (!p3 && p4) + (!p4 && p5) + (!p5 && p6) + (!p6 && p7) + (!p7 && p8) + (!p8 && p9) + (!p9 && p2);
+        if (A !== 1) continue;
+        if (pass === 0 ? (p2 * p4 * p6 || p4 * p6 * p8) : (p2 * p4 * p8 || p2 * p6 * p8)) continue;
+        del.push(i);
+      }
+      for (const i of del) a[i] = 0;
+      if (del.length) changed = true;
+    }
+    pts = pts.filter((i) => a[i]);
+  }
+  for (let i = 0; i < a.length; i++) a[i] = a[i] ? 255 : 0;
 }
 
 class Grid {
