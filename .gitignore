@@ -5,3 +5,4 @@ app/models/
 *.log
 eval-out/
 test-results/
+.claude/
