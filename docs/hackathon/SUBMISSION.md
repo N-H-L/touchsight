@@ -11,45 +11,38 @@ Live: https://n-h-l.github.io/touchsight/ · Repo: https://github.com/N-H-L/touc
 
 **Tagline (≤200 chars):** Turn any labeled textbook diagram into a tactile graphic with braille labels, in under a minute, entirely in your browser.
 
-**Built with:** javascript, tesseract.js, segment-anything (slimsam), transformers.js, onnx-runtime-web, opencv.js, three.js, github-pages, playwright
+**Built with:** javascript, paddleocr, onnx-runtime-web, segment-anything (slimsam), transformers.js, opencv.js, three.js, tesseract.js, github-pages, playwright
 
 **Try it out:**
 - https://n-h-l.github.io/touchsight/
 - https://github.com/N-H-L/touchsight
 
-### Description (paste into "About the project"; under 500 words)
+### Description (paste into "About the project"; about 450 words)
 
 ## Inspiration
-Blind students learn biology from the same diagrams as everyone else, but only after a teacher redraws each one as a *tactile graphic*: clutter removed, print swapped for braille, lines at least 3 mm apart. A science assignment with graphics can take up to 10 hours to transcribe, and almost half of these teachers report no training in making tactile graphics. We wanted image AI to do the tedious 90% so teachers keep the judgement calls.
+Blind students learn from the same diagrams as everyone else, but only after a teacher or transcriber redraws each one as a *tactile graphic*: print swapped for braille, clutter removed, lines far enough apart for fingers. A science assignment with graphics can take up to 10 hours to transcribe, and in a 2023 survey almost half of these teachers had never been trained to make tactile graphics. I wanted image AI to do the tedious first draft so teachers keep the judgement calls.
 
 ## What it does
-Upload a labeled diagram or pick a sample. In 10–30 seconds TouchSight:
-1. **Reads the diagram's own labels** with an in-browser PaddleOCR text detector (98% of 151 hand-counted labels found), repairing slips like "Leff" → "Left".
-2. **Follows every leader line to the part it names.** This works even when the leader is dotted.
-3. **Segments that part with Segment Anything,** using the leader tip as the prompt. This *label-guided simplification* keeps exactly what the author thought worth naming and drops shading and decoration.
-4. **Lays out a page in real millimetres** following BANA tactile guidelines: outlines traced from the original (Detailed) or merged to 3 mm spacing (Simplified), optional textures instead of colours, Spec-800 braille dots, letter keys when a word won't fit, and 3 mm clearance.
-5. **Checks itself** with guideline measurements and lets the teacher fix any label.
-6. **Exports** a pure-black SVG for swell paper, a braille key page, or an **STL to 3D-print**. A 3D relief view shows how it will feel.
+Upload a labeled diagram or pick a sample. In about 10–50 seconds TouchSight:
+1. **Reads the labels** with PaddleOCR running in the browser (148 of 151 hand-counted labels found on 10 diagrams) and repairs slips like "Leff Atrium" → "Left Atrium".
+2. **Follows each leader line to the part it names,** even dotted ones.
+3. **Segments that part with Segment Anything,** prompted at the leader's tip.
+4. **Redraws the page for touch:** traces the original's lines with the print text removed, raises the edges of every *labeled* part bold so readers can find what was named, and lays out real braille (Spec 800 dot sizes, letter keys when a word won't fit, 3 mm clearance) following the BANA tactile guidelines. A Simplified style merges lines closer than 3 mm.
+5. **Checks itself** against those guidelines and lets the teacher fix any label.
+6. **Exports** a pure-black SVG for swell paper, a braille key page, or an STL to 3D-print. A 3D relief view shows how it will feel.
 
-## How we built it
-Everything runs **in the browser**: PaddleOCR (ONNX), SlimSAM via transformers.js/ONNX Runtime, OpenCV.js and three.js. There's no server, no uploads and no API bill, so it is free and private for schools. A Playwright harness scores the real app on 16 Wikimedia Commons diagrams.
+## How I built it
+Everything runs **in the browser**: PaddleOCR on ONNX Runtime Web, SlimSAM through transformers.js in a worker, OpenCV.js and three.js. No server, uploads or API bill, so it is free and private for schools. A Playwright harness scores the real app on 16 Wikimedia Commons diagrams.
 
 ## Results (same checker for every method)
-- **Print text:** edge tracing turns all 233 print labels into raised squiggles; TouchSight removes them and puts every label in braille.
-- **Fragments too short to feel (<12.5 mm), Simplified style:** 14, vs 763 for edge tracing, or 336 for edge tracing with the print text erased first.
-- **Figure area where lines crowd closer than 3 mm:** 1.0% vs 6.4% (4.8% with text erased).
-- **Labels:** 98% of hand-counted labels found, and every one becomes braille.
+- Plain edge tracing turns all 233 print labels into raised squiggles; TouchSight removes them and places 232 as braille.
+- Fragments too short to feel: 66 (Detailed) or 14 (Simplified), vs 763 for edge tracing and 336 for edge tracing with text erased.
 
-## Challenges and lessons
-- Dotted leader lines.
-- Labels printed *on* the drawing.
-- OCR on coloured fills.
-- Braille being ~3× wider than print.
+## Challenges
+Dotted leaders, labels printed on the drawing, OCR on coloured fills, and braille being about three times wider than print.
 
-Tactile design is mostly about what to leave out, and segmentation becomes useful when the diagram itself says where to look.
-
-## Limitations and what's next
-These are automated checks, not a replacement for a qualified transcriber. We haven't yet tested with blind readers or on physical swell paper, and that comes next. Labels are uncontracted braille, and OCR misses some labels that can't be added by hand yet. Next: contracted UEB, click-to-add parts, and generative redraws of unlabeled photos.
+## Limitations and next steps
+These are automated checks, not a qualified transcriber. It has not been tested with blind readers or on physical swell paper; that comes next. Braille is uncontracted, and a label OCR misses can't be added by hand yet. Prior work (UW's Tactile Graphics Assistant, 2007) replaced text with braille; TouchSight adds leader-to-part tracing and label-prompted segmentation.
 
 **AI disclosure:** built with extensive help from Claude Code (Anthropic) for research, code and docs. The product itself uses only the open models listed, running locally.
 

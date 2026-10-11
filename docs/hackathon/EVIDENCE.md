@@ -40,26 +40,28 @@ Totals over 16 samples: print labels left as raised text 11 (TouchSight) vs 233 
 ### Detailed outline style (default since 11 Oct evening)
 The table above is the Simplified style.
 
+Re-run 11 Oct ~17:30 SGT with the label-guided line hierarchy (bold edges along each labeled part's SAM mask) and whole-label phrase repair. Local server, headless Chromium, i9-14900KF.
+
 | Sample | Cat. | Labels found | Braille labels | Print-label spots still marked (TS / edge) | Lines <3 mm, % of figure (TS / edge / edge−text) | Short fragments (TS / edge / edge−text) | Braille clear 3 mm | Run time (s) |
 |---|---|---|---|---|---|---|---|---|
-| animal-cell | bio | 22 | 22 | 0 / 22 | 4 / 5.3 / 4.2 | 14 / 52 / 46 | 13/22 | 12.1 |
-| heart | bio | 14 of 14 | 14 | 0 / 14 | 6 / 8.6 / 6.6 | 2 / 4 / 1 | 11/14 | 11.1 |
-| flower | bio | 17 | 17 | 0 / 17 | 3.4 / 5 / 3.8 | 1 / 20 / 4 | 11/17 | 10.2 |
-| eye | bio | 22 | 22 | 2 / 22 | 5.9 / 8.8 / 6.3 | 7 / 13 / 8 | 15/22 | 13.7 |
-| ear | bio | 13 | 13 | 0 / 13 | 5.4 / 9.3 / 6.3 | 3 / 105 / 1 | 11/13 | 9.8 |
-| mitochondrion | bio | 9 | 9 | 0 / 9 | 3.3 / 4.9 / 4.2 | 15 / 60 / 38 | 6/9 | 8.2 |
-| tooth | bio | 11 | 11 | 0 / 11 | 9.5 / 11.1 / 10.7 | 10 / 69 / 53 | 11/11 | 9.0 |
-| earth-layers | earth | 13 | 13 | 1 / 13 | 1 / 4.3 / 1.3 | 4 / 102 / 12 | 11/13 | 9.2 |
-| volcano | earth | 12 of 13 | 12 | 0 / 12 | 2.1 / 4 / 2.5 | 4 / 101 / 11 | 12/12 | 8.9 |
+| animal-cell | bio | 22 | 22 | 0 / 22 | 3 / 5.3 / 4.2 | 3 / 52 / 46 | 13/22 | 12.9 |
+| heart | bio | 14 of 14 | 14 | 0 / 14 | 5.1 / 8.6 / 6.6 | 1 / 4 / 1 | 9/14 | 12.3 |
+| flower | bio | 17 | 17 | 0 / 17 | 2.7 / 5 / 3.8 | 1 / 20 / 4 | 11/17 | 10.4 |
+| eye | bio | 22 | 22 | 2 / 22 | 5.1 / 8.8 / 6.3 | 7 / 13 / 8 | 15/22 | 19.1 |
+| ear | bio | 13 | 13 | 0 / 13 | 3.7 / 9.3 / 6.3 | 1 / 105 / 1 | 11/13 | 17.3 |
+| mitochondrion | bio | 9 | 9 | 0 / 9 | 2.2 / 4.9 / 4.2 | 3 / 60 / 38 | 6/9 | 11.0 |
+| tooth | bio | 11 | 11 | 0 / 11 | 8.6 / 11.1 / 10.7 | 7 / 69 / 53 | 11/11 | 13.2 |
+| earth-layers | earth | 13 | 13 | 1 / 13 | 0.8 / 4.3 / 1.3 | 1 / 102 / 12 | 11/13 | 18.0 |
+| volcano | earth | 12 of 13 | 12 | 0 / 12 | 1.8 / 4 / 2.5 | 2 / 101 / 11 | 12/12 | 9.8 |
 | ohms-law-circuit | physics | 0 | 0 | 0 / 0 | 0.6 / 1.9 / 1.9 | 1 / 2 / 2 | 0/0 | 5.7 |
-| pulley-lever | physics | 3 | 3 | 0 / 3 | 2 / 2.8 / 2.7 | 5 / 12 / 6 | 3/3 | 7.1 |
-| australia-states | map | 29 | 28 | 7 / 29 | 1.9 / 4.6 / 3.6 | 2 / 37 / 36 | 11/28 | 16.3 |
-| solar-system | chart | 2 | 2 | 0 / 2 | 2.8 / 3.2 / 3.1 | 17 / 27 / 31 | 2/2 | 6.5 |
-| plant-cell | stress | 24 | 24 | 0 / 24 | 6.5 / 7.8 / 5.7 | 6 / 18 / 9 | 17/24 | 12.9 |
-| water-cycle-usgs | stress | 19 | 19 | 0 / 19 | 6.5 / 12.7 / 8 | 19 / 81 / 53 | 14/19 | 11.1 |
-| skin-layers | stress | 23 | 23 | 1 / 23 | 6.3 / 8.4 / 5.6 | 9 / 60 / 25 | 20/23 | 13.6 |
+| pulley-lever | physics | 3 | 3 | 0 / 3 | 1.5 / 2.8 / 2.7 | 3 / 12 / 6 | 3/3 | 9.4 |
+| australia-states | map | 29 | 28 | 4 / 29 | 1.9 / 4.6 / 3.6 | 5 / 37 / 36 | 12/28 | 17.7 |
+| solar-system | chart | 2 | 2 | 0 / 2 | 2.7 / 3.2 / 3.1 | 15 / 27 / 31 | 2/2 | 7.6 |
+| plant-cell | stress | 24 | 24 | 0 / 24 | 5.7 / 7.8 / 5.7 | 4 / 18 / 9 | 17/24 | 17.0 |
+| water-cycle-usgs | stress | 19 | 19 | 0 / 19 | 4.9 / 12.7 / 8 | 8 / 81 / 53 | 15/19 | 14.9 |
+| skin-layers | stress | 23 | 23 | 1 / 23 | 5.3 / 8.4 / 5.6 | 4 / 60 / 25 | 17/23 | 15.4 |
 
-Totals over 16 samples: print labels left as raised text 11 (TouchSight) vs 233 (edge tracing) of 233; short fragments 119 vs 763; short fragments vs text-erased tracing 119 vs 336; mean narrow-gap area 4.2% vs 6.4% (text-erased tracing 4.8%); braille labels with 3 mm clearance 168 of 232.
+Totals over 16 samples: print labels left as raised text 8 (TouchSight) vs 233 (edge tracing) of 233; short fragments 66 vs 763; short fragments vs text-erased tracing 66 vs 336; mean narrow-gap area 3.5% vs 6.4% (text-erased tracing 4.8%); braille labels with 3 mm clearance 165 of 232.
 
 ### Label recall vs hand-counted ground truth (app/samples/labels_truth.json)
 | Sample | True labels | Found (matched) | Recall | Extra detections | Missed |
@@ -83,7 +85,8 @@ Overall recall: 148 of 151 (98%)
 - **Braille clearance:** 172 of 231 placed labels (74%) keep ≥3 mm from all lines and textures (textures now off by default). The rest sit on knockouts or in crowded areas; this is the main open improvement.
 - **Outlines (11 Oct, after user feedback):** the outline tracer now uses colour-region boundaries (k-means, specks merged, kept only where colour steps sharply so shading bands drop out) plus thin drawn strokes. Part textures snap to those regions and are off by default because users read them as clutter.
 - **Coverage:**
-  - OCR finds no labels on 3 samples (ohms-law-circuit: single-letter math symbols; pulley-lever: math symbols; solar-system: white rotated text on black). Those outputs contain outlines only.
-  - Some in-figure labels on colored fills are missed (e.g. heart: Left/Right Atrium/Ventricle).
-  - Some OCR text needs teacher correction ("Pulmonary ein", "Right Atriym").
+  - Diagrams labeled only with math symbols or single letters (ohms-law-circuit, pulley-lever) get few or no labels; solar-system finds only 2. Those outputs are mostly outlines only.
+  - Recall misses are long multi-line labels (eye, tooth, plant cell; see the recall table). Heart in-figure labels are now all found (14/14).
+  - A few OCR slips remain for the teacher to fix in the label list. Whole-label repair against known terms fixes cases like "Leff Atrium" → "Left Atrium" and shows each repair.
+  - A label that cannot be placed anywhere on the page with clearance is dropped from the page (australia-states: 28 of 29 placed); the status line reports placed counts.
 - **Not validated with blind readers or TVIs, and no physical swell-paper print was tested.** The claims stay at "meets these automated checks".

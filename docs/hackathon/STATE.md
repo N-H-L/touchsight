@@ -28,11 +28,11 @@ Stage 2+: applying user feedback (received ~06:55 SGT). The live site is updated
 - [x] Textures snap to colour regions and are OFF by default (checkbox to enable).
 - [x] Eval: clearance 172/231 (74%), fragments 14, narrow gap 1.0%, recall 148/151. Live verified.
 
-## Feedback round 4 (user: "naive edge tracing is exactly what we want, just add braille")
+## Feedback round 4 (user preferred the faithful edge-traced look, plus braille)
 - [x] Outline style option: Detailed (default) = Canny edges, text + leaders erased, specks <4 mm dropped, 0.8 mm lines; Simplified = lineart.js tracer with 3 mm merge. Eval for both in EVIDENCE/README. Live verified.
 
 ## Next actions
-1. Get the user's review of the new build. Open issue: braille clearance is 61%.
+1. Get the user's review of the new build. 
 2. Re-check the video script against the new UI (SUBMISSION.md).
 3. The user records the video and submits. Hard deadline Mon 11:59 SGT.
 
