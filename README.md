@@ -19,7 +19,9 @@ A science assignment with graphics can take up to ~10 hours to transcribe. A 202
 1. **Reads the diagram's own labels.** PaddleOCR's text detector and recognizer run in the browser through ONNX Runtime, so they also catch small text and text printed on coloured fills. Tesseract is the fallback.
 2. **Follows each leader line to the part it names.** It builds a thin-stroke mask, finds probabilistic Hough segments, assigns them to labels, and chains broken or dotted leaders.
 3. **Segments that part.** The tip of each leader (or the area around an in-figure label) becomes a point prompt for **Segment Anything** (SlimSAM). This is *label-guided simplification*: the output keeps exactly the structures the diagram's author thought worth naming.
-4. **Redraws the structure for touch.** The diagram's own outlines are traced: sharp boundaries between colour regions (shading gradients are ignored) plus thin drawn strokes. Lines closer than 3 mm are merged and thinned to one centreline, and fragments under 12.5 mm are dropped.
+4. **Redraws the structure for touch,** in one of two outline styles:
+   - **Detailed (default):** every edge of the original is traced, with print text and leader lines removed and specks under 4 mm dropped. It looks like the original.
+   - **Simplified:** sharp boundaries between colour regions (shading ignored) plus thin drawn strokes. Lines closer than 3 mm are merged and thinned to one centreline, and fragments under 12.5 mm are dropped (BANA spacing).
 5. **Lays out a tactile page in millimetres,** following the BANA *Guidelines and Standards for Tactile Graphics* (2022):
    - a 1.5 mm silhouette, 1.0 mm part outlines, and 0.6 mm leader lines (always the thinnest line)
    - at most 5 textures, inset 1.5 mm from outlines
@@ -33,12 +35,16 @@ A science assignment with graphics can take up to ~10 hours to transcribe. A 202
 10. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
 
 ## Results (16 Wikimedia Commons diagrams, same checker for all)
-| | TouchSight | Edge tracing | Edge tracing with print text erased |
-|---|---|---|---|
-| Label recall vs hand-counted labels (10 diagrams, 151 labels) | **148 of 151 (98%)** | n/a | n/a |
-| Short fragments (< 12.5 mm, too small to identify by touch) | **14** | 763 | 336 |
-| Mean figure area where lines are < 3 mm apart | **1.0%** | 6.4% | 4.8% |
-| Braille labels with full 3 mm clearance | 172 of 231 (74%) | n/a | n/a |
+| | TouchSight Detailed (default) | TouchSight Simplified | Edge tracing | Edge tracing with print text erased |
+|---|---|---|---|---|
+| Label recall vs hand-counted labels (10 diagrams, 151 labels) | **148 of 151 (98%)** | same | n/a | n/a |
+| Print labels left as raised squiggles | **0 of 233** text traced | 0 | 233 of 233 | 0 |
+| Labels in braille | **every detected label** | same | none | none |
+| Short fragments (< 12.5 mm, too small to identify by touch) | 119 | **14** | 763 | 336 |
+| Mean figure area where lines are < 3 mm apart | 4.2% | **1.0%** | 6.4% | 4.8% |
+| Braille labels with full 3 mm clearance | 168 of 232 (72%) | 172 of 231 (74%) | n/a | n/a |
+
+Detailed keeps the original's look; Simplified follows BANA spacing more strictly. Teachers pick per diagram.
 
 Every detected label becomes braille, either as a full word or as a two-letter key. Per-diagram numbers, method and limitations are in [docs/hackathon/EVIDENCE.md](docs/hackathon/EVIDENCE.md) and [docs/hackathon/OCR_BENCH.md](docs/hackathon/OCR_BENCH.md). Reproduce with `npm run serve`, `npm run eval`, then `node scripts/recall.mjs`.
 
