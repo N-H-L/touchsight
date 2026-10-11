@@ -24,7 +24,7 @@ Blind students learn biology from the same diagrams as everyone else, but only a
 
 ## What it does
 Upload a labeled diagram or pick a sample. In 10–30 seconds TouchSight:
-1. **Reads the diagram's own labels.** OCR, with slips like "Atriym" → "Atrium" repaired.
+1. **Reads the diagram's own labels** with an in-browser PaddleOCR text detector (98% of 151 hand-counted labels found), repairing slips like "Leff" → "Left".
 2. **Follows every leader line to the part it names.** This works even when the leader is dotted.
 3. **Segments that part with Segment Anything,** using the leader tip as the prompt. This *label-guided simplification* keeps exactly what the author thought worth naming and drops shading and decoration.
 4. **Lays out a page in real millimetres** following BANA tactile guidelines: bold outlines, at most 5 textures instead of colours, Spec-800 braille dots, letter keys when a word won't fit, and 3 mm clearance.
@@ -32,12 +32,12 @@ Upload a labeled diagram or pick a sample. In 10–30 seconds TouchSight:
 6. **Exports** a pure-black SVG for swell paper, a braille key page, or an **STL to 3D-print**. A 3D relief view shows how it will feel.
 
 ## How we built it
-Everything runs **in the browser**: Tesseract.js, SlimSAM via transformers.js/ONNX Runtime, OpenCV.js and three.js. There's no server, no uploads and no API bill, so it is free and private for schools. A Playwright harness scores the real app on 16 Wikimedia Commons diagrams.
+Everything runs **in the browser**: PaddleOCR (ONNX), SlimSAM via transformers.js/ONNX Runtime, OpenCV.js and three.js. There's no server, no uploads and no API bill, so it is free and private for schools. A Playwright harness scores the real app on 16 Wikimedia Commons diagrams.
 
 ## Results (same checker for every method)
-- **Fragments too short to feel (<12.5 mm):** 11, vs 763 for edge tracing, or 329 for edge tracing with the print text erased first.
-- **Figure area where lines crowd closer than 3 mm:** 1.4% vs 6.4%.
-- **Labels:** every label found becomes braille, and 77% of them keep full 3 mm clearance.
+- **Fragments too short to feel (<12.5 mm):** 15, vs 763 for edge tracing, or 336 for edge tracing with the print text erased first.
+- **Figure area where lines crowd closer than 3 mm:** 1.2% vs 6.4% (4.8% with text erased).
+- **Labels:** 98% of hand-counted labels found, and every one becomes braille.
 
 ## Challenges and lessons
 - Dotted leader lines.

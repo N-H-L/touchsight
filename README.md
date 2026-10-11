@@ -16,32 +16,31 @@ Blind and low-vision students learn science from diagrams too. Each diagram has 
 A science assignment with graphics can take up to ~10 hours to transcribe. A 2023 survey found almost half of these teachers had no training in making tactile graphics. Tracing the picture automatically doesn't work: edge detection turns every print label into raised squiggles and every shading gradient into noise.
 
 ## What TouchSight does
-1. **Reads the diagram's own labels.** Tesseract OCR runs twice, once on the original and once on a locally binarized copy, so it also catches text printed on colored fills.
+1. **Reads the diagram's own labels.** PaddleOCR's text detector and recognizer run in the browser through ONNX Runtime, so they also catch small text and text printed on coloured fills. Tesseract is the fallback.
 2. **Follows each leader line to the part it names.** It builds a thin-stroke mask, finds probabilistic Hough segments, assigns them to labels, and chains broken or dotted leaders.
 3. **Segments that part.** The tip of each leader (or the area around an in-figure label) becomes a point prompt for **Segment Anything** (SlimSAM). This is *label-guided simplification*: the output keeps exactly the structures the diagram's author thought worth naming.
-4. **Lays out a tactile page in millimetres,** following the BANA *Guidelines and Standards for Tactile Graphics* (2022):
+4. **Redraws the structure for touch.** The diagram's own outlines and colour boundaries are extracted. Lines closer than 3 mm are merged and thinned to one centreline, and fragments under 12.5 mm are dropped.
+5. **Lays out a tactile page in millimetres,** following the BANA *Guidelines and Standards for Tactile Graphics* (2022):
    - a 1.5 mm silhouette, 1.0 mm part outlines, and 0.6 mm leader lines (always the thinnest line)
    - at most 5 textures, inset 1.5 mm from outlines
    - uncontracted UEB braille drawn as Spec 800 dots
    - full words where they fit, otherwise 2-letter keys on a key page (keys avoid aa/ac/cc/ca and contain dot 3 or 6)
    - 3 mm clearance around braille, with knockouts where a label must sit on the drawing
-5. **Repairs OCR slips** (e.g. "Atriym" → "Atrium") against a small science vocabulary. This happens only for words OCR was unsure about, and every correction is shown to the teacher.
-6. **Checks the result.** The same automated checks run on TouchSight's output and on naive edge tracing at the same page size.
-7. **Lets the teacher fix it.** Edit OCR text, merge split labels, or remove labels. The layout updates instantly.
-8. **Shows how it will feel.** A 3D relief view (three.js) renders raised lines and braille dots under a sweeping raking light. The same plate exports as an **STL for 3D printing**.
-9. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
+6. **Repairs OCR slips** (e.g. "Atriym" → "Atrium") against a small science vocabulary. This happens only for words OCR was unsure about, and every correction is shown to the teacher.
+7. **Checks the result.** The same automated checks run on TouchSight's output and on naive edge tracing at the same page size.
+8. **Lets the teacher fix it.** Edit OCR text, merge split labels, or remove labels. The layout updates instantly.
+9. **Shows how it will feel.** A 3D relief view (three.js) renders raised lines and braille dots under a sweeping raking light. The same plate exports as an **STL for 3D printing**.
+10. **Exports.** Tactile SVG (pure black, no greys, ready for swell paper), a key page, or print / save as PDF at true page size.
 
 ## Results (16 Wikimedia Commons diagrams, same checker for all)
 | | TouchSight | Edge tracing | Edge tracing with print text erased |
 |---|---|---|---|
-| Print labels turned into braille | 194 of 194 found | 0 | 0 |
-| Short fragments (< 12.5 mm, too small to identify by touch) | 11 | 763 | 329 |
-| Mean figure area where lines are < 3 mm apart | 1.4% | 6.4% | 5.0% |
-| Braille labels with full 3 mm clearance | 150 of 194 (77%) | n/a | n/a |
+| Label recall vs hand-counted labels (10 diagrams, 151 labels) | **148 of 151 (98%)** | n/a | n/a |
+| Short fragments (< 12.5 mm, too small to identify by touch) | **15** | 763 | 336 |
+| Mean figure area where lines are < 3 mm apart | **1.2%** | 6.4% | 4.8% |
+| Braille labels with full 3 mm clearance | 140 of 228 (61%) | n/a | n/a |
 
-**Label recall.** "Found" means found by OCR. On the two diagrams where we hand-counted every label, TouchSight found 11 of 14 (heart: it misses Left Atrium and Left/Right Ventricle, printed faintly on coloured fills) and 12 of 13 (volcano).
-
-Per-diagram numbers, method and limitations are in [docs/hackathon/EVIDENCE.md](docs/hackathon/EVIDENCE.md). Reproduce with `npm run serve` and `npm run eval`.
+Every detected label becomes braille, either as a full word or as a two-letter key. Per-diagram numbers, method and limitations are in [docs/hackathon/EVIDENCE.md](docs/hackathon/EVIDENCE.md) and [docs/hackathon/OCR_BENCH.md](docs/hackathon/OCR_BENCH.md). Reproduce with `npm run serve`, `npm run eval`, then `node scripts/recall.mjs`.
 
 **Limitations.** These are automated checks derived from BANA guidelines, not a substitute for a qualified transcriber. TouchSight has not yet been tested with blind readers or printed on physical swell paper.
 - Labels are uncontracted braille.
@@ -76,7 +75,8 @@ npm run eval     # runs every sample in headless Chromium (needs: npx playwright
 
 ## Credits
 - **Models and libraries:**
-  - [Tesseract.js](https://github.com/naptha/tesseract.js) (Apache-2.0) with the `eng` LSTM model
+  - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv6 detector + PP-OCRv5 English recognizer (Apache-2.0), via RapidOCR's ONNX conversions
+  - [Tesseract.js](https://github.com/naptha/tesseract.js) (Apache-2.0) with the `eng` LSTM model (fallback)
   - [SlimSAM](https://huggingface.co/Xenova/slimsam-77-uniform) (Apache-2.0), a distilled [Segment Anything](https://segment-anything.com/)
   - [transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0) and ONNX Runtime Web (MIT)
   - [OpenCV.js](https://opencv.org/) (Apache-2.0)
