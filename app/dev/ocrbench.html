@@ -1,0 +1,140 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>OCR bench</title>
+<style>body{font:13px system-ui;margin:8px} table{border-collapse:collapse} td,th{border:1px solid #ccc;padding:2px 6px;text-align:left;vertical-align:top}</style></head>
+<body>
+<div id="status">starting</div>
+<table id="t"><thead><tr><th>sample</th><th>engine</th><th>recall</th><th>precision</th><th>ms</th><th>missed</th></tr></thead><tbody></tbody></table>
+<script type="module">
+// Label recall of Tesseract (as run by pipeline.js) vs PaddleOCR (paddle.js) against
+// app/samples/labels_truth.json. ?s=heart,volcano limits samples; ?e=paddle limits engines.
+import { loadOpenCV, loadOCR } from '../js/libs.js';
+import { recognizeWords, mergeWordSets, filterWords, wordsToLines } from '../js/ocr.js';
+import { correctWord } from '../js/vocab.js';
+import { loadPaddle, detectText } from '../js/paddle.js';
+
+const q = new URLSearchParams(location.search);
+const st = document.getElementById('status');
+const log = (m) => { st.textContent = m; console.log(m); };
+window.__bench = { done: false, results: [], load: {} };
+const truth = await (await fetch('../samples/labels_truth.json')).json();
+const ids = (q.get('s') || Object.keys(truth).filter((k) => !k.startsWith('_')).join(',')).split(',');
+const engines = (q.get('e') || 'tesseract,paddle').split(',');
+
+const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+function lev(a, b) {
+  const m = a.length, n = b.length; let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+const sim = (a, b) => (a.length || b.length ? 1 - lev(a, b) / Math.max(a.length, b.length) : 1);
+function partial(a, b) { // best similarity of the shorter string against same-length windows of the longer
+  const [s, t] = a.length <= b.length ? [a, b] : [b, a];
+  let best = 0;
+  for (let i = 0; i + s.length <= t.length; i++) best = Math.max(best, sim(s, t.slice(i, i + s.length)));
+  return best;
+}
+// Candidates: single lines and vertical stacks of up to 4 adjacent lines.
+function candidates(lines) {
+  const idx = lines.map((_, i) => i).sort((i, j) => lines[i].y0 - lines[j].y0);
+  const below = (a, b) => {
+    const h = Math.max(a.y1 - a.y0, b.y1 - b.y0), vg = b.y0 - a.y1;
+    if (vg < -0.4 * h || vg > 1.3 * h) return false;
+    return Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 0 || Math.abs((a.x0 + a.x1) / 2 - (b.x0 + b.x1) / 2) < h;
+  };
+  const out = [];
+  const rec = (chain) => {
+    out.push(chain);
+    if (chain.length >= 4) return;
+    for (const j of idx) if (!chain.includes(j) && below(lines[chain.at(-1)], lines[j])) rec([...chain, j]);
+  };
+  for (const i of idx) rec([i]);
+  return out;
+}
+function score(labels, lines) {
+  const cands = candidates(lines), ctext = cands.map((c) => norm(c.map((i) => lines[i].text).join(' ')));
+  const used = new Set(), missed = [];
+  let hits = 0;
+  for (const lab of [...labels].sort((a, b) => b.length - a.length)) {
+    let best = 0, bi = -1;
+    cands.forEach((c, k) => {
+      if (c.some((i) => used.has(i))) return;
+      const r = sim(norm(lab), ctext[k]);
+      if (r > best) { best = r; bi = k; }
+    });
+    if (best >= 0.8) { hits++; cands[bi].forEach((i) => used.add(i)); } else missed.push(lab);
+  }
+  const good = lines.filter((l) => norm(l.text) && labels.some((t) => partial(norm(l.text), norm(t)) >= 0.8)).length;
+  return { hits, total: labels.length, good, lines: lines.length, missed };
+}
+
+async function imageDataFor(id) {
+  const img = new Image(); img.src = `../samples/${id}.png`; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0);
+  return ctx.getImageData(0, 0, c.width, c.height);
+}
+
+// Same OCR stage as pipeline.js: original + adaptive-binarized pass, merge, filter, vocab repair, lines.
+async function tesseractLines(cv, worker, imageData) {
+  const W = imageData.width, H = imageData.height;
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  canvas.getContext('2d').putImageData(imageData, 0, 0);
+  const src = cv.matFromImageData(imageData), gray = new cv.Mat(), bin = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const a = await recognizeWords(worker, canvas);
+  cv.adaptiveThreshold(gray, bin, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 31, 18);
+  const bc = document.createElement('canvas'); cv.imshow(bc, bin);
+  const b = (await recognizeWords(worker, bc)).filter((w) => w.conf >= 70 && w.text.replace(/[^A-Za-z0-9]/g, '').length >= 3);
+  src.delete(); gray.delete(); bin.delete();
+  const good = filterWords(mergeWordSets(a, b), W, H);
+  for (const w of good) w.text = correctWord(w.text, w.conf);
+  return wordsToLines(good);
+}
+
+const row = (r) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${r.id}</td><td>${r.engine}</td><td>${r.hits}/${r.total}</td><td>${r.good}/${r.lines}</td><td>${r.ms}</td><td>${r.missed.join(', ')}</td>`;
+  document.querySelector('#t tbody').appendChild(tr);
+};
+
+try {
+  let t = performance.now();
+  const cv = await loadOpenCV();
+  window.__bench.load.opencv = Math.round(performance.now() - t);
+  let worker;
+  if (engines.includes('tesseract')) {
+    log('loading Tesseract'); t = performance.now(); worker = await loadOCR();
+    window.__bench.load.tesseract = Math.round(performance.now() - t);
+  }
+  if (engines.some((e) => e.startsWith('paddle'))) {
+    log('loading Paddle'); t = performance.now(); await loadPaddle({ proxy: q.has('proxy') });
+    window.__bench.load.paddle = Math.round(performance.now() - t);
+  }
+  for (const id of ids) {
+    const imageData = await imageDataFor(id);
+    for (const engine of engines) {
+      log(`${id}: ${engine}`);
+      t = performance.now();
+      let lines;
+      if (engine === 'tesseract') lines = await tesseractLines(cv, worker, imageData);
+      else if (engine === 'paddle-raw') lines = await detectText(imageData, { cv, level: 'line' });
+      else { // what pipeline.js would see: paddle words -> filterWords -> wordsToLines
+        const words = await detectText(imageData, { cv });
+        lines = wordsToLines(filterWords(words, imageData.width, imageData.height));
+      }
+      const ms = Math.round(performance.now() - t);
+      const r = { id, engine, ms, ...score(truth[id], lines), texts: lines.map((l) => l.text) };
+      if (engine.startsWith('paddle')) r.timing = detectText.lastTiming;
+      window.__bench.results.push(r); row(r);
+    }
+  }
+  log('done');
+} catch (e) { log('error: ' + e.message); console.error(e); window.__bench.error = String(e.stack || e); }
+window.__bench.done = true;
+</script>
+</body></html>

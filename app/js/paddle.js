@@ -32,6 +32,7 @@ export function loadPaddle({ proxy = false } = {}) {
       return new Uint8Array(await r.arrayBuffer());
     }));
     const dict = onnxMetadata(recBuf).character?.split(/\r?\n/);
+    while (dict?.at(-1) === '') dict.pop(); // trailing newline
     if (!dict?.length) throw new Error('Recognizer has no character dictionary');
     const opts = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' };
     const det = await ort.InferenceSession.create(detBuf, opts);
