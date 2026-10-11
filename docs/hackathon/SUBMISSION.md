@@ -27,7 +27,7 @@ Upload a labeled diagram or pick a sample. In 10–30 seconds TouchSight:
 1. **Reads the diagram's own labels** with an in-browser PaddleOCR text detector (98% of 151 hand-counted labels found), repairing slips like "Leff" → "Left".
 2. **Follows every leader line to the part it names.** This works even when the leader is dotted.
 3. **Segments that part with Segment Anything,** using the leader tip as the prompt. This *label-guided simplification* keeps exactly what the author thought worth naming and drops shading and decoration.
-4. **Lays out a page in real millimetres** following BANA tactile guidelines: bold outlines, at most 5 textures instead of colours, Spec-800 braille dots, letter keys when a word won't fit, and 3 mm clearance.
+4. **Lays out a page in real millimetres** following BANA tactile guidelines: bold outlines traced from the diagram's own lines, optional textures instead of colours, Spec-800 braille dots, letter keys when a word won't fit, and 3 mm clearance.
 5. **Checks itself** with guideline measurements and lets the teacher fix any label.
 6. **Exports** a pure-black SVG for swell paper, a braille key page, or an **STL to 3D-print**. A 3D relief view shows how it will feel.
 
@@ -36,7 +36,7 @@ Everything runs **in the browser**: PaddleOCR (ONNX), SlimSAM via transformers.j
 
 ## Results (same checker for every method)
 - **Fragments too short to feel (<12.5 mm):** 15, vs 763 for edge tracing, or 336 for edge tracing with the print text erased first.
-- **Figure area where lines crowd closer than 3 mm:** 1.2% vs 6.4% (4.8% with text erased).
+- **Figure area where lines crowd closer than 3 mm:** 1.0% vs 6.4% (4.8% with text erased).
 - **Labels:** 98% of hand-counted labels found, and every one becomes braille.
 
 ## Challenges and lessons
@@ -68,9 +68,9 @@ These are automated checks, not a replacement for a qualified transcriber. We ha
 | 0:00–0:15 | The original heart diagram (Original view) | "This is a heart diagram from a biology class. A blind student can't use it, until a teacher spends hours redrawing it by hand as a tactile graphic." |
 | 0:15–0:30 | Empty state, then click **Try it on a heart diagram**; the spinner runs | "TouchSight does that first draft in seconds, entirely in the browser. Nothing is uploaded, so it's free and private for schools." |
 | 0:30–0:55 | **What the AI saw** tab; hover labels 1→4 in the list so each part lights up | "First it reads the diagram's own labels. Then it follows every leader line to its tip, and uses that tip to prompt Segment Anything, so it segments exactly the parts the author named. In-figure labels like Right Atrium are handled too." |
-| 0:55–1:20 | **Tactile graphic** tab; switch **Overlay** → **Tactile** | "Then it redraws for touch, following the braille authority's guidelines: bold outlines, textures instead of colours, real braille with letter keys when a word doesn't fit, and three millimetres of space so fingers can tell things apart." |
+| 0:55–1:20 | **Tactile graphic** tab; switch **Overlay** → **Tactile** | "Then it redraws for touch, following the braille authority's guidelines: bold outlines traced from the diagram itself, real braille with letter keys when a word doesn't fit, and three millimetres of space so fingers can tell things apart." |
 | 1:20–1:35 | Right rail: point at an auto-corrected label, then edit one label's text and show the braille updating | "OCR slips are fixed automatically, and the teacher stays in control: edit any label and the braille updates instantly." |
-| 1:35–1:55 | **vs. edge tracing** tab, then the Guideline check table | "Compare with just tracing the picture: every word becomes raised blobs. Across 16 diagrams, TouchSight left 11 fragments too small to feel; tracing left 763." |
+| 1:35–1:55 | **vs. edge tracing** tab, then the Guideline check table | "Compare with just tracing the picture: every word becomes raised blobs. Across 16 diagrams, TouchSight left 14 fragments too small to feel; tracing left 763." |
 | 1:55–2:20 | **3D relief** tab, light sweeping; drag to tilt | "Here's how it will feel. The same file exports for swell paper, or as an STL to 3D print." |
 | 2:20–2:35 | Click the **Volcano** sample, show its result quickly | "It works across biology and earth-science diagrams." |
 | 2:35–2:50 | README or the Tactile view | "Next we want to test it with blind students and their teachers. TouchSight: diagrams everyone can read." |

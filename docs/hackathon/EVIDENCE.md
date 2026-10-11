@@ -18,24 +18,24 @@ Pipeline at this point: PaddleOCR labels, line-art outlines (merged at 3 mm, thi
 
 | Sample | Cat. | Labels found | Braille labels | Print-label spots still marked (TS / edge) | Lines <3 mm, % of figure (TS / edge / edge−text) | Short fragments (TS / edge / edge−text) | Braille clear 3 mm | Run time (s) |
 |---|---|---|---|---|---|---|---|---|
-| animal-cell | bio | 22 | 22 | 0 / 22 | 1.6 / 5.3 / 4.2 | 0 / 52 / 46 | 13/22 | 12.0 |
-| heart | bio | 14 of 14 | 14 | 2 / 14 | 1.9 / 8.6 / 6.6 | 0 / 4 / 1 | 10/14 | 11.1 |
-| flower | bio | 17 | 17 | 0 / 17 | 1.2 / 5 / 3.8 | 1 / 20 / 4 | 11/17 | 9.9 |
-| eye | bio | 22 | 22 | 6 / 22 | 1.6 / 8.8 / 6.3 | 4 / 13 / 8 | 13/22 | 13.7 |
-| ear | bio | 13 | 13 | 4 / 13 | 1.1 / 9.3 / 6.3 | 1 / 105 / 1 | 9/13 | 11.3 |
-| mitochondrion | bio | 9 | 9 | 0 / 9 | 1.2 / 4.9 / 4.2 | 1 / 60 / 38 | 6/9 | 8.1 |
-| tooth | bio | 11 | 11 | 0 / 11 | 0.8 / 11.1 / 10.7 | 2 / 69 / 53 | 11/11 | 9.4 |
-| earth-layers | earth | 13 | 13 | 2 / 13 | 0.4 / 4.3 / 1.3 | 0 / 102 / 12 | 10/13 | 11.3 |
-| volcano | earth | 12 of 13 | 12 | 0 / 12 | 0.8 / 4 / 2.5 | 1 / 101 / 11 | 12/12 | 9.1 |
-| ohms-law-circuit | physics | 0 | 0 | 0 / 0 | 0.1 / 1.9 / 1.9 | 0 / 2 / 2 | 0/0 | 5.8 |
-| pulley-lever | physics | 3 | 3 | 1 / 3 | 1.6 / 2.8 / 2.7 | 0 / 12 / 6 | 3/3 | 7.1 |
-| australia-states | map | 29 | 28 | 11 / 29 | 1 / 4.6 / 3.6 | 2 / 37 / 36 | 10/28 | 15.9 |
-| solar-system | chart | 2 | 2 | 0 / 2 | 1.2 / 3.2 / 3.1 | 0 / 27 / 31 | 2/2 | 6.4 |
-| plant-cell | stress | 24 | 24 | 0 / 24 | 2.7 / 7.8 / 5.7 | 2 / 18 / 9 | 17/24 | 12.8 |
-| water-cycle-usgs | stress | 19 | 19 | 11 / 19 | 0.9 / 12.7 / 8 | 1 / 81 / 53 | 9/19 | 10.9 |
-| skin-layers | stress | 23 | 19 | 17 / 23 | 1.9 / 8.4 / 5.6 | 0 / 60 / 25 | 4/19 | 12.3 |
+| animal-cell | bio | 22 | 22 | 0 / 22 | 1.2 / 5.3 / 4.2 | 0 / 52 / 46 | 14/22 | 21.6 |
+| heart | bio | 14 of 14 | 14 | 0 / 14 | 1.4 / 8.6 / 6.6 | 0 / 4 / 1 | 11/14 | 19.5 |
+| flower | bio | 17 | 17 | 0 / 17 | 1 / 5 / 3.8 | 1 / 20 / 4 | 11/17 | 18.0 |
+| eye | bio | 22 | 22 | 2 / 22 | 1.5 / 8.8 / 6.3 | 3 / 13 / 8 | 17/22 | 24.7 |
+| ear | bio | 13 | 13 | 0 / 13 | 1.2 / 9.3 / 6.3 | 1 / 105 / 1 | 11/13 | 17.3 |
+| mitochondrion | bio | 9 | 9 | 0 / 9 | 0.7 / 4.9 / 4.2 | 1 / 60 / 38 | 6/9 | 14.4 |
+| tooth | bio | 11 | 11 | 0 / 11 | 0.8 / 11.1 / 10.7 | 2 / 69 / 53 | 11/11 | 16.1 |
+| earth-layers | earth | 13 | 13 | 1 / 13 | 0.3 / 4.3 / 1.3 | 0 / 102 / 12 | 11/13 | 16.4 |
+| volcano | earth | 12 of 13 | 12 | 0 / 12 | 0.7 / 4 / 2.5 | 1 / 101 / 11 | 12/12 | 17.0 |
+| ohms-law-circuit | physics | 0 | 0 | 0 / 0 | 0.4 / 1.9 / 1.9 | 0 / 2 / 2 | 0/0 | 10.9 |
+| pulley-lever | physics | 3 | 3 | 0 / 3 | 1.4 / 2.8 / 2.7 | 0 / 12 / 6 | 3/3 | 12.3 |
+| australia-states | map | 29 | 28 | 7 / 29 | 0.8 / 4.6 / 3.6 | 1 / 37 / 36 | 13/28 | 30.3 |
+| solar-system | chart | 2 | 2 | 0 / 2 | 0.2 / 3.2 / 3.1 | 0 / 27 / 31 | 2/2 | 10.9 |
+| plant-cell | stress | 24 | 24 | 0 / 24 | 2.6 / 7.8 / 5.7 | 2 / 18 / 9 | 16/24 | 23.7 |
+| water-cycle-usgs | stress | 19 | 19 | 0 / 19 | 0.6 / 12.7 / 8 | 2 / 81 / 53 | 16/19 | 20.2 |
+| skin-layers | stress | 23 | 22 | 1 / 23 | 1.8 / 8.4 / 5.6 | 0 / 60 / 25 | 18/22 | 21.8 |
 
-Totals over 16 samples: print labels left as raised text 54 (TouchSight) vs 233 (edge tracing) of 233; short fragments 15 vs 763; short fragments vs text-erased tracing 15 vs 336; mean narrow-gap area 1.2% vs 6.4% (text-erased tracing 4.8%); braille labels with 3 mm clearance 140 of 228.
+Totals over 16 samples: print labels left as raised text 11 (TouchSight) vs 233 (edge tracing) of 233; short fragments 14 vs 763; short fragments vs text-erased tracing 14 vs 336; mean narrow-gap area 1.0% vs 6.4% (text-erased tracing 4.8%); braille labels with 3 mm clearance 172 of 231.
 
 ### Label recall vs hand-counted ground truth (app/samples/labels_truth.json)
 | Sample | True labels | Found (matched) | Recall | Extra detections | Missed |
@@ -56,7 +56,8 @@ Overall recall: 148 of 151 (98%)
 ### Honest reading of these numbers
 - **Print-label spots still covered by raised marks.** TouchSight never draws print text. Its non-zero counts are leader lines, outlines or textures that pass through where a print label used to be. The baseline count is real traced text.
 - **Lines closer than 3 mm** is approximated with a morphological closing at 3 mm. It is a proxy for BANA's "3 mm between distinct lines", not a perfect measure.
-- **Braille clearance:** 140 of 228 placed labels (61%) keep ≥3 mm from all lines and textures. More labels and fuller outlines made this harder; it is the main open improvement. The remaining labels sit on knockouts or crowded areas. This is an open improvement area.
+- **Braille clearance:** 172 of 231 placed labels (74%) keep ≥3 mm from all lines and textures (textures now off by default). The rest sit on knockouts or in crowded areas; this is the main open improvement.
+- **Outlines (11 Oct, after user feedback):** the outline tracer now uses colour-region boundaries (k-means, specks merged, kept only where colour steps sharply so shading bands drop out) plus thin drawn strokes. Part textures snap to those regions and are off by default because users read them as clutter.
 - **Coverage:**
   - OCR finds no labels on 3 samples (ohms-law-circuit: single-letter math symbols; pulley-lever: math symbols; solar-system: white rotated text on black). Those outputs contain outlines only.
   - Some in-figure labels on colored fills are missed (e.g. heart: Left/Right Atrium/Ventricle).
