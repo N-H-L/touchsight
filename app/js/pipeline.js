@@ -43,6 +43,9 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
   assignLeaders(lines.filter((l) => !l.inside), segs);
   // Reading order (top to bottom, then left to right) so the review list matches the page.
   const labels = linesToLabels(lines).sort((a, b) => (a.y0 - b.y0) || (a.x0 - b.x0));
+  // Lone single characters are usually OCR noise, unless the diagram is letter-labeled.
+  const singles = labels.filter((L) => L.text.replace(/[^A-Za-z0-9]/g, '').length <= 1);
+  if (singles.length < 3) for (const L of singles) labels.splice(labels.indexOf(L), 1);
   for (const L of labels) {
     L.inside = L.lines.every((l) => l.inside);
     if (L.inside) L.leader = null;

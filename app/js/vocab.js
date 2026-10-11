@@ -24,6 +24,8 @@ vitreous volcanic volcano water wall xylem zone bomb cone inactive active lithos
 infiltration transpiration ocean sea river lake glacier snow ice sun planet mercury venus mars jupiter saturn uranus neptune moon orbit
 gland sebaceous erector pili arrector hypodermis corpuscle meissner pacinian blood vessels root canal periodontal ligament cementum
 apparatus actin endothelium cristae intermembrane space outer inner dna rna atp synthase granules
+starch grain tonoplast thylakoid plasmodesmata filamentous cytoskeleton membranous amyloplast body particles
+posterior anterior auricle lobule malleus semicircular pinna enamel dentin pulp gingiva crown neck periodontium
 `.split(/\s+/).filter(Boolean);
 
 export const PHRASES = [
@@ -34,7 +36,8 @@ export const PHRASES = [
   'intermediate filaments', 'actin filaments', 'central vacuole', 'optic nerve', 'vitreous humor', 'aqueous humor',
   'ear canal', 'auditory nerve', 'eustachian tube', 'semicircular canals', 'magma chamber', 'main chimney', 'secondary cone',
   'lava flow', 'ash layer', 'volcanic bomb', 'volcanic ash cloud', 'inner core', 'outer core', 'upper mantle', 'lower mantle',
-  'root canal', 'blood vessels', 'sweat gland', 'hair follicle', 'sebaceous gland',
+  'root canal', 'blood vessels', 'sweat gland', 'hair follicle', 'sebaceous gland', 'starch grain', 'thylakoid membrane',
+  'inner membrane', 'outer membrane', 'posterior chamber', 'anterior chamber', 'cell wall', 'golgi body',
 ];
 
 const SET = new Set(TERMS);
