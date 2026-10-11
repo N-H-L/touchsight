@@ -37,6 +37,30 @@ Pipeline at this point: PaddleOCR labels, line-art outlines (merged at 3 mm, thi
 
 Totals over 16 samples: print labels left as raised text 11 (TouchSight) vs 233 (edge tracing) of 233; short fragments 14 vs 763; short fragments vs text-erased tracing 14 vs 336; mean narrow-gap area 1.0% vs 6.4% (text-erased tracing 4.8%); braille labels with 3 mm clearance 172 of 231.
 
+### Detailed outline style (default since 11 Oct evening)
+The table above is the Simplified style.
+
+| Sample | Cat. | Labels found | Braille labels | Print-label spots still marked (TS / edge) | Lines <3 mm, % of figure (TS / edge / edge−text) | Short fragments (TS / edge / edge−text) | Braille clear 3 mm | Run time (s) |
+|---|---|---|---|---|---|---|---|---|
+| animal-cell | bio | 22 | 22 | 0 / 22 | 4 / 5.3 / 4.2 | 14 / 52 / 46 | 13/22 | 12.1 |
+| heart | bio | 14 of 14 | 14 | 0 / 14 | 6 / 8.6 / 6.6 | 2 / 4 / 1 | 11/14 | 11.1 |
+| flower | bio | 17 | 17 | 0 / 17 | 3.4 / 5 / 3.8 | 1 / 20 / 4 | 11/17 | 10.2 |
+| eye | bio | 22 | 22 | 2 / 22 | 5.9 / 8.8 / 6.3 | 7 / 13 / 8 | 15/22 | 13.7 |
+| ear | bio | 13 | 13 | 0 / 13 | 5.4 / 9.3 / 6.3 | 3 / 105 / 1 | 11/13 | 9.8 |
+| mitochondrion | bio | 9 | 9 | 0 / 9 | 3.3 / 4.9 / 4.2 | 15 / 60 / 38 | 6/9 | 8.2 |
+| tooth | bio | 11 | 11 | 0 / 11 | 9.5 / 11.1 / 10.7 | 10 / 69 / 53 | 11/11 | 9.0 |
+| earth-layers | earth | 13 | 13 | 1 / 13 | 1 / 4.3 / 1.3 | 4 / 102 / 12 | 11/13 | 9.2 |
+| volcano | earth | 12 of 13 | 12 | 0 / 12 | 2.1 / 4 / 2.5 | 4 / 101 / 11 | 12/12 | 8.9 |
+| ohms-law-circuit | physics | 0 | 0 | 0 / 0 | 0.6 / 1.9 / 1.9 | 1 / 2 / 2 | 0/0 | 5.7 |
+| pulley-lever | physics | 3 | 3 | 0 / 3 | 2 / 2.8 / 2.7 | 5 / 12 / 6 | 3/3 | 7.1 |
+| australia-states | map | 29 | 28 | 7 / 29 | 1.9 / 4.6 / 3.6 | 2 / 37 / 36 | 11/28 | 16.3 |
+| solar-system | chart | 2 | 2 | 0 / 2 | 2.8 / 3.2 / 3.1 | 17 / 27 / 31 | 2/2 | 6.5 |
+| plant-cell | stress | 24 | 24 | 0 / 24 | 6.5 / 7.8 / 5.7 | 6 / 18 / 9 | 17/24 | 12.9 |
+| water-cycle-usgs | stress | 19 | 19 | 0 / 19 | 6.5 / 12.7 / 8 | 19 / 81 / 53 | 14/19 | 11.1 |
+| skin-layers | stress | 23 | 23 | 1 / 23 | 6.3 / 8.4 / 5.6 | 9 / 60 / 25 | 20/23 | 13.6 |
+
+Totals over 16 samples: print labels left as raised text 11 (TouchSight) vs 233 (edge tracing) of 233; short fragments 119 vs 763; short fragments vs text-erased tracing 119 vs 336; mean narrow-gap area 4.2% vs 6.4% (text-erased tracing 4.8%); braille labels with 3 mm clearance 168 of 232.
+
 ### Label recall vs hand-counted ground truth (app/samples/labels_truth.json)
 | Sample | True labels | Found (matched) | Recall | Extra detections | Missed |
 |---|---|---|---|---|---|
