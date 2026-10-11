@@ -51,4 +51,11 @@ const hf = 'https://huggingface.co/Xenova/slimsam-77-uniform/resolve/main/';
 for (const f of ['config.json', 'preprocessor_config.json', 'onnx/vision_encoder.onnx', 'onnx/prompt_encoder_mask_decoder.onnx']) {
   await fetchTo(hf + f, join(root, 'app', 'models', 'Xenova', 'slimsam-77-uniform', f));
 }
+// PaddleOCR text detector + English recognizer (ONNX conversions by RapidOCR, Apache-2.0),
+// run by app/js/paddle.js on the WebGPU build of ORT, which loads the asyncify WASM above.
+await cp(join(nm, 'onnxruntime-web/dist/ort.webgpu.min.mjs'), join(out, 'ort', 'ort.webgpu.min.mjs'));
+const rapid = 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.10.0/onnx/';
+for (const f of ['PP-OCRv6/det/PP-OCRv6_det_small.onnx', 'PP-OCRv5/rec/en_PP-OCRv5_rec_mobile.onnx']) {
+  await fetchTo(rapid + f, join(root, 'app', 'models', 'paddleocr', f.split('/').pop()));
+}
 console.log('vendor done');
