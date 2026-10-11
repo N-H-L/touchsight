@@ -100,7 +100,9 @@ export function isKnownLabel(text) {
   if (!t) return false;
   if (PHRASES.includes(t)) return true;
   const words = t.split(' ');
-  return words.length <= 3 && words.every((w) => SET.has(w)) && !(words.length === 1 && ['left', 'right', 'superior', 'inferior', 'upper', 'lower', 'inner', 'outer', 'main', 'free', 'smooth', 'rough', 'secondary', 'primary', 'pulmonary', 'nuclear', 'volcanic', 'mitral', 'aortic', 'tricuspid'].includes(w)));
+  // A lone modifier ("Left", "Pulmonary") is the first half of a two-line label, not a label.
+  const MODIFIERS = ['left', 'right', 'superior', 'inferior', 'upper', 'lower', 'inner', 'outer', 'main', 'free', 'smooth', 'rough', 'secondary', 'primary', 'pulmonary', 'nuclear', 'volcanic', 'mitral', 'aortic', 'tricuspid'];
+  return words.length <= 3 && words.every((w) => SET.has(w)) && !(words.length === 1 && MODIFIERS.includes(words[0]));
 }
 
 export function isPhrase(text) {

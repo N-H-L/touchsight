@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><body><pre id="o">running</pre><script type="module">
+import { loadOpenCV, loadOCR } from '../js/libs.js';
+import { recognizeWords } from '../js/ocr.js';
+const id = new URLSearchParams(location.search).get('s') || 'heart';
+const cv = await loadOpenCV(); const w = await loadOCR();
+const img = new Image(); img.src = `../samples/${id}.png`; await img.decode();
+const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0);
+const src = cv.imread(c); const gray = new cv.Mat(); cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+const res = {};
+const run = async (name, mat) => { const cc = document.createElement('canvas'); cv.imshow(cc, mat); const t0 = performance.now(); const ws = await recognizeWords(w, cc); res[name] = { ms: Math.round(performance.now() - t0), words: ws.filter((q) => q.conf > 60 && /[A-Za-z]{3}/.test(q.text)).map((q) => q.text) }; };
+await run('orig', src);
+const up = new cv.Mat(); cv.resize(gray, up, new cv.Size(0, 0), 2, 2, cv.INTER_CUBIC); await run('gray2x', up);
+const cl = new cv.Mat(); const clahe = new cv.CLAHE(3.0, new cv.Size(8, 8)); clahe.apply(up, cl); await run('clahe2x', cl);
+const bin = new cv.Mat(); cv.adaptiveThreshold(up, bin, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 41, 15); await run('adapt2x', bin);
+document.getElementById('o').textContent = JSON.stringify(res);
+window.__done = res;
+</script>
