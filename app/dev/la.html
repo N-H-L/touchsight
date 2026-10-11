@@ -1,0 +1,27 @@
+<!doctype html><meta charset="utf-8"><title>lineart lab</title>
+<style>body{margin:0;font:12px sans-serif;background:#fff}.row{display:flex;gap:6px;margin:4px}canvas,img{width:480px;height:auto;border:1px solid #ccc}</style>
+<div id="out"></div>
+<script type="module">
+import { loadOpenCV } from '../js/libs.js';
+import { structureLines } from '../js/lineart.js';
+console.log('start'); const cv = await loadOpenCV(); console.log('cv ok');
+const ids = (new URLSearchParams(location.search).get('ids') || 'heart').split(',');
+for (const id of ids) {
+  const img = new Image(); img.src = `../samples/${id}.png`; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0);
+  const id_ = ctx.getImageData(0, 0, c.width, c.height);
+  const src = cv.matFromImageData(id_);
+  const t0 = performance.now();
+  const r = structureLines(cv, src, { views: true, ...JSON.parse(new URLSearchParams(location.search).get('o') || '{}') });
+  const row = document.createElement('div'); row.className = 'row';
+  row.append(img);
+  for (const [name, m] of Object.entries(r.views)) {
+    const cc = document.createElement('canvas'); cv.imshow(cc, m); m.delete(); cc.title = name; row.append(cc);
+  }
+  document.getElementById('out').append(row);
+  console.log(id, Math.round(performance.now() - t0), 'ms');
+  src.delete();
+}
+document.title = 'done';
+</script>

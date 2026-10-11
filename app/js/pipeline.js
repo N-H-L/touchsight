@@ -5,6 +5,7 @@ import { thinStrokeMask, houghSegments, assignLeaders } from './leaders.js';
 import { embedImage, segmentPoint } from './segment.js';
 import { correctWord } from './vocab.js';
 import { loadPaddle, detectText } from './paddle.js';
+import { structureLines } from './lineart.js';
 
 export async function analyze(imageData, { onStage = () => {} } = {}) {
   const timings = {};
@@ -66,7 +67,7 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
   }
 
   const fg = foregroundMask(cv, src, labels);
-  const lineArt = await timed('lineart', () => lineArtMask(cv, src, labels, fg));
+  const { lineArt, regions } = await timed('lineart', () => lineArtMask(cv, src, labels, fg));
 
   onStage('segment', 'Segmenting each labeled part…');
   const emb = await timed('sam_embed', () => embedImage(sam, imageData));
@@ -96,7 +97,7 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     }
   });
   src.delete(); gray.delete();
-  return { W, H, labels, words: good, fg, lineArt, timings, device: sam.device, ocrEngine };
+  return { W, H, labels, words: good, fg, lineArt, regions, timings, device: sam.device, ocrEngine };
 }
 
 // Non-background pixels minus text and thin strokes (leader lines), holes filled.
@@ -185,40 +186,14 @@ function dilateMask(cv, mask, W, H, k) {
   return out;
 }
 
-// The diagram's own structure lines: dark outline strokes from the original plus
-// boundaries between colour regions after mean-shift smoothing (which flattens
-// shading so gradients don't turn into contour bands). Text and leaders removed.
+// The diagram's own structure lines (see lineart.js), with print text and leader
+// lines removed and kept to the drawing itself.
 function lineArtMask(cv, src, labels, fg) {
   const W = src.cols, H = src.rows;
-  const rgb = new cv.Mat(); cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
-  const f = Math.min(1, 800 / Math.max(W, H));
-  const small = new cv.Mat(); cv.resize(rgb, small, new cv.Size(Math.round(W * f), Math.round(H * f)), 0, 0, cv.INTER_AREA);
-  // Edge-preserving smoothing (two bilateral passes) flattens texture and shading noise.
-  const ms = new cv.Mat(), tmpb = new cv.Mat();
-  cv.bilateralFilter(small, tmpb, 9, 45, 9);
-  cv.bilateralFilter(tmpb, ms, 9, 45, 9);
-  tmpb.delete();
-  const lab = new cv.Mat(); cv.cvtColor(ms, lab, cv.COLOR_RGB2Lab);
-  const ch = new cv.MatVector(); cv.split(lab, ch);
-  const edges = cv.Mat.zeros(ms.rows, ms.cols, cv.CV_8UC1);
-  for (let c = 0; c < 3; c++) {
-    const e = new cv.Mat(); const m = ch.get(c);
-    cv.Canny(m, e, c === 0 ? 40 : 25, c === 0 ? 100 : 60);
-    cv.bitwise_or(edges, e, edges);
-    e.delete(); m.delete();
-  }
-  const big = new cv.Mat(); cv.resize(edges, big, new cv.Size(W, H), 0, 0, cv.INTER_LINEAR);
-  cv.threshold(big, big, 60, 255, cv.THRESH_BINARY);
-  // Dark drawn outlines in the original.
-  const gray = new cv.Mat(); cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  const dark = new cv.Mat(); cv.threshold(gray, dark, 70, 255, cv.THRESH_BINARY_INV);
-  cv.bitwise_or(big, dark, big);
-  // Remove print text and leader lines.
-  for (const L of labels) {
-    for (const l of L.lines) cv.rectangle(big, new cv.Point(l.x0 - 4, l.y0 - 4), new cv.Point(l.x1 + 4, l.y1 + 4), new cv.Scalar(0), -1);
-    if (L.leader) cv.line(big, new cv.Point(L.leader.x1, L.leader.y1), new cv.Point(L.leader.x2, L.leader.y2), new cv.Scalar(0), 9);
-  }
-  // Keep only lines on the drawing itself.
+  const r = structureLines(cv, src, { textBoxes: labels.flatMap((L) => L.lines) });
+  const big = new cv.Mat(H, W, cv.CV_8UC1);
+  big.data.set(r.mask.map((v) => v * 255));
+  for (const L of labels) if (L.leader) cv.line(big, new cv.Point(L.leader.x1, L.leader.y1), new cv.Point(L.leader.x2, L.leader.y2), new cv.Scalar(0), 9);
   const fgm = new cv.Mat(H, W, cv.CV_8UC1);
   for (let i = 0; i < W * H; i++) fgm.data[i] = fg[i] ? 255 : 0;
   const k = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(9, 9));
@@ -226,9 +201,8 @@ function lineArtMask(cv, src, labels, fg) {
   cv.bitwise_and(big, fgm, big);
   const out = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) out[i] = big.data[i] ? 1 : 0;
-  for (const m of [rgb, small, ms, lab, edges, big, gray, dark, fgm, k]) m.delete();
-  ch.delete();
-  return out;
+  for (const m of [big, fgm, k]) m.delete();
+  return { lineArt: out, regions: { id: r.regions, w: r.rW, h: r.rH } };
 }
 
 // The drawing as a solid shape (text and thin lines on white paper drop out; text

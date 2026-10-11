@@ -82,7 +82,7 @@ export function buildLayout(cv, analysis, opts = {}) {
   labels.forEach((L) => {
     L.partId = null;
     if (!L.mask || L.skipPart) return;
-    const m = maskToMat(cv, L.mask, W, H);
+    const m = maskToMat(cv, analysis.regions ? snapToRegions(L.mask, analysis.regions, W, H) : L.mask, W, H);
     cv.morphologyEx(m, m, cv.MORPH_OPEN, ker);
     cv.morphologyEx(m, m, cv.MORPH_CLOSE, ker);
     keepLargest(cv, m);
@@ -282,6 +282,32 @@ function rectExitPoint(r, target, gap) {
 }
 
 // Zhang–Suen thinning (in place): reduces strokes to one-pixel centrelines.
+// Replace a SAM mask with the colour regions it mostly covers, so a part's texture
+// fills exactly the shape bounded by the traced outlines.
+function snapToRegions(mask, regions, W, H) {
+  const { id, w, h } = regions, fx = W / w, fy = H / h;
+  let n = 0; for (const r of id) if (r >= n) n = r + 1;
+  const inside = new Uint32Array(n), total = new Uint32Array(n);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const r = id[y * w + x]; if (r < 0) continue;
+    total[r]++;
+    if (mask[Math.min(H - 1, Math.round((y + 0.5) * fy)) * W + Math.min(W - 1, Math.round((x + 0.5) * fx))]) inside[r]++;
+  }
+  const pick = new Uint8Array(n);
+  let any = false, best = -1;
+  for (let r = 0; r < n; r++) {
+    if (inside[r] >= 0.5 * total[r] && total[r] > 0) { pick[r] = 1; any = true; }
+    if (best < 0 || inside[r] > inside[best]) best = r;
+  }
+  if (!any) { if (best < 0 || inside[best] < 0.3 * total[best]) return mask; pick[best] = 1; }
+  const out = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const r = id[Math.min(h - 1, Math.floor(y / fy)) * w + Math.min(w - 1, Math.floor(x / fx))];
+    out[y * W + x] = r >= 0 && pick[r] ? 1 : 0;
+  }
+  return out;
+}
+
 function thin(m) {
   const w = m.cols, h = m.rows, a = m.data;
   for (let i = 0; i < a.length; i++) a[i] = a[i] ? 1 : 0;
