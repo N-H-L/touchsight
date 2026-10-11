@@ -99,6 +99,8 @@ export function linesToLabels(lines) {
       const continuation = phrase || /^\(/.test(bt) || (at.split('(').length > at.split(')').length);
       // A column of 3+ evenly stacked lines is a list of separate labels
       // ("Nucleus" / "Nuclear pore" / "Chromatin"); an isolated pair is one label.
+      // Two complete terms ("Rough endoplasmic reticulum" / "Smooth endoplasmic reticulum") stay apart.
+      if (!continuation && isKnownLabel(at) && isKnownLabel(bt)) continue;
       if (!continuation && inColumn(items, a, b, h)) {
         const lowerCont = /^[a-z]/.test(bt) && /^[A-Z]/.test(at) && !isKnownLabel(bt);
         if (!lowerCont) continue;

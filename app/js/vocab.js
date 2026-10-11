@@ -109,8 +109,15 @@ export function isKnownLabel(text) {
   if (PHRASES.includes(t)) return true;
   const words = t.split(' ');
   // A lone modifier ("Left", "Pulmonary") is the first half of a two-line label, not a label.
-  const MODIFIERS = ['left', 'right', 'superior', 'inferior', 'upper', 'lower', 'inner', 'outer', 'main', 'free', 'smooth', 'rough', 'secondary', 'primary', 'pulmonary', 'nuclear', 'volcanic', 'mitral', 'aortic', 'tricuspid'];
-  return words.length <= 3 && words.every((w) => SET.has(w)) && !(words.length === 1 && MODIFIERS.includes(words[0]));
+  // A lone generic noun ("body", "membrane") is the second half of a two-line label.
+  const MODIFIERS = ['left', 'right', 'superior', 'inferior', 'upper', 'lower', 'inner', 'outer', 'main', 'free', 'smooth', 'rough',
+    'secondary', 'primary', 'pulmonary', 'nuclear', 'volcanic', 'mitral', 'aortic', 'tricuspid', 'ciliary', 'vitreous', 'aqueous',
+    'tympanic', 'semicircular', 'cochlear', 'vestibular', 'auditory', 'external', 'internal', 'posterior', 'anterior', 'suspensory',
+    'optic', 'central', 'cell', 'plasma', 'blood', 'sweat', 'hair', 'root', 'golgi', 'endoplasmic', 'secretory', 'intermediate', 'magma', 'ash', 'lava'];
+  const GENERIC = ['body', 'canal', 'nerve', 'membrane', 'chamber', 'humour', 'humor', 'layer', 'cone', 'tube', 'gland', 'vessel', 'vessels',
+    'wall', 'cavity', 'window', 'duct', 'fiber', 'fibre', 'plate', 'cloud', 'flow', 'reticulum', 'filaments', 'vesicle', 'vesicles', 'apparatus', 'disc', 'space'];
+  if (words.length === 1 && (MODIFIERS.includes(words[0]) || GENERIC.includes(words[0]))) return false;
+  return words.length <= 4 && words.every((w) => SET.has(w));
 }
 
 export function isPhrase(text) {
