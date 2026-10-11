@@ -208,9 +208,13 @@ async function recognize(P, cv, src, boxes) {
     const r = it.best;
     if (!r || !r.text.trim() || r.conf < TEXT_SCORE) continue;
     const xs = it.box.pts.map((p) => p[0]), ys = it.box.pts.map((p) => p[1]);
+    const x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
+    // The unclipped DB box carries padding around the ink (~17% of its height per side);
+    // inset it so boxes match Tesseract-style ink boxes that ocr.js thresholds expect.
+    const k = Math.round(0.17 * Math.min(x1 - x0, y1 - y0));
     lines.push({
       text: r.text.trim(), conf: r.conf * 100,
-      x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys),
+      x0: x0 + k, y0: y0 + k, x1: x1 - k, y1: y1 - k,
       quad: it.box.pts, vertical: !!it.vertical, detScore: it.box.score,
     });
   }

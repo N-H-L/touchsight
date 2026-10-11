@@ -128,7 +128,7 @@ try {
         lines = wordsToLines(filterWords(words, imageData.width, imageData.height));
       }
       const ms = Math.round(performance.now() - t);
-      const r = { id, engine, ms, ...score(truth[id], lines), texts: lines.map((l) => l.text) };
+      const r = { id, engine, ms, ...score(truth[id], lines), texts: lines.map((l) => `${l.text}@${[l.x0, l.y0, l.x1, l.y1].map(Math.round)}`) };
       if (engine.startsWith('paddle')) r.timing = detectText.lastTiming;
       window.__bench.results.push(r); row(r);
     }
