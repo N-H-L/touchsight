@@ -153,7 +153,7 @@ async function relayout(withSteps = false) {
   const cv = await loadOpenCV();
   if (withSteps) { setStep('layout', 'Laying out the tactile page…'); await nextFrame(); }
   state.layout = buildLayout(cv, state.analysis, {
-    page: $('#opt-page').value, title: $('#opt-title').value.trim(),
+    page: $('#opt-page').value, style: $('#opt-style').value, title: $('#opt-title').value.trim(),
     textures: $('#opt-textures').checked, forceKeys: $('#opt-keys').checked,
   });
   if (withSteps) { setStep('check', 'Running guideline checks…'); await nextFrame(); }
@@ -333,7 +333,7 @@ $('#viewmode').addEventListener('click', (e) => {
   $('#viewmode').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   drawTactile();
 });
-for (const id of ['#opt-page', '#opt-textures', '#opt-keys', '#opt-title']) $(id).addEventListener('change', () => state.analysis && !state.busy && relayout());
+for (const id of ['#opt-page', '#opt-style', '#opt-textures', '#opt-keys', '#opt-title']) $(id).addEventListener('change', () => state.analysis && !state.busy && relayout());
 
 // ---------- export ----------
 function download(name, text, type = 'image/svg+xml') {

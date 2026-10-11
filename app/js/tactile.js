@@ -45,28 +45,38 @@ export function buildLayout(cv, analysis, opts = {}) {
     // Work on a page raster at 4 px/mm so every threshold below is in real millimetres.
     const R = 4, f = s * R;
     const ww = Math.max(1, Math.round(W * f)), wh = Math.max(1, Math.round(H * f));
-    const raw = maskToMat(cv, analysis.lineArt, W, H);
+    const detailed = opts.style !== 'simple' && analysis.edges;
+    const raw = maskToMat(cv, detailed ? analysis.edges : analysis.lineArt, W, H);
     const work = new cv.Mat();
     cv.resize(raw, work, new cv.Size(ww, wh), 0, 0, cv.INTER_AREA);
     cv.threshold(work, work, 0, 255, cv.THRESH_BINARY);
     raw.delete();
-    // Lines closer than 3 mm can't be told apart by touch: merge them, then thin to
-    // one centreline so the result is a single clean stroke.
-    const kc = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(SPEC.clearance * R) | 1, Math.round(SPEC.clearance * R) | 1));
-    cv.morphologyEx(work, work, cv.MORPH_CLOSE, kc);
-    kc.delete();
-    thin(work);
-    // Drop fragments shorter than the 12.5 mm minimum line length.
-    const lab = new cv.Mat(), st = new cv.Mat(), ce = new cv.Mat();
-    const n = cv.connectedComponentsWithStats(work, lab, st, ce, 8, cv.CV_32S);
-    const keep = new Uint8Array(n);
-    for (let c = 1; c < n; c++) keep[c] = Math.hypot(st.intAt(c, cv.CC_STAT_WIDTH), st.intAt(c, cv.CC_STAT_HEIGHT)) / R >= SPEC.minLine ? 1 : 0;
-    for (let q = 0; q < ww * wh; q++) if (work.data[q] && !keep[lab.data32S[q]]) work.data[q] = 0;
-    lab.delete(); st.delete(); ce.delete();
-    // Raise to a 1 mm line.
-    const kd = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(SPEC.partLine * R) | 1, Math.round(SPEC.partLine * R) | 1));
-    cv.dilate(work, work, kd);
-    kd.delete();
+    if (detailed) {
+      // Detailed: keep every traced edge as in the original, raised to a 0.8 mm line;
+      // only specks under 4 mm are dropped.
+      const kd = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(0.8 * R) | 1, Math.round(0.8 * R) | 1));
+      cv.dilate(work, work, kd);
+      kd.delete();
+      dropShort(cv, work, R, 4);
+    } else {
+      // Lines closer than 3 mm can't be told apart by touch: merge them, then thin to
+      // one centreline so the result is a single clean stroke.
+      const kc = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(SPEC.clearance * R) | 1, Math.round(SPEC.clearance * R) | 1));
+      cv.morphologyEx(work, work, cv.MORPH_CLOSE, kc);
+      kc.delete();
+      thin(work);
+      // Drop fragments shorter than the 12.5 mm minimum line length.
+      const lab = new cv.Mat(), st = new cv.Mat(), ce = new cv.Mat();
+      const n = cv.connectedComponentsWithStats(work, lab, st, ce, 8, cv.CV_32S);
+      const keep = new Uint8Array(n);
+      for (let c = 1; c < n; c++) keep[c] = Math.hypot(st.intAt(c, cv.CC_STAT_WIDTH), st.intAt(c, cv.CC_STAT_HEIGHT)) / R >= SPEC.minLine ? 1 : 0;
+      for (let q = 0; q < ww * wh; q++) if (work.data[q] && !keep[lab.data32S[q]]) work.data[q] = 0;
+      lab.delete(); st.delete(); ce.delete();
+      // Raise to a 1 mm line.
+      const kd = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(SPEC.partLine * R) | 1, Math.round(SPEC.partLine * R) | 1));
+      cv.dilate(work, work, kd);
+      kd.delete();
+    }
     lineArt = contoursOf(cv, work, 0.6, 1).map((p) => p.map(([x, y]) => [ox + x / R, oy + y / R]));
     // Image-resolution copy for keeping textures clear of the lines.
     lineArtMat = new cv.Mat();
@@ -306,6 +316,16 @@ function snapToRegions(mask, regions, W, H) {
     out[y * W + x] = r >= 0 && pick[r] ? 1 : 0;
   }
   return out;
+}
+
+// Remove connected pieces whose extent is under `mm` millimetres (raster at R px/mm).
+function dropShort(cv, m, R, mm) {
+  const lab = new cv.Mat(), st = new cv.Mat(), ce = new cv.Mat();
+  const n = cv.connectedComponentsWithStats(m, lab, st, ce, 8, cv.CV_32S);
+  const keep = new Uint8Array(n);
+  for (let c = 1; c < n; c++) keep[c] = Math.hypot(st.intAt(c, cv.CC_STAT_WIDTH), st.intAt(c, cv.CC_STAT_HEIGHT)) / R >= mm ? 1 : 0;
+  for (let q = 0; q < m.rows * m.cols; q++) if (m.data[q] && !keep[lab.data32S[q]]) m.data[q] = 0;
+  lab.delete(); st.delete(); ce.delete();
 }
 
 function thin(m) {

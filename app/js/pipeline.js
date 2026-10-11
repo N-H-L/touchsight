@@ -67,7 +67,7 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
   }
 
   const fg = foregroundMask(cv, src, labels);
-  const { lineArt, regions } = await timed('lineart', () => lineArtMask(cv, src, labels, fg));
+  const { lineArt, regions, edges } = await timed('lineart', () => lineArtMask(cv, src, labels, fg));
 
   onStage('segment', 'Segmenting each labeled part…');
   const emb = await timed('sam_embed', () => embedImage(sam, imageData));
@@ -97,7 +97,7 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     }
   });
   src.delete(); gray.delete();
-  return { W, H, labels, words: good, fg, lineArt, regions, timings, device: sam.device, ocrEngine };
+  return { W, H, labels, words: good, fg, lineArt, regions, edges, timings, device: sam.device, ocrEngine };
 }
 
 // Non-background pixels minus text and thin strokes (leader lines), holes filled.
@@ -201,8 +201,20 @@ function lineArtMask(cv, src, labels, fg) {
   cv.bitwise_and(big, fgm, big);
   const out = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) out[i] = big.data[i] ? 1 : 0;
-  for (const m of [big, fgm, k]) m.delete();
-  return { lineArt: out, regions: { id: r.regions, w: r.rW, h: r.rH } };
+  // "Detailed" style: every edge in the picture (Canny), minus print text and leaders.
+  const gray = new cv.Mat(), ed = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
+  cv.Canny(gray, ed, 60, 160);
+  for (const L of labels) {
+    for (const l of L.lines) cv.rectangle(ed, new cv.Point(l.x0 - 4, l.y0 - 4), new cv.Point(l.x1 + 4, l.y1 + 4), new cv.Scalar(0), -1);
+    if (L.leader) cv.line(ed, new cv.Point(L.leader.x1, L.leader.y1), new cv.Point(L.leader.x2, L.leader.y2), new cv.Scalar(0), 9);
+  }
+  cv.bitwise_and(ed, fgm, ed);
+  const edges = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) edges[i] = ed.data[i] ? 1 : 0;
+  for (const m of [big, fgm, k, gray, ed]) m.delete();
+  return { lineArt: out, regions: { id: r.regions, w: r.rW, h: r.rH }, edges };
 }
 
 // The drawing as a solid shape (text and thin lines on white paper drop out; text

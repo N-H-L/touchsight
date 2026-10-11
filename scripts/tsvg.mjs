@@ -12,9 +12,9 @@ const svgs = await p.evaluate(async () => {
   const { renderTactile } = await import('./js/render.js');
   const { buildLayout } = await import('./js/tactile.js');
   const st = window.__touchsight, cv = window.cv;
-  const a = renderTactile(st.layout, { braille: true });
-  const lay2 = buildLayout(cv, st.analysis, { textures: false });
-  return [a, renderTactile(lay2, { braille: false })];
+  const a = renderTactile(st.layout, { braille: true }); // current UI options (detailed by default)
+  const lay2 = buildLayout(cv, st.analysis, { style: 'simple' });
+  return [a, renderTactile(lay2, { braille: true })];
 });
 const v = await b.newPage({ viewport: { width: 1700, height: 1100 } });
 await v.setContent(`<body style="margin:0;display:flex;gap:10px;background:#ddd">${svgs.map((s) => s.replace(/width="[\d.]+mm" height="[\d.]+mm"/, 'height="1080"')).join('')}</body>`);
