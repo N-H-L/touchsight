@@ -123,7 +123,7 @@ async function run() {
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     const st = state.layout.stats;
     const fixes = state.analysis.labels.reduce((n, L) => n + (L.corrections?.length || 0), 0);
-    setStatus(`Done in ${secs} s on this device · ${state.analysis.labels.length} labels found · ${st.parts} parts segmented · ${st.fullLabels} full braille labels + ${st.keyLabels} keyed${fixes ? ` · ${fixes} OCR slip${fixes > 1 ? 's' : ''} auto-corrected` : ''}`);
+    setStatus(`Done in ${secs} s on this device · ${state.analysis.labels.length} labels found · ${st.parts} parts segmented · ${st.fullLabels} full braille labels + ${st.keyLabels} keyed${fixes ? ` · ${fixes} OCR slip${fixes > 1 ? 's' : ''} auto-corrected` : ''}${state.analysis.labels.length ? '' : ' · no printed labels found, so this is outlines only'}`);
   } catch (e) {
     console.error(e);
     if (byId[state.name] && await showPrecomputed(state.name)) {
@@ -298,7 +298,15 @@ function hover(i, k) {
 function drawLegend() {
   const ul = $('#legend'); ul.innerHTML = '';
   const parts = state.layout.parts.filter((p) => p.texture != null);
-  $('#legend-card').hidden = !parts.length;
+  const bold = state.layout.stats.boldEdges;
+  $('#legend-card').hidden = !parts.length && !bold;
+  if (bold) {
+    for (const [w, txt] of [[3, '<b>Bold line</b> · edge of a labeled part (found by Segment Anything from the leader tip)'], [1.4, '<b>Fine line</b> · other detail traced from the original']]) {
+      const li = document.createElement('li');
+      li.innerHTML = `<svg viewBox="0 0 12 12" aria-hidden="true"><line x1="1" y1="6" x2="11" y2="6" stroke="#000" stroke-width="${w}" stroke-linecap="round"/></svg><span>${txt}</span>`;
+      ul.appendChild(li);
+    }
+  }
   for (const p of parts) {
     const names = state.analysis.labels.filter((L) => !L.removed && L.partId === p.id).map((L) => L.text);
     const li = document.createElement('li');

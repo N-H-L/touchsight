@@ -120,6 +120,25 @@ export function isKnownLabel(text) {
   return words.length <= 4 && words.every((w) => SET.has(w));
 }
 
+// Whole-label repair against known multi-word terms ("Leff Atrium" -> "Left Atrium"),
+// where a single word is ambiguous ("Leff" is one letter from both "left" and "leaf").
+export function correctPhrase(text) {
+  const t = text.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (PHRASES.includes(t)) return text;
+  let best = null, bestD = 99, tie = false;
+  for (const ph of PHRASES) {
+    const max = ph.length <= 12 ? 1 : 2;
+    const d = lev(t, ph, max);
+    if (d > max) continue;
+    if (d < bestD) { best = ph; bestD = d; tie = false; } else if (d === bestD && ph !== best) tie = true;
+  }
+  if (!best || tie) return text;
+  // Keep the original's capitalisation style word by word.
+  const src = text.trim().split(/\s+/), out = best.split(' ');
+  if (src.length !== out.length) return text;
+  return out.map((w, i) => matchCase(src[i], w)).join(' ');
+}
+
 export function isPhrase(text) {
   return PHRASES.includes(text.toLowerCase().replace(/\s+/g, ' ').trim());
 }

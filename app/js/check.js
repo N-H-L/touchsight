@@ -150,12 +150,13 @@ export function checkAll(cv, analysis, layout, imageData) {
   const b2 = measure(cv, base2, layout, analysis, 'baseline_text_erased');
   for (const L of [ours, base, base2]) { L.lines.delete(); L.textures.delete(); }
   const leaders = layout.labels.filter((L) => L.leader).map((L) => Math.hypot(L.leader[1][0] - L.leader[0][0], L.leader[1][1] - L.leader[0][1]));
+  const none = a.printLabels === 0; // nothing detected: don't show passing ticks for an empty page
   const rules = [
-    { id: 'print', name: 'Print-label spots still covered by raised marks', ours: `${a.printTextLeft} of ${a.printLabels}`, base: `${b.printTextLeft} of ${b.printLabels}`, pass: a.printTextLeft === 0 },
-    { id: 'braille', name: 'Labels available in braille', ours: `${a.brailleLabels} of ${a.printLabels}`, base: `0 of ${b.printLabels}`, pass: a.brailleLabels >= a.printLabels },
+    { id: 'print', name: 'Print-label spots still covered by raised marks', ours: `${a.printTextLeft} of ${a.printLabels}`, base: `${b.printTextLeft} of ${b.printLabels}`, pass: none ? null : a.printTextLeft === 0 },
+    { id: 'braille', name: 'Labels available in braille', ours: `${a.brailleLabels} of ${a.printLabels}`, base: `0 of ${b.printLabels}`, pass: none ? null : a.brailleLabels >= a.printLabels },
     { id: 'gaps', name: 'Lines closer than 3 mm (% of figure area)', ours: `${a.narrowGapPct}%`, base: `${b.narrowGapPct}%`, pass: a.narrowGapPct < 5 },
     { id: 'frags', name: 'Fragments shorter than 12.5 mm', ours: `${a.fragments}`, base: `${b.fragments}`, pass: a.fragments <= 3 },
-    { id: 'clear', name: 'Braille labels with 3 mm clearance', ours: `${a.brailleClear} of ${a.brailleLabels}`, base: '—', pass: a.brailleClear === a.brailleLabels },
+    { id: 'clear', name: 'Braille labels with 3 mm clearance', ours: `${a.brailleClear} of ${a.brailleLabels}`, base: '—', pass: none ? null : a.brailleClear === a.brailleLabels },
     { id: 'tex', name: 'Textures used (max 5)', ours: `${a.textures}`, base: '0', pass: a.textures <= 5 },
     { id: 'lead', name: 'Leader lines 20–37.5 mm long', ours: `${leaders.filter((d) => d >= 20 && d <= 37.5).length} of ${leaders.length}`, base: '—', pass: null },
   ];

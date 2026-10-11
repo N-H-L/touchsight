@@ -40,7 +40,7 @@ export function buildLayout(cv, analysis, opts = {}) {
 
   // Structure lines from the original (outlines + colour boundaries), thickened to a
   // raisable 1 mm, with fragments too small to identify by touch removed.
-  let lineArtMat = null, lineArt = [];
+  let lineArtMat = null, lineArt = [], boldLen = 0;
   if (analysis.lineArt && opts.lineArt !== false) {
     // Work on a page raster at 4 px/mm so every threshold below is in real millimetres.
     const R = 4, f = s * R;
@@ -52,12 +52,22 @@ export function buildLayout(cv, analysis, opts = {}) {
     cv.threshold(work, work, 0, 255, cv.THRESH_BINARY);
     raw.delete();
     if (detailed) {
-      // Detailed: keep every traced edge as in the original, raised to a 0.8 mm line;
-      // only specks under 4 mm are dropped.
-      const kd = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.round(0.8 * R) | 1, Math.round(0.8 * R) | 1));
-      cv.dilate(work, work, kd);
-      kd.delete();
+      // Detailed: every traced edge of the original, minus print text and leaders;
+      // specks under 4 mm are dropped.
       dropShort(cv, work, R, 4);
+      // Label-guided line hierarchy: edges that bound a part the diagram's author
+      // labeled (its Segment Anything mask) are raised bold (1.5 mm) so a reader can
+      // find the named parts; all other detail stays a fine 0.8 mm line.
+      const band = namedPartBands(cv, labels, W, H, ww, wh, 1.5 * R);
+      const bold = new cv.Mat();
+      cv.bitwise_and(work, band, bold);
+      band.delete();
+      const kf = disk(cv, 0.8 * R), kb = disk(cv, SPEC.outline * R);
+      cv.dilate(work, work, kf);
+      cv.dilate(bold, bold, kb);
+      boldLen = cv.countNonZero(bold);
+      cv.bitwise_or(work, bold, work);
+      kf.delete(); kb.delete(); bold.delete();
     } else {
       // Lines closer than 3 mm can't be told apart by touch: merge them, then thin to
       // one centreline so the result is a single clean stroke.
@@ -207,7 +217,7 @@ export function buildLayout(cv, analysis, opts = {}) {
     stats: {
       labelsDetected: analysis.labels.length, labelsPlaced: placed.length,
       fullLabels: placed.filter((p) => !p.usesKey).length, keyLabels: keyEntries.length,
-      parts: parts.length, textures: texturable.length,
+      parts: parts.length, textures: texturable.length, boldEdges: boldLen > 0,
     },
   };
 }
@@ -326,6 +336,28 @@ function dropShort(cv, m, R, mm) {
   for (let c = 1; c < n; c++) keep[c] = Math.hypot(st.intAt(c, cv.CC_STAT_WIDTH), st.intAt(c, cv.CC_STAT_HEIGHT)) / R >= mm ? 1 : 0;
   for (let q = 0; q < m.rows * m.cols; q++) if (m.data[q] && !keep[lab.data32S[q]]) m.data[q] = 0;
   lab.delete(); st.delete(); ce.delete();
+}
+
+const disk = (cv, d) => cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(Math.max(1, Math.round(d)) | 1, Math.max(1, Math.round(d)) | 1));
+
+// A band (width `w` px at page resolution) along the boundary of every labeled part's
+// segmentation mask. Masks covering most of the figure are skipped (their edge is the
+// silhouette, already bold).
+function namedPartBands(cv, labels, W, H, ww, wh, w) {
+  const band = cv.Mat.zeros(wh, ww, cv.CV_8UC1);
+  const k = disk(cv, w);
+  for (const L of labels) {
+    if (!L.mask) continue;
+    let n = 0; for (let i = 0; i < L.mask.length; i++) n += L.mask[i];
+    if (n < 50) continue;
+    const m = maskToMat(cv, L.mask, W, H), r = new cv.Mat(), g = new cv.Mat();
+    cv.resize(m, r, new cv.Size(ww, wh), 0, 0, cv.INTER_NEAREST);
+    cv.morphologyEx(r, g, cv.MORPH_GRADIENT, k);
+    cv.bitwise_or(band, g, band);
+    m.delete(); r.delete(); g.delete();
+  }
+  k.delete();
+  return band;
 }
 
 function thin(m) {

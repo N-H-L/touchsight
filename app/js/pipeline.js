@@ -3,7 +3,7 @@ import { loadOpenCV, loadOCR, loadSAM } from './libs.js';
 import { recognizeWords, mergeWordSets, filterWords, wordsToLines, linesToLabels } from './ocr.js';
 import { thinStrokeMask, houghSegments, assignLeaders } from './leaders.js';
 import { embedImage, segmentPoint } from './segment.js';
-import { correctWord } from './vocab.js';
+import { correctWord, correctPhrase } from './vocab.js';
 import { loadPaddle, detectText } from './paddle.js';
 import { structureLines } from './lineart.js';
 
@@ -64,6 +64,8 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     if (L.inside) L.leader = null;
     const fixes = L.lines.flatMap((l) => l.words).filter((w) => w.orig !== w.text);
     L.corrections = fixes.map((w) => `${w.orig} → ${w.text}`);
+    const ph = correctPhrase(L.text);
+    if (ph !== L.text) { L.corrections.push(`${L.text} → ${ph}`); L.text = ph; }
   }
 
   const fg = foregroundMask(cv, src, labels);
