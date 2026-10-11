@@ -50,7 +50,7 @@ These are automated checks, not a qualified transcriber. It has not been tested 
 
 ## Video (ready): `C:\Users\Admin\Videos\touchsight-demo.mp4`
 - 2:10, 1920×1080, H.264, no audio (captions on screen). It is a real screen capture of the live site (recorded by `scripts/record.mjs` with headless Chromium). The only edits: captions/title cards are overlaid, and three processing waits are shortened. On-screen captions say "processing shortened".
-- Optional: add your own voice in Clipchamp (Windows) by reading the captions. Not required.
+- **You chose to record your own voiceover version: follow [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md).** The captioned video is the backup.
 - Upload to YouTube with visibility **Public** (not Unlisted, not Private).
 
 **YouTube title:** TouchSight: textbook diagrams to tactile graphics with braille (Banana Hacks 2026)
@@ -59,7 +59,7 @@ These are automated checks, not a qualified transcriber. It has not been tested 
 TouchSight turns a labeled science diagram into a first-draft tactile graphic with braille labels, entirely in the browser (PaddleOCR + Segment Anything + OpenCV.js + three.js). Built solo for Banana Hacks 2026.
 Live demo: https://n-h-l.github.io/touchsight/
 Code: https://github.com/N-H-L/touchsight
-Real screen capture of the live site; processing waits shortened. Built with help from Claude Code (AI disclosure).
+Screen recording of the live site. Built with help from Claude Code (AI disclosure).
 Diagrams: "Diagram of the human heart" by Wapcaplet (CC BY-SA 3.0) and the volcano diagram from Wikimedia Commons; full credits in app/samples/CREDITS.md in the repo.
 
 | Time (approx.) | Scene |
