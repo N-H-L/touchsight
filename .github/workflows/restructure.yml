@@ -1,0 +1,36 @@
+# One-time restructure: renames app/ to src/ and updates the path references.
+# Guarded so it only acts while app/ still exists, then deletes itself.
+name: Move app/ to src
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: restructure
+  cancel-in-progress: true
+jobs:
+  restructure:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, 'Move app/ to src/') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rename and update paths
+        run: |
+          if [ -d app ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git mv app src
+            sed -i "s/, 'app')/, 'src')/" scripts/serve.mjs
+            sed -i "s/join(root, 'app'/join(root, 'src'/g" scripts/vendor.mjs
+            sed -i "s|app/samples|src/samples|g; s|app/precomputed|src/precomputed|g" scripts/eval.mjs scripts/recall.mjs
+            sed -i "s|app/fonts|src/fonts|g" scripts/thumb.mjs
+            sed -i "s|^app/|src/|" .gitignore
+            sed -i "s|# .../app/|# .../src/|; s|// site (app/vendor, app/models)|// site (src/vendor, src/models)|" src/js/paddle.js src/js/libs.js
+            git rm -q .github/workflows/restructure.yml
+            git commit -q -m "Move app/ to src/ and update path references" -m "Prepares the repository for docs at the GitHub Pages root with the app served at /app."
+            git push
+          else
+            echo "app/ already renamed; nothing to do"
+          fi

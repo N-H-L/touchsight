@@ -1,0 +1,47 @@
+site_name: TouchSight-NG Documentation
+site_description: Turn labeled diagrams into tactile graphics with braille labels, entirely in the browser.
+site_author: Michael Ryan Hunsaker, M.Ed., Ph.D.
+site_url: https://mrhunsaker.github.io/touchsight-NG/
+repo_url: https://github.com/mrhunsaker/touchsight-NG
+repo_name: mrhunsaker/touchsight-NG
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.tabbed
+nav:
+  - Home: index.md
+  - For transcribers:
+      - Getting started: getting-started.md
+      - The teacher review workflow: review-workflow.md
+      - Printing and swell paper: printing.md
+  - How it works:
+      - Architecture: architecture.md
+      - Pipeline stages: pipeline.md
+      - Tactile layout and BANA guidelines: guidelines.md
+      - Module reference: modules.md
+  - Project:
+      - Evaluation and benchmarks: evaluation.md
+      - Deployment (GitHub Pages): deployment.md
+      - Contributing: contributing.md
+      - Changelog: changelog.md

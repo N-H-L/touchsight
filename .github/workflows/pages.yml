@@ -1,4 +1,5 @@
-name: Deploy to GitHub Pages
+# Publishes the documentation site at the GitHub Pages root and the app at /app.
+name: Deploy documentation and app to GitHub Pages
 on:
   push:
     branches: [main]
@@ -22,12 +23,23 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          grep -q "src/samples" scripts/eval.mjs 2>/dev/null || echo "warn: app/ may not have been renamed yet" >&2
       - run: npm ci --ignore-scripts
       - run: npm run vendor
-      - run: rm -rf app/dev
+      - run: rm -rf src/dev
+      - run: pip install -r requirements-docs.txt
+      - run: mkdocs build --site-dir _site
+      - run: |
+          mkdir -p _site/app
+          cp -r src/. _site/app/
+          touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: app
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
