@@ -17,5 +17,10 @@
   },
   "devDependencies": {
     "playwright": "1.64.0"
+  },
+  "allowScripts": {
+    "onnxruntime-node@1.30.0": true,
+    "protobufjs@7.6.6": true,
+    "tesseract.js@7.0.0": true
   }
 }
