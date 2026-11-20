@@ -1,8 +1,8 @@
 {
   "name": "touchsight",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Turn textbook diagrams into print-ready tactile graphics with braille labels, entirely in the browser.",
+  "version": "2026.11.20-beta"
+  "private": false,
+  "description": "Turn textbook diagrams into print-ready tactile graphics with braille labels.",
   "scripts": {
     "vendor": "node scripts/vendor.mjs",
     "serve": "node scripts/serve.mjs",

@@ -1,1 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1b1a17"/><g fill="#f2c230"><circle cx="11" cy="9" r="2.6"/><circle cx="11" cy="16" r="2.6"/><circle cx="21" cy="16" r="2.6"/><circle cx="21" cy="23" r="2.6"/></g></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 32 32"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="favicon.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="12.89365"
+     inkscape:cx="-0.85313312"
+     inkscape:cy="23.15093"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <rect
+     width="32"
+     height="32"
+     rx="8"
+     fill="#1b1a17"
+     id="rect1" />
+  <g
+     fill="#f2c230"
+     id="g4"
+     style="fill:#ff00ff">
+    <circle
+       cx="11"
+       cy="9"
+       r="2.6"
+       id="circle1"
+       style="fill:#ff00ff" />
+    <circle
+       cx="11"
+       cy="16"
+       r="2.6"
+       id="circle2"
+       style="fill:#ff00ff" />
+    <circle
+       cx="21"
+       cy="16"
+       r="2.6"
+       id="circle3"
+       style="fill:#ff00ff" />
+    <circle
+       cx="21"
+       cy="23"
+       r="2.6"
+       id="circle4"
+       style="fill:#ff00ff" />
+  </g>
+</svg>
