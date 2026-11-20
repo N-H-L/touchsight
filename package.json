@@ -2,16 +2,16 @@
   "name": "touchsight-ng",
   "version": "2026.11.20-beta",
   "private": false,
-  "author": "Michael Ryan Hunsaker, M.Ed., Ph.D. <github@main.hunsakerweb.com>"
-  "homepage":"https:mrhunsaker.github.io/touchsight-ng",
+  "author": "Michael Ryan Hunsaker, M.Ed., Ph.D. <github@main.hunsakerweb.com>",
+  "homepage": "https:mrhunsaker.github.io/touchsight-ng",
   "repository": {
     "type": "git",
     "url": "https://github.com/mrhunsaker/touchsight-ng"
-  }
+  },
   "bugs": {
-  "url": "https://github.com/mrhunsaker/touchsight-ng",
-  "email": "github@main.hunsakerweb.com"
-}
+    "url": "https://github.com/mrhunsaker/touchsight-ng",
+    "email": "github@main.hunsakerweb.com"
+  },
   "description": "Turn diagrams into print-ready tactile graphics with braille labels.",
   "scripts": {
     "vendor": "node scripts/vendor.mjs",
@@ -22,6 +22,7 @@
   "dependencies": {
     "@huggingface/transformers": "4.3.0",
     "@techstark/opencv-js": "4.12.0-release.1",
+    "esm-potrace-wasm": "^0.5.1",
     "tesseract.js": "7.0.0",
     "three": "0.186.1"
   },
