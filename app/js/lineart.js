@@ -1,3 +1,5 @@
+import { tracingConfig } from './tracing-config.js';
+
 // The diagram's own structure lines, as a line-drawing: boundaries between flat
 // colour regions (k-means on smoothed colour, small specks merged into their
 // neighbours) plus thin drawn strokes that are darker or more saturated than what
@@ -5,6 +7,7 @@
 // strokes (texture stipple, dotted leaders) are dropped.
 export function structureLines(cv, src, opt = {}) {
   const K = opt.K ?? 10, wL = opt.wL ?? 0.5;
+  const sensitivity = tracingConfig(opt.sensitivity);
   const W0 = src.cols, H0 = src.rows;
   const f = Math.min(1, 700 / Math.max(W0, H0));
   const W = Math.round(W0 * f), H = Math.round(H0 * f), N = W * H;
@@ -35,7 +38,7 @@ export function structureLines(cv, src, opt = {}) {
   for (let p = 0; p < N; p++) if (lm[p] >= 0 && isBgCol[p]) lm[p] = -2;
 
   // Small regions are shading speckle: hand them to their neighbours.
-  const minA = opt.minA ?? Math.round(0.0012 * N);
+  const minA = opt.minA ?? Math.round(sensitivity.minRegionArea * N);
   for (let pass = 0; pass < 2; pass++) {
     const { id, sizes } = components(lm, W, H);
     for (let p = 0; p < N; p++) if (lm[p] >= 0 && sizes[id[p]] < minA) lm[p] = -2;
@@ -45,7 +48,7 @@ export function structureLines(cv, src, opt = {}) {
   // Region boundaries, kept only where the colour actually steps across them: k-means
   // also cuts smooth shading gradients into bands, and those cuts are not drawn edges.
   const bd = new cv.Mat(H, W, cv.CV_8UC1, new cv.Scalar(0));
-  const step = opt.step ?? 18, d = 2;
+  const step = opt.step ?? sensitivity.regionStep, d = 2;
   const dE = (p, q) => { const i = p * 3, j = q * 3; return Math.hypot(L[i] - L[j], L[i + 1] - L[j + 1], L[i + 2] - L[j + 2]); };
   for (let y = d; y < H - d; y++) for (let x = d; x < W - d; x++) {
     const p = y * W + x, a = lm[p];
@@ -57,18 +60,18 @@ export function structureLines(cv, src, opt = {}) {
   // Thin drawn lines: darker or more saturated than their surroundings.
   const Lc = new cv.Mat(H, W, cv.CV_8UC1), Cc = new cv.Mat(H, W, cv.CV_8UC1);
   for (let p = 0; p < N; p++) { const i = p * 3, r = labRaw.data; Lc.data[p] = r[i]; Cc.data[p] = Math.min(255, 2 * Math.hypot(r[i + 1] - 128, r[i + 2] - 128)); }
-  const kk = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(7, 7));
+  const kk = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(opt.kernelSize ?? 7, opt.kernelSize ?? 7));
   const bh = new cv.Mat(), th = new cv.Mat();
   cv.morphologyEx(Lc, bh, cv.MORPH_BLACKHAT, kk);
   cv.morphologyEx(Cc, th, cv.MORPH_TOPHAT, kk);
   const thinM = new cv.Mat(H, W, cv.CV_8UC1, new cv.Scalar(0));
-  for (let p = 0; p < N; p++) thinM.data[p] = (bh.data[p] > 35 || th.data[p] > 50) && !outside[p] ? 255 : 0;
+  for (let p = 0; p < N; p++) thinM.data[p] = (bh.data[p] > sensitivity.blackhatThreshold || th.data[p] > sensitivity.tophatThreshold) && !outside[p] ? 255 : 0;
   for (const b of opt.textBoxes ?? []) for (const m of [thinM, bd]) cv.rectangle(m, new cv.Point((b.x0 - 4) * f, (b.y0 - 4) * f), new cv.Point((b.x1 + 4) * f, (b.y1 + 4) * f), new cv.Scalar(0), -1);
   {
     // Keep only strokes long enough to be structure, not stipple or hatching.
     const cl = new cv.Mat(), st = new cv.Mat(), ce = new cv.Mat();
     const n = cv.connectedComponentsWithStats(thinM, cl, st, ce, 8, cv.CV_32S);
-    const minLen = (opt.minStroke ?? 0.03) * Math.hypot(W, H);
+    const minLen = (opt.minStroke ?? sensitivity.minStroke) * Math.hypot(W, H);
     const keep = new Uint8Array(n);
     for (let c = 1; c < n; c++) keep[c] = Math.hypot(st.intAt(c, cv.CC_STAT_WIDTH), st.intAt(c, cv.CC_STAT_HEIGHT)) >= minLen ? 1 : 0;
     for (let p = 0; p < N; p++) if (thinM.data[p] && !keep[cl.data32S[p]]) thinM.data[p] = 0;

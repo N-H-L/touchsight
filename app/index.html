@@ -59,6 +59,10 @@
             <option value="simple">Simplified (3 mm spacing)</option>
           </select>
         </label>
+        <label for="opt-sensitivity">Tracing sensitivity <output id="opt-sensitivity-value" for="opt-sensitivity">55</output>
+          <input id="opt-sensitivity" type="range" min="0" max="100" step="5" value="55">
+          <small class="hint">Higher values recover lighter contours but may add detail. Tactile spacing and braille clearance remain enforced.</small>
+        </label>
         <label>Title (in braille, optional)
           <input id="opt-title" type="text" placeholder="e.g. Human heart" maxlength="40">
         </label>

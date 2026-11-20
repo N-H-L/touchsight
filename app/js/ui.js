@@ -1,5 +1,6 @@
 import { loadOpenCV } from './libs.js';
-import { analyze } from './pipeline.js';
+import { analyze, updateTracing } from './pipeline.js';
+import { DEFAULT_TRACING_SENSITIVITY } from './tracing-config.js';
 import { buildLayout } from './tactile.js';
 import { renderTactile, renderKeyPage, TEXTURES } from './render.js';
 import { checkAll } from './check.js';
@@ -19,7 +20,7 @@ async function showRelief() {
 }
 
 const $ = (s) => document.querySelector(s);
-const state = { imageData: null, original: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false, mode: 'tactile' };
+const state = { imageData: null, original: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false, mode: 'tactile', sensitivity: DEFAULT_TRACING_SENSITIVITY };
 const MAX_SIDE = 1400; // keep in-browser inference fast
 const PAL = ['#e6194b', '#3cb44b', '#0082c8', '#f58230', '#911eb4', '#2fa8a8', '#f032e6', '#7f9d1f', '#008080', '#aa6e28', '#5a5aff', '#c0392b'];
 
@@ -116,7 +117,8 @@ async function run() {
   setStatus('Working… everything runs on this device.');
   const t0 = performance.now();
   try {
-    state.analysis = await analyze(state.imageData, {
+    state.sensitivity = Number($('#opt-sensitivity')?.value ?? DEFAULT_TRACING_SENSITIVITY);
+    state.analysis = await analyze(state.imageData, { sensitivity: state.sensitivity,
       onStage: (k, msg) => setStep(k, k === 'engines' ? 'Loading on-device models… (first run only)' : msg),
     });
     await relayout(true);
@@ -153,7 +155,7 @@ async function relayout(withSteps = false) {
   const cv = await loadOpenCV();
   if (withSteps) { setStep('layout', 'Laying out the tactile page…'); await nextFrame(); }
   state.layout = buildLayout(cv, state.analysis, {
-    page: $('#opt-page').value, style: $('#opt-style').value, title: $('#opt-title').value.trim(),
+    page: $('#opt-page').value, style: $('#opt-style').value, title: $('#opt-title').value.trim(), sensitivity: state.sensitivity,
     textures: $('#opt-textures').checked, forceKeys: $('#opt-keys').checked,
   });
   if (withSteps) { setStep('check', 'Running guideline checks…'); await nextFrame(); }
@@ -342,6 +344,29 @@ $('#viewmode').addEventListener('click', (e) => {
   drawTactile();
 });
 for (const id of ['#opt-page', '#opt-style', '#opt-textures', '#opt-keys', '#opt-title']) $(id).addEventListener('change', () => state.analysis && !state.busy && relayout());
+
+const sensitivityInput = $('#opt-sensitivity');
+const sensitivityValue = $('#opt-sensitivity-value');
+sensitivityInput?.addEventListener('input', () => { sensitivityValue.value = sensitivityInput.value; sensitivityValue.textContent = sensitivityInput.value; });
+sensitivityInput?.addEventListener('change', async () => {
+  if (!state.analysis || state.busy) return;
+  state.busy = true;
+  sensitivityInput.disabled = true;
+  setStatus('Updating tracing sensitivity…');
+  try {
+    const cv = await loadOpenCV();
+    state.sensitivity = Number(sensitivityInput.value);
+    updateTracing(cv, state.imageData, state.analysis, state.sensitivity);
+    await relayout();
+    setStatus(`Tracing updated · sensitivity ${state.sensitivity}/100 · OCR and segmentation were reused.`);
+  } catch (e) {
+    console.error(e);
+    setStatus('Could not update tracing: ' + (e.message || e), true);
+  } finally {
+    sensitivityInput.disabled = false;
+    state.busy = false;
+  }
+});
 
 // ---------- export ----------
 function download(name, text, type = 'image/svg+xml') {

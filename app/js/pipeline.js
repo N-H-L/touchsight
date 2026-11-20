@@ -6,11 +6,13 @@ import { embedImage, segmentPoint } from './segment.js';
 import { correctWord, correctPhrase } from './vocab.js';
 import { loadPaddle, detectText } from './paddle.js';
 import { structureLines } from './lineart.js';
+import { DEFAULT_TRACING_SENSITIVITY, tracingConfig } from './tracing-config.js';
 
-export async function analyze(imageData, { onStage = () => {} } = {}) {
+export async function analyze(imageData, { onStage = () => {}, sensitivity = DEFAULT_TRACING_SENSITIVITY } = {}) {
   const timings = {};
   const timed = async (k, f) => { const t0 = performance.now(); const r = await f(); timings[k] = Math.round(performance.now() - t0); return r; };
   const W = imageData.width, H = imageData.height;
+  sensitivity = tracingConfig(sensitivity).sensitivity;
 
   onStage('engines', 'Loading on-device models…');
   const [cv, sam] = await timed('load', () => Promise.all([loadOpenCV(), loadSAM(), loadPaddle({ proxy: true }).catch(() => null)]));
@@ -68,8 +70,8 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     if (ph !== L.text) { L.corrections.push(`${L.text} → ${ph}`); L.text = ph; }
   }
 
-  const fg = foregroundMask(cv, src, labels);
-  const { lineArt, regions, edges } = await timed('lineart', () => lineArtMask(cv, src, labels, fg));
+  const fg = foregroundMask(cv, src, labels, sensitivity);
+  const { lineArt, regions, edges } = await timed('lineart', () => lineArtMask(cv, src, labels, fg, sensitivity));
 
   onStage('segment', 'Segmenting each labeled part…');
   const emb = await timed('sam_embed', () => embedImage(sam, imageData));
@@ -99,26 +101,27 @@ export async function analyze(imageData, { onStage = () => {} } = {}) {
     }
   });
   src.delete(); gray.delete();
-  return { W, H, labels, words: good, fg, lineArt, regions, edges, timings, device: sam.device, ocrEngine };
+  return { W, H, labels, words: good, fg, lineArt, regions, edges, timings, device: sam.device, ocrEngine, sensitivity };
 }
 
 // Non-background pixels minus text and thin strokes (leader lines), holes filled.
-function foregroundMask(cv, src, labels) {
+function foregroundMask(cv, src, labels, sensitivity = DEFAULT_TRACING_SENSITIVITY) {
+  const trace = tracingConfig(sensitivity);
   const W = src.cols, H = src.rows;
-  const nb = nonBackground(src);
+  const nb = nonBackground(src, sensitivity);
   const m = new cv.Mat(H, W, cv.CV_8UC1);
   for (let i = 0; i < W * H; i++) m.data[i] = nb[i] ? 255 : 0;
   for (const L of labels) {
     const p = 3;
     cv.rectangle(m, new cv.Point(L.x0 - p, L.y0 - p), new cv.Point(L.x1 + p, L.y1 + p), new cv.Scalar(0), -1);
   }
-  const k = Math.max(3, Math.round(0.005 * Math.hypot(W, H))) | 1;
+  const k = Math.max(3, Math.round(trace.foregroundKernelScale * Math.hypot(W, H))) | 1;
   const ker = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
   cv.morphologyEx(m, m, cv.MORPH_OPEN, ker);
   cv.morphologyEx(m, m, cv.MORPH_CLOSE, ker);
   ker.delete();
   fillHoles(cv, m);
-  removeSmall(cv, m, 0.002 * W * H);
+  removeSmall(cv, m, trace.foregroundMinArea * W * H);
   const out = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) out[i] = m.data[i] ? 1 : 0;
   m.delete();
@@ -162,10 +165,11 @@ function bgColor(src) {
   for (let y = 0; y < H; y += 4) border.push(y * W, y * W + W - 1);
   return [0, 1, 2].map((c) => border.map((i) => d[i * 4 + c]).sort((a, b) => a - b)[border.length >> 1]);
 }
-function nonBackground(src) {
+function nonBackground(src, sensitivity = DEFAULT_TRACING_SENSITIVITY) {
+  const threshold = tracingConfig(sensitivity).foregroundDistance;
   const W = src.cols, H = src.rows, d = src.data, med = bgColor(src), out = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) {
-    out[i] = Math.max(Math.abs(d[i * 4] - med[0]), Math.abs(d[i * 4 + 1] - med[1]), Math.abs(d[i * 4 + 2] - med[2])) > 28 ? 1 : 0;
+    out[i] = Math.max(Math.abs(d[i * 4] - med[0]), Math.abs(d[i * 4 + 1] - med[1]), Math.abs(d[i * 4 + 2] - med[2])) > threshold ? 1 : 0;
   }
   return out;
 }
@@ -190,9 +194,10 @@ function dilateMask(cv, mask, W, H, k) {
 
 // The diagram's own structure lines (see lineart.js), with print text and leader
 // lines removed and kept to the drawing itself.
-function lineArtMask(cv, src, labels, fg) {
+function lineArtMask(cv, src, labels, fg, sensitivity = DEFAULT_TRACING_SENSITIVITY) {
+  const trace = tracingConfig(sensitivity);
   const W = src.cols, H = src.rows;
-  const r = structureLines(cv, src, { textBoxes: labels.flatMap((L) => L.lines) });
+  const r = structureLines(cv, src, { textBoxes: labels.flatMap((L) => L.lines), sensitivity });
   const big = new cv.Mat(H, W, cv.CV_8UC1);
   big.data.set(r.mask.map((v) => v * 255));
   for (const L of labels) if (L.leader) cv.line(big, new cv.Point(L.leader.x1, L.leader.y1), new cv.Point(L.leader.x2, L.leader.y2), new cv.Scalar(0), 9);
@@ -207,7 +212,7 @@ function lineArtMask(cv, src, labels, fg) {
   const gray = new cv.Mat(), ed = new cv.Mat();
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
   cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
-  cv.Canny(gray, ed, 60, 160);
+  cv.Canny(gray, ed, trace.cannyLow, trace.cannyHigh);
   for (const L of labels) {
     for (const l of L.lines) cv.rectangle(ed, new cv.Point(l.x0 - 4, l.y0 - 4), new cv.Point(l.x1 + 4, l.y1 + 4), new cv.Scalar(0), -1);
     if (L.leader) cv.line(ed, new cv.Point(L.leader.x1, L.leader.y1), new cv.Point(L.leader.x2, L.leader.y2), new cv.Scalar(0), 9);
@@ -255,3 +260,23 @@ function matToCanvas(cv, mat) {
   return c;
 }
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+
+// Recompute only foreground and tracing layers after sensitivity changes.
+// OCR, leader assignment and SAM inference are intentionally not repeated.
+export function updateTracing(cv, imageData, analysis, sensitivity) {
+  const src = cv.matFromImageData(imageData);
+  try {
+    const value = tracingConfig(sensitivity).sensitivity;
+    const fg = foregroundMask(cv, src, analysis.labels, value);
+    const { lineArt, regions, edges } = lineArtMask(cv, src, analysis.labels, fg, value);
+    analysis.fg = fg;
+    analysis.lineArt = lineArt;
+    analysis.regions = regions;
+    analysis.edges = edges;
+    analysis.sensitivity = value;
+    return analysis;
+  } finally {
+    src.delete();
+  }
+}
