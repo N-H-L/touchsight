@@ -1,0 +1,253 @@
+{
+  "task": "update_tracing_sensitivity",
+  "project": "TouchSight",
+  "target_repository": "https://github.com/mrhunsaker/touchsight-NG",
+  "implementation_language": "JavaScript",
+  "implementation_scope": "Additive change to the existing browser-only OpenCV.js tracing pipeline. Do not replace OCR, leader assignment, SlimSAM segmentation, tactile layout, braille encoding, SVG export, or STL export.",
+  "problem_statement": {
+    "observed_failure": "The uploaded labeled anatomical cross-section is transcribed correctly, but the tactile trace omits important low-contrast outlines and lighter internal structures. The output is biased toward the darkest/highest-contrast strokes.",
+    "visual_evidence_to_recover": [
+      "The continuous outer shell / body silhouette, including its curved perimeter.",
+      "The outline of the large lower foot region.",
+      "Long, light internal anatomical boundaries and folds.",
+      "Thin but continuous structural contours that are visually weaker than the darkest black strokes."
+    ],
+    "do_not_assume": "Do not treat every pale pixel, shading transition, OCR glyph, leader line, stipple, hatch, or paper artifact as a tactile feature."
+  },
+  "primary_objective": "Recover more semantically useful diagram structure at adjustable sensitivity while keeping the final tactile graphic sparse, separable by touch, and compliant with the project's existing physical spacing and braille-placement checks.",
+  "preserve_existing_behavior": [
+    "Keep the current Detailed and Simplified style choices and their meanings.",
+    "Keep OCR text detection, text-box erasure, leader-line detection/chaining, and leader-line removal from structural tracing.",
+    "Keep label-guided SAM masks and the existing bold hierarchy for boundaries of named parts.",
+    "Keep the current silhouette, part, texture, braille, key-page, and export stages.",
+    "Keep all processing local in the browser; do not add server calls, paid APIs, or Python runtime dependencies.",
+    "Keep existing defaults visually close to current output unless the user explicitly changes sensitivity."
+  ],
+  "diagnosis_from_current_source": {
+    "files_to_review": [
+      "app/js/lineart.js",
+      "app/js/pipeline.js",
+      "app/js/tactile.js",
+      "app/js/check.js",
+      "app/js/ui.js"
+    ],
+    "likely_sensitivity_bottlenecks": [
+      "app/js/lineart.js: structureLines uses fixed region-boundary contrast (step defaults to 18), fixed black-hat/top-hat stroke thresholds (35 and 50), a fixed 7x7 morphology kernel, and a minimum stroke length proportional to the working image diagonal.",
+      "app/js/pipeline.js: foregroundMask uses a fixed RGB distance threshold (>28), then morphology OPEN/CLOSE and small-component removal; faint outer contours can be lost before later tracing stages.",
+      "app/js/pipeline.js: lineArtMask uses fixed Canny thresholds (60, 160) for Detailed edges.",
+      "app/js/tactile.js: Detailed removes fragments under 4 mm; Simplified merges nearby strokes at a 3 mm scale, thins them, and removes fragments under 12.5 mm.",
+      "app/js/tactile.js: braille placement uses a 3 mm clearance occupancy grid; this must remain authoritative when additional lines are introduced."
+    ],
+    "instruction": "Treat these as source-inspection findings, not proof that any single threshold is the sole cause. Instrument intermediate masks and test the uploaded image plus the existing sample/evaluation set before choosing final thresholds."
+  },
+  "user_control": {
+    "control_name": "Tracing sensitivity",
+    "control_type": "integer_slider",
+    "range": {
+      "min": 0,
+      "max": 100,
+      "step": 5
+    },
+    "default": 55,
+    "labels": {
+      "0": "Conservative",
+      "25": "Light",
+      "50": "Balanced",
+      "75": "Sensitive",
+      "100": "Maximum recovery"
+    },
+    "behavior": [
+      "Expose the control in the existing options area without removing the Detailed/Simplified style selector.",
+      "Changing sensitivity should recompute tracing/layout from the already loaded image and analysis data where feasible; do not rerun OCR or model downloads unless required.",
+      "Show a short explanatory note: higher sensitivity recovers lighter and weaker contours, but may add clutter; tactile spacing and braille checks still apply.",
+      "Persist the selected value in in-memory UI state for the current session. Do not add localStorage or remote persistence unless the project already has an established settings mechanism."
+    ]
+  },
+  "proposed_tracing_strategy": {
+    "principle": "Use multiple complementary edge candidates and rank them; do not merely lower one global threshold.",
+    "candidate_layers": [
+      {
+        "name": "silhouette_recovery",
+        "purpose": "Recover the complete outside contour of the drawing and major connected regions even when their boundary is faint.",
+        "method": [
+          "Build a robust page-background estimate from border pixels, but do not assume every white-looking pixel inside the drawing is background.",
+          "Use a tolerant foreground candidate mask with local contrast or luminance/chroma distance, plus connected-component and contour continuity checks.",
+          "Recover the dominant outer contour independently from interior dark-stroke detection.",
+          "Prefer long, closed, smooth contours enclosing substantial drawing area; reject isolated page noise.",
+          "Retain the existing OCR text-box exclusions and leader-line exclusions."
+        ],
+        "priority": "highest"
+      },
+      {
+        "name": "strong_edges",
+        "purpose": "Keep clearly printed structural strokes and strong region boundaries.",
+        "method": "Retain current edge and region-boundary candidates as the high-confidence layer."
+      },
+      {
+        "name": "weak_edges",
+        "purpose": "Recover light pencil/ink contours and low-contrast internal structures.",
+        "method": [
+          "Add a lower-threshold edge candidate pass (for example, Canny-style hysteresis with independently configurable low/high thresholds) and/or local-gradient thresholding.",
+          "Use local contrast normalization or a multi-scale gradient so faint lines are detectable without globally amplifying page texture.",
+          "Keep weak candidates only when they have sufficient length, continuity, curvature consistency, enclosure, or proximity to a known structural boundary / named-part mask.",
+          "Avoid treating broad smooth shading gradients as edges; require a localized gradient ridge or persistent contour across scales."
+        ]
+      },
+      {
+        "name": "region_boundaries",
+        "purpose": "Retain boundaries between meaningful diagram regions even when their luminance difference is modest.",
+        "method": [
+          "Make the current Lab boundary step threshold sensitivity-aware.",
+          "Keep the existing strategy of down-weighting lightness in colour clustering so shading does not dominate.",
+          "Reject boundaries that merely follow smooth tonal bands or tiny segmentation regions."
+        ]
+      }
+    ],
+    "candidate_fusion": [
+      "Combine candidates with provenance/confidence metadata before rasterizing the final mask.",
+      "Rank outer silhouette and long continuous anatomical contours above isolated high-frequency details.",
+      "Use named-part SAM masks to promote relevant boundary candidates, not to indiscriminately fill or outline every pixel inside a mask.",
+      "Deduplicate overlapping candidates and join only short gaps when the continuation direction and local evidence agree.",
+      "Keep the outer silhouette as a distinct layer so later simplification cannot erase it."
+    ]
+  },
+  "sensitivity_mapping": {
+    "requirement": "Map the 0-100 UI value to named, testable parameters in one centralized configuration function. Avoid scattering magic numbers across files.",
+    "parameters_to_expose": [
+      "foreground_distance_threshold",
+      "canny_low_threshold",
+      "canny_high_threshold",
+      "lab_region_boundary_step",
+      "blackhat_response_threshold",
+      "tophat_response_threshold",
+      "weak_edge_min_confidence",
+      "minimum_structural_stroke_length",
+      "gap_join_limit",
+      "small_component_area_limit",
+      "multi_scale_edge_support"
+    ],
+    "mapping_guidance": [
+      "Increasing sensitivity should lower weak-edge and local-contrast thresholds gradually, not linearly force all thresholds to zero.",
+      "Keep strong-edge thresholds stable or nearly stable so high-confidence geometry is not destabilized.",
+      "Reduce the minimum accepted stroke length only moderately as sensitivity rises; retain a hard tactile-size filter during layout.",
+      "Use conservative defaults around sensitivity 55, then tune against the supplied diagram and the repository's existing sample/evaluation corpus.",
+      "Clamp all derived thresholds to safe ranges and validate values before passing them into OpenCV.js."
+    ]
+  },
+  "tactile_simplification_and_density_control": {
+    "non_negotiable_constraints": {
+      "braille_clearance_mm": 3,
+      "simplified_minimum_primary_line_length_mm": 12.5,
+      "simplified_merge_spacing_mm": 3,
+      "max_textures": 5,
+      "existing_line_width_hierarchy_mm": {
+        "silhouette": 1.5,
+        "part_outline": 1.0,
+        "detail": 0.8,
+        "leader": 0.6
+      }
+    },
+    "rules": [
+      "Do not solve missed outlines by raising every detected edge.",
+      "Do not reduce the existing 3 mm braille clearance or allow braille dots to collide with new structural lines.",
+      "Preserve the existing distinction between Detailed and Simplified: Detailed can retain more meaningful detail; Simplified must aggressively merge close lines and remove sub-12.5 mm fragments.",
+      "Apply density-aware pruning after candidate recovery and before final braille placement.",
+      "When local line density is too high, preserve in this order: outer silhouette; long closed boundaries; boundaries of labeled parts; long continuous internal anatomy; short secondary detail.",
+      "Remove or merge low-confidence parallel lines that cannot be distinguished at tactile scale.",
+      "Do not add textures to compensate for missing outlines; retain the existing maximum of five textures and texture inset.",
+      "Let the existing braille occupancy grid relocate labels or use its existing key/knockout fallback. Never silently shrink braille or its clearance to fit more lines.",
+      "If line recovery makes a label impossible to place safely, retain the label through the existing key-page/placement behavior and report the collision in diagnostics rather than sacrificing braille legibility."
+    ],
+    "density_metrics_to_record": [
+      "number of candidate edges before pruning",
+      "number and total length of retained edges by confidence tier",
+      "percentage of figure area with line spacing under 3 mm",
+      "number of fragments under 12.5 mm",
+      "number of labels placed and number with full 3 mm clearance",
+      "whether the outer silhouette was recovered as a continuous contour"
+    ]
+  },
+  "implementation_plan": [
+    {
+      "step": 1,
+      "title": "Centralize sensitivity configuration",
+      "details": [
+        "Add a pure helper (preferably in app/js/lineart.js or a small app/js/tracing-config.js module) that converts sensitivity 0-100 into validated tracing parameters.",
+        "Give the helper stable defaults matching current behavior as closely as possible.",
+        "Pass the resulting config through analyze/lineArtMask/structureLines without introducing global mutable state."
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Recover silhouette and weak contours",
+      "details": [
+        "Separate outer silhouette recovery from dark thin-stroke extraction.",
+        "Add a weak-edge pass using local contrast or multi-threshold hysteresis.",
+        "Retain strong and weak candidates separately until confidence ranking and pruning are complete.",
+        "Ensure OCR boxes and assigned leader lines are excluded from every relevant candidate layer."
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Add tactile-aware candidate pruning",
+      "details": [
+        "Rank candidates by geometry, confidence, continuity, and semantic relevance.",
+        "Promote the outer contour and long named-part boundaries.",
+        "Prune dense parallel/noisy edges before passing masks into buildLayout.",
+        "Keep the current Detailed and Simplified downstream operations and their physical dimensions."
+      ]
+    },
+    {
+      "step": 4,
+      "title": "Expose the UI control",
+      "details": [
+        "Add a labeled 0-100 sensitivity slider and concise helper text in the existing tracing/options UI.",
+        "Default to 55 (balanced recovery).",
+        "On slider change, regenerate tracing and tactile layout from the current image; avoid rerunning OCR/SAM if the architecture allows a tracing-only recompute.",
+        "Display the chosen sensitivity in the UI and include it in diagnostics."
+      ]
+    },
+    {
+      "step": 5,
+      "title": "Keep validation authoritative",
+      "details": [
+        "Reuse checkAll and the existing tactile measurements.",
+        "Add a silhouette continuity/recovery diagnostic.",
+        "Add weak-edge retention and clutter metrics to the analysis diagnostics.",
+        "Do not mark a result successful merely because more pixels were traced; success requires improved outline recall without regressions in braille clearance, line spacing, fragments, or print-text removal."
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    "On the supplied anatomical diagram, the outer shell is represented by a continuous, clearly traceable raised contour.",
+    "The large foot boundary and several long, light internal anatomical boundaries are recovered where they are visually continuous and structurally meaningful.",
+    "Purple printed labels and their OCR boxes do not become raised text-shaped marks.",
+    "Leader lines are not duplicated as structural anatomy; the existing leader treatment remains the thinnest line class.",
+    "Sensitivity changes visibly alter weak-edge recovery in a predictable monotonic direction.",
+    "At sensitivity 55, the result is more complete than the current failure while remaining sparse enough for tactile exploration.",
+    "At sensitivity 100, extra detail may appear, but density pruning and tactile checks still prevent uncontrolled clutter.",
+    "Braille remains legible and retains at least the existing 3 mm clearance behavior.",
+    "Simplified mode retains its 3 mm merge spacing and 12.5 mm minimum primary-line filtering.",
+    "Existing sample diagrams continue to run in-browser with no server dependency and no regression in OCR label recall or text removal.",
+    "No uncaught OpenCV.js Mat/resource leaks are introduced; all temporary Mats are deleted on every success/error path."
+  ],
+  "test_plan": [
+    "Use the supplied image as a regression fixture and compare current output with sensitivity values 0, 25, 55, 75, and 100.",
+    "Run npm run eval and the repository's recall script on the existing sample corpus.",
+    "Inspect intermediate masks for foreground, silhouette, strong edges, weak edges, fused candidates, and final tactile lines.",
+    "Record checker results for narrow gaps, short fragments, print text remaining, braille placement, and braille clearance at every sensitivity setting.",
+    "Test both Detailed and Simplified styles at low, default, and high sensitivity.",
+    "Test a low-contrast outline diagram, a high-contrast line drawing, a shaded diagram, and a diagram with dense labels.",
+    "Verify changing sensitivity does not trigger OCR/SAM model reloads unnecessarily."
+  ],
+  "engineering_notes": [
+    "Use JavaScript and the project's existing OpenCV.js primitives; do not introduce a Python image-processing service.",
+    "Prefer deterministic classical image processing over adding another ML model.",
+    "Do not hard-code the uploaded image's dimensions, exact anatomy, or coordinates.",
+    "Keep performance suitable for the current browser workflow; reuse grayscale/Lab intermediates where practical.",
+    "Guard against empty masks, tiny images, all-white images, and OpenCV.js allocation failures.",
+    "Add comments explaining each sensitivity parameter in image-space or physical tactile units.",
+    "Keep the existing source organization unless a small isolated tracing configuration module materially improves maintainability."
+  ],
+  "deliverable": "Implement the above as a focused, reviewable JavaScript change. First report the files to be changed and the parameter mapping; then implement, run the available tests, and summarize measured improvements and any remaining limitations. Do not claim tests passed unless they were actually run."
+}
