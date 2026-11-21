@@ -115,3 +115,8 @@ Generated vendor libraries and model weights are not committed as application so
 - **Label-guided segmentation over whole-image segmentation:** narrows the task to named parts, but errors in OCR or leader detection propagate downstream.
 - **Physical units over pixel-only layout:** tactile spacing is a physical constraint.
 - **Human review over automatic acceptance:** geometric checks cannot establish tactile readability.
+
+
+## Editable SVG handoff
+
+The rendering stage produces vector artwork with named groups and physical millimetre dimensions. After the automated checks and transcriber review, the SVG can be opened in Inkscape (the recommended FOSS editor) or any SVG-capable editor, including Illustrator or Affinity Designer, for manual path cleanup and production QC. The editor is optional; physical proofing and tactile review remain necessary. See [Review workflow](review-workflow.md).

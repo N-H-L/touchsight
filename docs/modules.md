@@ -66,6 +66,18 @@ Uses three.js to display a 3D relief preview and generate an STL plate model.
 
 ## Planned / not currently wired into the main pipeline
 
-- **Potrace Autotrace:** the package dependency is present, and integration is being developed separately in [PR #4](https://github.com/mrhunsaker/touchsight-NG/pull/4). The inspected `pipeline.js` does not yet call it.
-- **Inkscape-ready editable SVG:** planned as a separate export specification and implementation phase after Potrace verification and PR #4 merge. The existing tactile SVG remains the production-oriented export.
 - **Larger vision-language or segmentation models:** discussed as research directions in [Advanced model options](advanced-model-options.md); none are enabled in the current app.
+
+## Editable SVG and vector-editor handoff
+
+`render.js` exports editable SVG geometry with named groups for page background, textures, structural line art, outlines, knockouts, leaders, and braille. The tactile SVG uses millimetre page dimensions. Inkscape is the recommended FOSS editor, but any SVG-capable vector editor can perform manual post-processing and QC. See [The transcriber review workflow](review-workflow.md).
+
+## Editable SVG post-processing and quality control
+
+The tactile SVG is an editable vector document sized in millimetres, with named groups for textures, structural line art, outlines, label-clearance knockouts, leader lines, and braille dots. The key-page SVG separates braille from sighted print-reference text. These are vector objects, not a flattened screenshot.
+
+**Inkscape is the recommended reference editor because it is free and open-source (FOSS).** The SVG is standard vector artwork and can also be edited in other SVG-capable tools, including Adobe Illustrator and Affinity Designer. Inkscape is the documented default because the project targets FOSS workflows; it is not a technical requirement.
+
+Use the vector editor for post-processing: compare with the source and analysis overlays, correct paths and false contours, adjust leaders, and inspect braille, label-to-part correspondence, line hierarchy, textures, clearances, and margins. Preserve the page dimensions and mm scale. Save a separate reviewed copy, then produce a physical proof on the intended swell-paper/fuser system.
+
+Vector editing is an optional manual post-processing and QC stage, not automated validation. Edits do not update TouchSight-NG's analysis state or guideline report. Recheck the edited SVG independently, retain the untouched export, and assess the physical proof; visual correctness alone does not establish tactile readability.

@@ -72,3 +72,20 @@ Before exporting, verify:
 ## Production proof
 
 Export the tactile SVG or print/PDF and produce a proof using the actual swell-paper and fuser workflow. Inspect the physical result; on-screen geometry cannot model every printer, paper, fuser, or environmental variation. Where possible, obtain feedback from intended tactile readers and revise accordingly. See [Printing and swell paper](printing.md).
+
+## Editable SVG post-processing and quality control
+
+The tactile SVG export is a vector document with physical dimensions in millimetres. It contains separate, named SVG groups for the page background, textures, structural line art, outlines, label-clearance knockouts, leader lines, and braille dots. The key-page SVG also separates braille from sighted print-reference text. Paths, circles, and text remain vector objects rather than a flattened screenshot.
+
+**Inkscape is the recommended reference editor because it is free and open-source (FOSS).** The exported SVG is standard vector artwork; other SVG-capable editors—including Adobe Illustrator and Affinity Designer—can also be used. TouchSight-NG targets FOSS workflows, so Inkscape is the editor used in these instructions, not a technical requirement.
+
+Recommended post-processing sequence:
+
+1. Export the editable tactile SVG and, when present, the key-page SVG.
+2. Open the SVG in Inkscape. Use the Objects/Layers panel to inspect and isolate the named groups.
+3. Compare the artwork with the source diagram and the TouchSight-NG analysis views. Correct path geometry, remove false contours, reconnect broken boundaries, and adjust leader placement where necessary.
+4. Check label-to-part correspondence, braille spelling and dot patterns, line hierarchy, texture distinction, clearances, and page margins. Do not assume that a visually attractive edit is tactilely legible.
+5. Preserve the physical page dimensions and millimetre scale. Avoid scaling individual objects in ways that alter specified braille or line dimensions.
+6. Save a separate reviewed SVG, then produce a physical proof on the target printer/swell-paper/fuser system. Inspect the raised output and obtain tactile-reader feedback where possible.
+
+The vector editor is a post-processing and QC option, not an automated validation step. Editing SVG geometry does not update TouchSight-NG's analysis state or its automated guideline report. Re-run or independently perform checks after edits, and retain the unmodified export so changes can be compared or reverted.

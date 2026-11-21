@@ -23,6 +23,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-docs.txt
+      - name: Stage self-hosted Atkinson Hyperlegible fonts
+        run: mkdir -p docs/assets/fonts && cp src/fonts/atkinson-400.woff2 src/fonts/atkinson-700.woff2 docs/assets/fonts/
       - run: mkdocs build --site-dir _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -34,7 +34,9 @@ flowchart TD
   V --> W[Braille, keys, textures, knockouts]
   W --> X[Automated guideline checks]
   X --> Y[Transcriber review and correction]
-  Y --> Z[SVG / key page / print-PDF / STL]
+  Y --> Z[Editable layered SVG / key page / print-PDF / STL]
+  Z --> AA[Optional Inkscape or other SVG editor: manual correction and QC]
+  AA --> AB[Physical proof and tactile QA]
 ```
 
 ## 1. Input normalization
@@ -81,7 +83,7 @@ The current method:
 7. Uses the far endpoint as an approximate point on the named part.
 
 ```mermaid
-flowchart LR
+flowchart TD
   A[OCR label box] --> C[Candidate line segments]
   B[Thin-stroke mask] --> C
   C --> D[Score by proximity and direction]
@@ -141,3 +143,13 @@ The transcriber must compare every label and part relationship against the sourc
 Potrace is a bitmap-to-vector tracing engine. The project has an `esm-potrace-wasm` dependency associated with the separate Autotrace work in [PR #4](https://github.com/mrhunsaker/touchsight-NG/pull/4). The current `src/js/pipeline.js` does not import or invoke a Potrace preprocessing stage, and the current `scripts/vendor.mjs` does not copy a Potrace browser bundle into the app's runtime assets.
 
 The intended design under evaluation is to use Potrace as an optional first-pass reconstruction/cleanup step, rasterize its result for downstream analysis, and then run OCR, leader detection, foreground analysis, and segmentation on that prepared image. That differs from replacing the tactile renderer with a Potrace SVG. Treat this stage as planned until PR #4 is merged and the complete browser workflow is verified. See [Models and inference engines](models-and-engines.md#potrace-and-autotrace).
+
+## Editable SVG post-processing and quality control
+
+The tactile SVG is an editable vector document sized in millimetres, with named groups for textures, structural line art, outlines, label-clearance knockouts, leader lines, and braille dots. The key-page SVG separates braille from sighted print-reference text. These are vector objects, not a flattened screenshot.
+
+**Inkscape is the recommended reference editor because it is free and open-source (FOSS).** The SVG is standard vector artwork and can also be edited in other SVG-capable tools, including Adobe Illustrator and Affinity Designer. Inkscape is the documented default because the project targets FOSS workflows; it is not a technical requirement.
+
+Use the vector editor for post-processing: compare with the source and analysis overlays, correct paths and false contours, adjust leaders, and inspect braille, label-to-part correspondence, line hierarchy, textures, clearances, and margins. Preserve the page dimensions and mm scale. Save a separate reviewed copy, then produce a physical proof on the intended swell-paper/fuser system.
+
+Vector editing is an optional manual post-processing and QC stage, not automated validation. Edits do not update TouchSight-NG's analysis state or guideline report. Recheck the edited SVG independently, retain the untouched export, and assess the physical proof; visual correctness alone does not establish tactile readability.

@@ -17,7 +17,7 @@ The file names below come from the checked-in `scripts/vendor.mjs`, `package.jso
 | Transformers.js | `@huggingface/transformers@4.3.0` | Loads and runs SlimSAM in the browser | Segmentation |
 | ONNX Runtime Web | `onnxruntime-web` WASM and WebGPU-targeted bundle | Executes ONNX inference in the browser | PaddleOCR and SlimSAM |
 | three.js | `three@0.186.1` | 3D relief visualization and STL geometry support | Only when the relief view/export is used |
-| Potrace | `esm-potrace-wasm@^0.5.1` package dependency | Intended optional bitmap-to-vector preprocessing | Not called by the inspected main-branch pipeline |
+| Potrace | `esm-potrace-wasm@^0.5.1` package dependency | Optional bitmap-to-vector preprocessing | When Autotrace is enabled before analysis |
 
 ## PaddleOCR: primary OCR
 
@@ -108,7 +108,7 @@ Potrace is a bitmap-to-vector tracer: it converts raster shapes into vector path
 
 The repository's package manifest includes `esm-potrace-wasm`, a browser-oriented WebAssembly package. The optional Autotrace control in `src/index.html` invokes `src/js/autotrace.js`. The vendor script copies the ESM/WASM runtime into `src/vendor/potrace/` and includes the GPL-2.0 notice beside it.
 
-The proposed Autotrace design is an optional upstream preprocessing pass:
+The implemented Autotrace design is an optional upstream preprocessing pass:
 
 1. Preserve the original uploaded raster.
 2. If Autotrace is enabled, run Potrace to reconstruct a cleaner representation.
@@ -116,7 +116,7 @@ The proposed Autotrace design is an optional upstream preprocessing pass:
 4. Run OCR, leader detection, foreground/structure analysis, and segmentation on the prepared image.
 5. Keep the original available for comparison and for the non-Autotrace path.
 
-That is different from simply exporting Potrace's paths as the tactile graphic. The tactile renderer still needs semantic parts, braille, physical spacing, line hierarchy, and production constraints. Potrace is an optional preprocessing stage, not the tactile renderer. Browser behavior and output quality still require validation against the sample set before production use.
+That is different from simply exporting Potrace's paths as the tactile graphic. The tactile renderer still needs semantic parts, braille, physical spacing, line hierarchy, and production constraints. Potrace is an optional preprocessing stage, not the tactile renderer. Browser behavior and output quality should be checked against representative samples before production use.
 
 ## Download size and caching
 
@@ -127,3 +127,13 @@ For a reproducible release, record exact model URLs/revisions, checksums, licens
 ## Licensing and redistribution
 
 The npm dependencies and model repositories can have separate licenses. Do not infer the license of a model from the license of its runtime or conversion tool. Before redistributing a bundled build, review the license and attribution requirements for every library, model weight, conversion, and sample image. In particular, review the Potrace package's GPL-2.0 terms independently from the application's GPL-3.0-or-later license.
+
+## Editable SVG post-processing and quality control
+
+The tactile SVG is an editable vector document sized in millimetres, with named groups for textures, structural line art, outlines, label-clearance knockouts, leader lines, and braille dots. The key-page SVG separates braille from sighted print-reference text. These are vector objects, not a flattened screenshot.
+
+**Inkscape is the recommended reference editor because it is free and open-source (FOSS).** The SVG is standard vector artwork and can also be edited in other SVG-capable tools, including Adobe Illustrator and Affinity Designer. Inkscape is the documented default because the project targets FOSS workflows; it is not a technical requirement.
+
+Use the vector editor for post-processing: compare with the source and analysis overlays, correct paths and false contours, adjust leaders, and inspect braille, label-to-part correspondence, line hierarchy, textures, clearances, and margins. Preserve the page dimensions and mm scale. Save a separate reviewed copy, then produce a physical proof on the intended swell-paper/fuser system.
+
+Vector editing is an optional manual post-processing and QC stage, not automated validation. Edits do not update TouchSight-NG's analysis state or guideline report. Recheck the edited SVG independently, retain the untouched export, and assess the physical proof; visual correctness alone does not establish tactile readability.

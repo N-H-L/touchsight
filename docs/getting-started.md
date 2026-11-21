@@ -29,7 +29,7 @@ The vendor script is intended to prepare local browser assets: OpenCV.js, Tesser
 
 ### Asset path check
 
-**Important current source caveat:** the inspected `scripts/vendor.mjs` writes generated assets to `app/vendor` and `app/models`, while browser loaders in `src/js/libs.js` and `src/js/paddle.js` resolve assets relative to `src/` (under `src/vendor` and `src/models`). These paths do not currently agree in the checked-in source. Do not assume that a successful vendor command means the application can find every asset. This mismatch must be reconciled in code and verified before the clean-checkout setup can be considered reproducible.
+The server and vendor script target `src/`, matching the tracked application source. Run the commands above and confirm the browser console reports successful local asset loading.
 
 ## Start the local application
 
@@ -89,3 +89,20 @@ The harness records metrics for the sample set and compares TouchSight-NG with a
 ## Privacy and network behavior
 
 Image inference runs in the browser. The current design does not upload source diagrams to an application backend. Initial setup downloads public libraries and model files; after those assets are local, inference uses local browser assets. OpenCV has a pinned jsDelivr fallback in `libs.js` for setups where its vendored copy is unavailable. That request fetches library code, not user image pixels.
+
+## Editable SVG post-processing and quality control
+
+The tactile SVG export is a vector document with physical dimensions in millimetres. It contains separate, named SVG groups for the page background, textures, structural line art, outlines, label-clearance knockouts, leader lines, and braille dots. The key-page SVG also separates braille from sighted print-reference text. Paths, circles, and text remain vector objects rather than a flattened screenshot.
+
+**Inkscape is the recommended reference editor because it is free and open-source (FOSS).** The exported SVG is standard vector artwork; other SVG-capable editors—including Adobe Illustrator and Affinity Designer—can also be used. TouchSight-NG targets FOSS workflows, so Inkscape is the editor used in these instructions, not a technical requirement.
+
+Recommended post-processing sequence:
+
+1. Export the editable tactile SVG and, when present, the key-page SVG.
+2. Open the SVG in Inkscape. Use the Objects/Layers panel to inspect and isolate the named groups.
+3. Compare the artwork with the source diagram and the TouchSight-NG analysis views. Correct path geometry, remove false contours, reconnect broken boundaries, and adjust leader placement where necessary.
+4. Check label-to-part correspondence, braille spelling and dot patterns, line hierarchy, texture distinction, clearances, and page margins. Do not assume that a visually attractive edit is tactilely legible.
+5. Preserve the physical page dimensions and millimetre scale. Avoid scaling individual objects in ways that alter specified braille or line dimensions.
+6. Save a separate reviewed SVG, then produce a physical proof on the target printer/swell-paper/fuser system. Inspect the raised output and obtain tactile-reader feedback where possible.
+
+The vector editor is a post-processing and QC option, not an automated validation step. Editing SVG geometry does not update TouchSight-NG's analysis state or its automated guideline report. Re-run or independently perform checks after edits, and retain the unmodified export so changes can be compared or reverted.
