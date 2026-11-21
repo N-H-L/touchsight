@@ -2,17 +2,19 @@
 
 ## Run it locally
 
-TouchSight-NG is a static site with on-device models; there is nothing to install beyond Node.js (24 or newer).
+TouchSight-NG is a static browser application with on-device models. The application is **not hosted on GitHub Pages**; GitHub Pages hosts this project's documentation only. Run the application locally:
+
+Requirements: Node.js 24 or newer.
 
 ```bash
 npm ci
-npm run vendor   # fetches OpenCV.js, Tesseract.js, transformers.js, ONNX Runtime Web, three.js, SlimSAM and PaddleOCR weights into src/
+npm run vendor   # fetches browser libraries and model assets into src/
 npm run serve    # http://localhost:5173
 ```
 
-The first run downloads roughly 90 MB of models; the browser caches them afterwards. Measured on a desktop CPU (i9-14900KF, Chromium, WebAssembly): 10-30 s per diagram once the models are cached.
+Open [http://localhost:5173](http://localhost:5173). The first vendor setup downloads the required model and library assets; the browser caches model assets after they are loaded.
 
-The hosted copy lives at [`https://mrhunsaker.github.io/touchsight-NG/app/`](https://mrhunsaker.github.io/touchsight-NG/app/). This documentation site itself is at [`https://mrhunsaker.github.io/touchsight-NG/`](https://mrhunsaker.github.io/touchsight-NG/).
+The documentation site is hosted at [https://mrhunsaker.github.io/touchsight-NG/](https://mrhunsaker.github.io/touchsight-NG/). That site does not contain a hosted copy of the application.
 
 ## Input
 
@@ -33,7 +35,7 @@ The hosted copy lives at [`https://mrhunsaker.github.io/touchsight-NG/app/`](htt
 
 ## Reviewing the result
 
-The app shows five tabs: **Tactile graphic**, **What the AI saw**, **vs. edge tracing**, **Key page**, and **3D relief**. The right rail lists every detected label with its braille, its placement status, and the automated guideline check. See [The teacher review workflow](review-workflow.md).
+The app shows five tabs: **Tactile graphic**, **What the AI saw**, **vs. edge tracing**, **Key page**, and **3D relief**. The right rail lists every detected label with its braille, its placement status, and the automated guideline check. See [The transcriber review workflow](review-workflow.md).
 
 ## Exports
 
@@ -44,4 +46,4 @@ The app shows five tabs: **Tactile graphic**, **What the AI saw**, **vs. edge tr
 
 ## Privacy
 
-Everything runs in your browser. OCR (PaddleOCR, Tesseract fallback), segmentation (SlimSAM), layout and checks never contact a server. School materials never leave the computer. The only third-party load is a version-pinned OpenCV.js script for development setups where the vendored copy has not been generated; image data is never sent to it.
+Image analysis runs in your browser. OCR, segmentation, layout and checks do not send source diagrams to an application backend. The only third-party load is a version-pinned OpenCV.js script for development setups where the vendored copy has not been generated; image data is never sent to it.

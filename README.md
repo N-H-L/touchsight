@@ -6,7 +6,7 @@ TouchSight-NG helps a braille transcriber turn a labeled textbook or instruction
 
 The transcriber remains responsible for the finished graphic. TouchSight-NG is an assistive production tool, not an autonomous replacement for professional transcription, accessibility review, or testing with tactile readers.
 
-- **Application:** https://mrhunsaker.github.io/touchsight-NG/app/
+- **Application:** Run locally; the application is not hosted on GitHub Pages.
 - **User and technical documentation:** https://mrhunsaker.github.io/touchsight-NG/
 - **Getting started:** [docs/getting-started.md](docs/getting-started.md)
 - **Review workflow:** [docs/review-workflow.md](docs/review-workflow.md)
@@ -74,7 +74,7 @@ These measurements are automated checks, not evidence of validated tactile usabi
 
 ## Privacy and deployment
 
-TouchSight-NG is a static, browser-based application. OCR, segmentation, layout, checking, rendering, and 3D preview run on the user's device. There is no application backend, account, or image-upload service; source diagrams are not sent to a server. Model and library assets are prepared during the deployment build and served with the application.
+TouchSight-NG is a static, browser-based application. OCR, segmentation, layout, checking, rendering, and 3D preview run on the user's device. There is no application backend, account, or image-upload service; source diagrams are not sent to a server. Model and library assets are prepared locally with `npm run vendor`; GitHub Pages publishes documentation only.
 
 This design supports use with school and student materials while keeping source images on the transcriber's computer. See [Architecture](docs/architecture.md) and [Deployment](docs/deployment.md).
 
@@ -114,7 +114,7 @@ src/                  browser application
   fonts/              self-hosted fonts
 scripts/              vendor build, local server, evaluation and QA tooling
 docs/                 user and technical documentation (MkDocs)
-.github/workflows/    documentation and application deployment automation
+.github/workflows/    documentation-only deployment automation
 ```
 
 Key implementation modules are documented in [docs/modules.md](docs/modules.md). The processing sequence is described in [docs/pipeline.md](docs/pipeline.md).

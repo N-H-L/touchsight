@@ -1,6 +1,6 @@
 # TouchSight-NG
 
-**Textbook diagram in, tactile graphic out.** TouchSight-NG turns a labeled science diagram into a first-draft tactile graphic designed for swell paper, with braille labels, in under a minute. It runs entirely in the browser: no uploads, no accounts, no server.
+**Textbook diagram in, tactile graphic out.** TouchSight-NG turns a labeled science diagram into a first-draft tactile graphic designed for swell paper, with braille labels. The application runs locally in the browser: no uploads, no accounts, no application server. GitHub Pages hosts this documentation only; it does not host the application.
 
 TouchSight-NG is a working tool in daily use by a braille transcriber, not a demo. It began as a hackathon build and is now maintained and refined against real transcription work: preparing science and geography diagrams for students who read by touch.
 

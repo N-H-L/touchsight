@@ -1,35 +1,42 @@
-# Deployment (GitHub Pages)
+# Documentation deployment (GitHub Pages)
 
-The site publishes on every push to `main` via `.github/workflows/pages.yml` using the official GitHub Pages deploy action.
+GitHub Pages is used **only for the project documentation**. The Pages workflow does not install Node.js, build or vendor the application, copy application files, or publish the browser app.
 
-## Published layout
+The documentation is built with MkDocs and deployed on every push to `main` through `.github/workflows/pages.yml`.
 
-The Pages site hosts **both** the documentation and the application:
+## Published site
 
-- Documentation (MkDocs, Material theme) at `/`:
-  [`https://mrhunsaker.github.io/touchsight-NG/`](https://mrhunsaker.github.io/touchsight-NG/)
-- The application itself (the `src/` directory, with vendored libraries and models) at `/app/`:
-  [`https://mrhunsaker.github.io/touchsight-NG/app/`](https://mrhunsaker.github.io/touchsight-NG/app/)
+- **Documentation:** [https://mrhunsaker.github.io/touchsight-NG/](https://mrhunsaker.github.io/touchsight-NG/)
 
-## Build steps
+There is no hosted application at `/app/`. The application source remains in this repository and is run locally by the transcriber or developer. GitHub Pages deployment must not be treated as an application release or distribution mechanism.
 
-1. `npm ci --ignore-scripts`
-2. `npm run vendor` - downloads OpenCV.js, Tesseract.js, transformers.js, ONNX Runtime Web, three.js, SlimSAM and PaddleOCR weights into generated directories
-3. `rm -rf src/dev` - developer-only pages are excluded from the deployment
-4. `pip install -r requirements-docs.txt` then `mkdocs build --site-dir _site`
-5. Copy `src/` into `_site/app/`, add `.nojekyll`
-6. Upload and deploy the artifact
+## Documentation build
 
-## Adding documentation
+The workflow performs only these steps:
 
-Edit the Markdown files in `docs/` and, if needed, add the page to `nav` in `mkdocs.yml`. To preview:
+1. Check out the repository.
+2. Set up Python.
+3. Install the documentation dependencies from `requirements-docs.txt`.
+4. Run `mkdocs build --site-dir _site`.
+5. Upload the generated documentation site and deploy it to GitHub Pages.
+
+No application dependencies, model weights, vendored browser libraries, or files from `src/` are added to the Pages artifact.
+
+## Preview documentation locally
+
+Edit the Markdown files in `docs/` and, if needed, add pages to `nav` in `mkdocs.yml`.
 
 ```bash
 pip install -r requirements-docs.txt
 mkdocs serve     # http://localhost:8000
 ```
 
-## Notes
+To verify a production build:
 
-- The app is entirely static after the vendor step; there is no server-side component to host.
-- Models are fetched at build time from Hugging Face and a ModelScope mirror, then served from the site itself. End users never fetch from third parties at runtime (apart from the pinned, data-free OpenCV.js dev fallback).
+```bash
+mkdocs build --site-dir _site
+```
+
+## Run the application
+
+The application is separate from the documentation deployment. To run it locally, follow [Getting started](getting-started.md). The Pages workflow does not host, publish, or update an application instance.
