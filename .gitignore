@@ -1,6 +1,6 @@
 node_modules/
 app/vendor/
-src/vendor
+src/vendor/
 app/models/
 src/models/
 .env
