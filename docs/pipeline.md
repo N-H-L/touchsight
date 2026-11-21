@@ -138,11 +138,13 @@ The checker measures selected geometric properties such as short fragments, narr
 
 The transcriber must compare every label and part relationship against the source, inspect the tactile graphic and 3D relief, and perform applicable production QA. See [Review workflow](review-workflow.md).
 
-## Potrace: planned optional preprocessing, not yet active in this main-branch pipeline
+## Potrace: optional preprocessing
 
-Potrace is a bitmap-to-vector tracing engine. The project has an `esm-potrace-wasm` dependency associated with the separate Autotrace work in [PR #4](https://github.com/mrhunsaker/touchsight-NG/pull/4). The current `src/js/pipeline.js` does not import or invoke a Potrace preprocessing stage, and the current `scripts/vendor.mjs` does not copy a Potrace browser bundle into the app's runtime assets.
+TouchSight-NG includes an optional **Autotrace** control that uses the locally vendored `esm-potrace-wasm` runtime. It is an opt-in preprocessing step: when enabled, the browser passes the source image through Potrace, renders the resulting SVG back to an image at the original pixel dimensions, and sends that prepared raster through the normal analysis pipeline. OCR, leader detection, foreground and line-art analysis, and segmentation then operate on the prepared image.
 
-The intended design under evaluation is to use Potrace as an optional first-pass reconstruction/cleanup step, rasterize its result for downstream analysis, and then run OCR, leader detection, foreground analysis, and segmentation on that prepared image. That differs from replacing the tactile renderer with a Potrace SVG. Treat this stage as planned until PR #4 is merged and the complete browser workflow is verified. See [Models and inference engines](models-and-engines.md#potrace-and-autotrace).
+Autotrace is not the default path. With the control disabled, analysis uses the original image. The original source image is retained for comparison, and the prepared image is used for the analysis and downstream tactile layout. If Potrace initialization or reconstruction fails, the run reports the error and restores the previous application state rather than silently treating the failed result as valid.
+
+Potrace does not generate the final tactile graphic. The normal layout and rendering stages still create the semantic parts, braille, physical spacing, line hierarchy, and production-oriented SVG. Autotrace can change or simplify image details, so compare its results with the original and review labels, boundaries, and tactile meaning before export. See [Models and inference engines](models-and-engines.md#potrace-and-autotrace).
 
 ## Editable SVG post-processing and quality control
 

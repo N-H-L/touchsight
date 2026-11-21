@@ -70,7 +70,7 @@ This is a hybrid system: learned models handle text recognition and part segment
 | SlimSAM | Point-prompted segmentation of labeled parts | Transformers.js + ONNX Runtime WASM |
 | ONNX Runtime Web | Executes OCR and segmentation ONNX models | WebAssembly |
 | three.js | Interactive 3D relief preview | WebGL |
-| Potrace WASM | Optional vector-tracing/preprocessing experiment; not active in the inspected main-branch pipeline | WebAssembly package dependency |
+| Potrace WASM | Opt-in raster preprocessing through the Autotrace control; its SVG result is rasterized before normal analysis | Locally vendored WebAssembly package |
 
 See [Models and inference engines](models-and-engines.md) for model identities, files, roles, and caveats.
 
