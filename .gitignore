@@ -62,3 +62,7 @@ htmlcov/
 
 # Local AI-assistant configuration and state.
 .claude/
+
+# Neutralino desktop shell (downloaded by "npx neu update")
+desktop/neutralino/bin/
+desktop/neutralino/.tmp/

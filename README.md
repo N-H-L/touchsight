@@ -91,6 +91,14 @@ npm run vendor
 npm run serve
 ```
 
+By default the application runs in a browser tab. An optional desktop window
+(neutralino, using the operating system webview instead of a bundled Chromium)
+is also available; see [Desktop GUI](docs/desktop-gui.md).
+
+```bash
+npm run desktop
+```
+
 Open http://localhost:5173 if the local app runtime has been assembled. Note that the current checkout has an incomplete `src/` to `app/` transition: the server and vendor script target `app/`, but the tracked application source is under `src/` and no build/copy step currently populates `app/`. See [Getting started](docs/getting-started.md#asset-path-check) before treating this as a verified clean-checkout setup. To run the automated evaluation harness:
 
 ```bash
