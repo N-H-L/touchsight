@@ -142,7 +142,7 @@
       "max_textures": 5,
       "existing_line_width_hierarchy_mm": {
         "silhouette": 1.5,
-        "part_outline": 1.0,
+        "part_outline": 1,
         "detail": 0.8,
         "leader": 0.6
       }
@@ -249,5 +249,109 @@
     "Add comments explaining each sensitivity parameter in image-space or physical tactile units.",
     "Keep the existing source organization unless a small isolated tracing configuration module materially improves maintainability."
   ],
-  "deliverable": "Implement the above as a focused, reviewable JavaScript change. First report the files to be changed and the parameter mapping; then implement, run the available tests, and summarize measured improvements and any remaining limitations. Do not claim tests passed unless they were actually run."
+  "deliverable": "Implement the above as a focused, reviewable JavaScript change. First report the files to be changed and the parameter mapping; then implement, run the available tests, and summarize measured improvements and any remaining limitations. Do not claim tests passed unless they were actually run.",
+  "next_step_after_potrace_merge": {
+    "title": "Define and implement an Inkscape-ready editable SVG export",
+    "status": "Planned; requirements discovery only until the user verifies the Potrace workflow and merges PR #4.",
+    "sequence_gate": [
+      "Do not begin implementation as part of the current tracing-sensitivity task.",
+      "Wait until the user has verified that Autotrace/Potrace works as intended and has merged PR #4.",
+      "After that gate, inspect the then-current main branch and determine the actual export architecture before proposing implementation changes."
+    ],
+    "objective": "Add a dedicated export that produces an organized, editable SVG suitable for post-processing in Inkscape, while preserving the existing production-oriented tactile SVG output and its physical/tactile constraints.",
+    "required_outcome_discovery": {
+      "instruction": "The first task in this phase is to determine and document the complete outcome requirements with the user before coding. Do not assume that every proposed layer or content type is required. Inspect the current renderer/exporter and ask focused questions only where the desired production workflow is not inferable.",
+      "requirements_to_resolve": [
+        {
+          "area": "Intended use and deliverable",
+          "questions": [
+            "Is the editable SVG intended as a transcriber's working/master file, a final production file, or both?",
+            "Should it be a separate export option alongside the existing tactile-production SVG, or replace any existing export?",
+            "Which downstream outputs and workflows must remain supported?"
+          ]
+        },
+        {
+          "area": "Editable content and object structure",
+          "questions": [
+            "Which elements must be independently editable: outer silhouette, named-part outlines, internal details, textures, leader lines, braille dots, print labels, reference image, and key-page content?",
+            "Should each named part be a separately named group, with its boundary and texture grouped together or independently?",
+            "Should braille labels be editable as dot geometry, text, or both? If text is desired, determine font/encoding and portability requirements rather than assuming a font will exist on the target machine.",
+            "Should print labels be included in the same SVG, and if so, should they be editable text, paths, or a selectable option?"
+          ]
+        },
+        {
+          "area": "Inkscape layer and naming conventions",
+          "questions": [
+            "Confirm the required Inkscape layer stack and ordering. Candidate layers to evaluate are Braille, Print labels, Leader lines, Part outlines, Textures, and optional Reference/background.",
+            "Determine whether layers should be locked, hidden, or visible by default.",
+            "Define stable, human-readable layer, group, and object IDs/names, including how OCR labels and segmented part names map to them."
+          ]
+        },
+        {
+          "area": "Geometry, units, and page setup",
+          "questions": [
+            "Confirm page dimensions, physical units (preferably millimetres if consistent with the production workflow), viewBox, scale, and orientation.",
+            "Determine whether stroke widths, braille dot diameters, texture spacing, and clearances must remain physically meaningful when opened or edited in Inkscape.",
+            "Determine whether geometry should remain as editable strokes, filled paths, or a deliberate combination, and whether path simplification/conversion is permitted."
+          ]
+        },
+        {
+          "area": "Reference image and provenance",
+          "questions": [
+            "Determine whether the source image should be embedded, linked, omitted, or placed on a separate optional reference layer.",
+            "Determine whether the SVG needs source/processing metadata, label-to-object associations, or other provenance useful to a transcriber."
+          ]
+        },
+        {
+          "area": "Quality assurance and acceptance",
+          "questions": [
+            "Define what 'editable in Inkscape' means operationally: opening without warnings, selectable layers/objects, ability to move/edit individual parts, and save/reopen without structural loss.",
+            "Determine which Inkscape versions/platforms need to be supported and whether automated SVG structural checks are sufficient or a manual Inkscape smoke test is required.",
+            "Define how to verify that editing-oriented styling does not alter the existing tactile-production export, braille legibility, physical dimensions, line hierarchy, or tactile spacing."
+          ]
+        },
+        {
+          "area": "User interface and workflow",
+          "questions": [
+            "Determine where the new export option belongs and what file naming convention and default filename should be used.",
+            "Determine whether the editable export should include all detected elements or offer inclusion controls for optional layers."
+          ]
+        }
+      ],
+      "proposed_default_to_validate_not_assume": {
+        "export_model": "A separate 'Inkscape-ready SVG' export; keep the existing tactile-production SVG unchanged.",
+        "candidate_layers": [
+          "Braille",
+          "Print labels",
+          "Leader lines",
+          "Part outlines (organized into named part groups)",
+          "Textures",
+          "Optional reference/background"
+        ],
+        "geometry": "Use semantic SVG groups with stable IDs and human-readable labels; preserve editable vector geometry and physical dimensions in millimetres where appropriate.",
+        "compatibility": "Use standard SVG plus Inkscape layer metadata where needed; avoid making the file dependent on external assets or unavailable fonts unless the user explicitly chooses that behavior."
+      },
+      "definition_of_done_to_agree": [
+        "The user has approved a written export specification covering intended use, included content, layers, naming, units, page setup, and optional content.",
+        "A sample export opens in the agreed Inkscape version without warnings and presents the agreed layer/object structure.",
+        "A transcriber can independently select and edit the required diagram components without flattening the artwork.",
+        "The editable export retains correct page scale and physical dimensions after opening and saving from Inkscape.",
+        "The existing tactile-production SVG export remains available and unchanged in purpose and output requirements.",
+        "Regression checks confirm the new export does not change OCR, segmentation, tactile layout, braille placement/clearance, or production export behavior."
+      ]
+    },
+    "implementation_expectations_after_requirements_approval": [
+      "Inspect the current main-branch rendering and export code after PR #4 is merged; do not rely on assumptions from earlier branch snapshots.",
+      "Report the proposed files to change and the agreed SVG structure before implementation.",
+      "Implement the editable export as a separate, additive output path unless the user approves another design.",
+      "Add focused tests for SVG validity, layer/group IDs, required element inclusion, units/viewBox, and preservation of the existing production export.",
+      "Perform an Inkscape open/edit/save/reopen smoke test when the required environment is available; clearly report if it could not be run.",
+      "Do not claim Inkscape compatibility or successful editing without verification."
+    ],
+    "out_of_scope_until_the_gate_is_met": [
+      "Do not implement or modify SVG export code now.",
+      "Do not change the current tactile-production SVG or its rendering semantics.",
+      "Do not add dependencies for SVG authoring or Inkscape integration before requirements are agreed."
+    ]
+  }
 }
