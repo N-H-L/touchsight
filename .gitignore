@@ -1,8 +1,64 @@
+# Dependencies (keep package-lock.json and other lockfiles tracked).
 node_modules/
 app/vendor/
 app/models/
+
+# Local environment and secrets. Commit safe templates such as .env.example.
 .env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs, runtime output, and temporary files.
 *.log
-eval-out/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+Desktop.ini
+
+# Build output and generated documentation.
+dist/
+build/
+site/
+coverage/
+.nyc_output/
 test-results/
+eval-out/
+
+# Tool and package-manager caches.
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+.eslintcache
+.stylelintcache
+
+# Python virtual environments, bytecode, and test/type-check caches.
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+htmlcov/
+
+# Local IDE/editor state.
+.idea/
+.vscode/
+*.code-workspace
+
+# Local AI-assistant configuration and state.
 .claude/
