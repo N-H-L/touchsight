@@ -59,6 +59,8 @@
             <option value="simple">Simplified (3 mm spacing)</option>
           </select>
         </label>
+        <label class="check"><input id="opt-autotrace" type="checkbox"> Use Autotrace (Potrace)</label>
+        <p class="hint">Optional upstream image reconstruction. OCR, leader detection, and segmentation use the reconstructed image; the original remains available for comparison.</p>
         <label for="opt-sensitivity">Tracing sensitivity <output id="opt-sensitivity-value" for="opt-sensitivity">55</output>
           <input id="opt-sensitivity" type="range" min="0" max="100" step="5" value="55">
           <small class="hint">Higher values recover lighter contours but may add detail. Tactile spacing and braille clearance remain enforced.</small>
@@ -131,7 +133,7 @@
           <div class="spinner" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
           <p class="loadmsg" id="loadmsg">Starting…</p>
           <ol class="loadsteps" id="steps">
-            <li data-step="engines">Load on-device models</li>
+            <li data-step="engines">Prepare image and load models</li>
             <li data-step="ocr">Read the printed labels</li>
             <li data-step="leaders">Trace leader lines</li>
             <li data-step="segment">Segment each labeled part</li>

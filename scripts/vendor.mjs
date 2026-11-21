@@ -21,6 +21,14 @@ async function fetchTo(url, dst) {
   console.log('downloaded', url);
 }
 
+// Potrace ESM/WASM bundle and its complete third-party license notice.
+await cp(join(nm, 'esm-potrace-wasm/dist/index.js'), join(out, 'potrace/index.js'));
+await cp(join(root, 'LICENSES', 'GPL-2.0.txt'), join(out, 'potrace/GPL-2.0.txt'));
+
+// Potrace ESM/WASM bundle and its complete third-party license notice.
+await cp(join(nm, 'esm-potrace-wasm/dist/index.js'), join(out, 'potrace/index.js'));
+await cp(join(root, 'LICENSES', 'GPL-2.0.txt'), join(out, 'potrace/GPL-2.0.txt'));
+
 // OpenCV.js
 await cp(join(nm, '@techstark/opencv-js/dist/opencv.js'), join(out, 'opencv/opencv.js'));
 

@@ -106,7 +106,7 @@ three.js is a rendering library. It supports the interactive relief preview and 
 
 Potrace is a bitmap-to-vector tracer: it converts raster shapes into vector paths. It is useful when a raster diagram needs a clean vector representation, but it is not an OCR engine, a semantic segmentation model, or a tactile-layout engine.
 
-The repository's package manifest includes `esm-potrace-wasm`, a browser-oriented WebAssembly package. However, in the inspected main-branch source, `src/js/pipeline.js` does not call Potrace and `scripts/vendor.mjs` does not copy its runtime bundle. Its intended role is being developed separately in [PR #4](https://github.com/mrhunsaker/touchsight-NG/pull/4).
+The repository's package manifest includes `esm-potrace-wasm`, a browser-oriented WebAssembly package. The optional Autotrace control in `src/index.html` invokes `src/js/autotrace.js`. The vendor script copies the ESM/WASM runtime into `src/vendor/potrace/` and includes the GPL-2.0 notice beside it.
 
 The proposed Autotrace design is an optional upstream preprocessing pass:
 
@@ -116,7 +116,7 @@ The proposed Autotrace design is an optional upstream preprocessing pass:
 4. Run OCR, leader detection, foreground/structure analysis, and segmentation on the prepared image.
 5. Keep the original available for comparison and for the non-Autotrace path.
 
-That is different from simply exporting Potrace's paths as the tactile graphic. The tactile renderer still needs semantic parts, braille, physical spacing, line hierarchy, and production constraints. Do not treat Potrace as active until PR #4 is merged and browser behavior has been verified.
+That is different from simply exporting Potrace's paths as the tactile graphic. The tactile renderer still needs semantic parts, braille, physical spacing, line hierarchy, and production constraints. Potrace is an optional preprocessing stage, not the tactile renderer. Browser behavior and output quality still require validation against the sample set before production use.
 
 ## Download size and caching
 

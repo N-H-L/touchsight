@@ -1,6 +1,7 @@
 import { loadOpenCV } from './libs.js';
 import { analyze, updateTracing } from './pipeline.js';
 import { DEFAULT_TRACING_SENSITIVITY } from './tracing-config.js';
+import { prepareAutotrace } from './autotrace.js';
 import { buildLayout } from './tactile.js';
 import { renderTactile, renderKeyPage, TEXTURES } from './render.js';
 import { checkAll } from './check.js';
@@ -20,7 +21,7 @@ async function showRelief() {
 }
 
 const $ = (s) => document.querySelector(s);
-const state = { imageData: null, original: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false, mode: 'tactile', sensitivity: DEFAULT_TRACING_SENSITIVITY };
+const state = { imageData: null, sourceImageData: null, original: null, analysis: null, layout: null, check: null, name: 'diagram', busy: false, mode: 'tactile', sensitivity: DEFAULT_TRACING_SENSITIVITY };
 const MAX_SIDE = 1400; // keep in-browser inference fast
 const PAL = ['#e6194b', '#3cb44b', '#0082c8', '#f58230', '#911eb4', '#2fa8a8', '#f032e6', '#7f9d1f', '#008080', '#aa6e28', '#5a5aff', '#c0392b'];
 
@@ -72,11 +73,8 @@ async function runFromURL(url, title, name) {
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const ctx = c.getContext('2d', { willReadFrequently: true });
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.drawImage(img, 0, 0, W, H);
-    state.imageData = ctx.getImageData(0, 0, W, H);
-    state.original = c.toDataURL('image/jpeg', 0.85);
-    state.name = name || 'diagram';
-    $('#opt-title').value = title || '';
-    await run();
+    const sourceImageData = ctx.getImageData(0, 0, W, H);
+    await run({ sourceImageData, original: c.toDataURL('image/jpeg', 0.85), name: name || 'diagram', title: title || '' });
   } catch (e) {
     console.error(e);
     setStatus('Could not read that image. ' + (e.message || ''), true);
@@ -109,18 +107,34 @@ function setStatus(msg, err = false) { const s = $('#status'); s.textContent = m
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 // ---------- pipeline ----------
-async function run() {
+async function run(input = {}) {
+  if (state.busy) return;
+  const previous = { imageData: state.imageData, sourceImageData: state.sourceImageData, original: state.original, analysis: state.analysis, layout: state.layout, check: state.check, name: state.name };
   state.busy = true;
   document.body.setAttribute('aria-busy', 'true');
+  document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = true; });
   $('#empty').hidden = true;
   showLoading(true);
   setStatus('Working… everything runs on this device.');
   const t0 = performance.now();
   try {
+    const sourceImageData = input.sourceImageData ?? state.sourceImageData;
+    if (!sourceImageData) throw new Error('No source image is available.');
     state.sensitivity = Number($('#opt-sensitivity')?.value ?? DEFAULT_TRACING_SENSITIVITY);
-    state.analysis = await analyze(state.imageData, { sensitivity: state.sensitivity,
+    let preparedImageData = sourceImageData;
+    if ($('#opt-autotrace')?.checked) {
+      setStep('engines', 'Reconstructing image with Potrace…');
+      preparedImageData = await prepareAutotrace(sourceImageData);
+    }
+    const analysis = await analyze(preparedImageData, { sensitivity: state.sensitivity,
       onStage: (k, msg) => setStep(k, k === 'engines' ? 'Loading on-device models… (first run only)' : msg),
     });
+    state.sourceImageData = sourceImageData;
+    state.imageData = preparedImageData;
+    state.original = input.original ?? state.original;
+    state.name = input.name ?? state.name;
+    if (input.title !== undefined) $('#opt-title').value = input.title;
+    state.analysis = analysis;
     await relayout(true);
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     const st = state.layout.stats;
@@ -128,7 +142,9 @@ async function run() {
     setStatus(`Done in ${secs} s on this device · ${state.analysis.labels.length} labels found · ${st.parts} parts segmented · ${st.fullLabels} full braille labels + ${st.keyLabels} keyed${fixes ? ` · ${fixes} OCR slip${fixes > 1 ? 's' : ''} auto-corrected` : ''}${state.analysis.labels.length ? '' : ' · no printed labels found, so this is outlines only'}`);
   } catch (e) {
     console.error(e);
-    if (byId[state.name] && await showPrecomputed(state.name)) {
+    Object.assign(state, previous);
+    if (state.analysis) { try { draw(); } catch {} }
+    if (!state.analysis && byId[state.name] && await showPrecomputed(state.name)) {
       setStatus(`This browser could not run the on-device models (${e.message || e}). Showing a result computed earlier with the same pipeline.`, true);
     } else {
       $('#empty').hidden = !!state.layout;
@@ -137,6 +153,7 @@ async function run() {
   } finally {
     showLoading(false);
     state.busy = false;
+    document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = false; });
     document.body.removeAttribute('aria-busy');
   }
 }
@@ -345,13 +362,19 @@ $('#viewmode').addEventListener('click', (e) => {
 });
 for (const id of ['#opt-page', '#opt-style', '#opt-textures', '#opt-keys', '#opt-title']) $(id).addEventListener('change', () => state.analysis && !state.busy && relayout());
 
+const autotraceInput = $('#opt-autotrace');
+autotraceInput?.addEventListener('change', () => {
+  if (!state.sourceImageData || state.busy) return;
+  run();
+});
+
 const sensitivityInput = $('#opt-sensitivity');
 const sensitivityValue = $('#opt-sensitivity-value');
 sensitivityInput?.addEventListener('input', () => { sensitivityValue.value = sensitivityInput.value; sensitivityValue.textContent = sensitivityInput.value; });
 sensitivityInput?.addEventListener('change', async () => {
   if (!state.analysis || state.busy) return;
   state.busy = true;
-  sensitivityInput.disabled = true;
+  document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = true; });
   setStatus('Updating tracing sensitivity…');
   try {
     const cv = await loadOpenCV();
@@ -363,7 +386,7 @@ sensitivityInput?.addEventListener('change', async () => {
     console.error(e);
     setStatus('Could not update tracing: ' + (e.message || e), true);
   } finally {
-    sensitivityInput.disabled = false;
+    document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = false; });
     state.busy = false;
   }
 });

@@ -661,3 +661,9 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+
+Third-party software
+--------------------
+
+TouchSight-NG includes esm-potrace-wasm 0.5.1, licensed under GNU General Public License version 2 (GPL-2.0). The complete license text is included in LICENSES/GPL-2.0.txt and is copied into src/vendor/potrace/GPL-2.0.txt by the vendor script. Upstream: https://github.com/tomayac/esm-potrace-wasm.

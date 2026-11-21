@@ -271,6 +271,15 @@ export function updateTracing(cv, imageData, analysis, sensitivity) {
     const fg = foregroundMask(cv, src, analysis.labels, value);
     const { lineArt, regions, edges } = lineArtMask(cv, src, analysis.labels, fg, value);
     analysis.fg = fg;
+    // Keep cached SAM masks constrained to the newly computed foreground. Otherwise
+    // tracing updates can leave stale mask pixels outside the current drawing.
+    const fgDilated = dilateMask(cv, fg, analysis.W, analysis.H, 5);
+    for (const label of analysis.labels) if (label.mask) {
+      const constrained = new Uint8Array(label.mask.length);
+      for (let i = 0; i < constrained.length; i++) constrained[i] = label.mask[i] && fgDilated[i] ? 1 : 0;
+      label.mask = constrained;
+      label._contours = null;
+    }
     analysis.lineArt = lineArt;
     analysis.regions = regions;
     analysis.edges = edges;
