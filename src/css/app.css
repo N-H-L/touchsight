@@ -2,6 +2,8 @@
 @font-face { font-family: "Atkinson Hyperlegible"; font-weight: 700; font-display: swap; src: url(../fonts/atkinson-700.woff2) format("woff2"); }
 
 :root {
+  /* 150% of the browser default: enlarge the entire app UI by 50%. */
+  font-size: 150%;
   /* Catppuccin Latte, adjusted for WCAG AA (all text >= 4.5:1) */
   --bg: #eff1f5;            /* Base */
   --panel: #ffffff;         /* Panel: Text on white (11.2:1) */
@@ -43,7 +45,7 @@
     --shadow: none;
   }
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; font-family: inherit; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; }
