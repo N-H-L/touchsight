@@ -1,97 +1,137 @@
 # TouchSight-NG
 
-**Textbook diagram in, tactile graphic out.** TouchSight-NG turns a labeled science diagram into a first-draft tactile graphic designed for swell paper, with braille labels, in under a minute. It runs entirely in the browser: no uploads, no accounts, no server.
+**A production-oriented drafting tool for tactile graphics transcription.**
 
-This is a working, maintained tool in daily use by a braille transcriber, not a hackathon demo. It was prototyped at a hackathon and has since been reworked and hardened against real transcription work: preparing science and geography diagrams for students who read by touch, and iterating on the pipeline whenever a real diagram exposes a rough edge.
+TouchSight-NG helps a braille transcriber turn a labeled textbook or instructional diagram into an editable first draft of a tactile graphic. It automates the image-analysis and page-layout work—reading printed labels, tracing the leader lines that identify diagram parts, segmenting those parts, and laying out braille and tactile features—so the transcriber can spend more time reviewing the content and less time building every graphic from scratch.
 
-- **Live app:** https://mrhunsaker.github.io/touchsight-NG/app/
-- **Documentation:** https://mrhunsaker.github.io/touchsight-NG/ (built from [docs/](docs/index.md))
+The transcriber remains responsible for the finished graphic. TouchSight-NG is an assistive production tool, not an autonomous replacement for professional transcription, accessibility review, or testing with tactile readers.
 
-## The problem
+- **Application:** https://mrhunsaker.github.io/touchsight-NG/app/
+- **User and technical documentation:** https://mrhunsaker.github.io/touchsight-NG/
+- **Getting started:** [docs/getting-started.md](docs/getting-started.md)
+- **Review workflow:** [docs/review-workflow.md](docs/review-workflow.md)
 
-Blind and low-vision students learn science from diagrams too. Each diagram has to be redrawn as a *tactile graphic*: clutter removed, print replaced with braille, lines at least 3 mm apart so fingers can tell them apart, only a few distinguishable textures. A science assignment with graphics can take up to 10 hours to transcribe ([Jordan School District, 2024](https://jam.jordandistrict.org/2024/10/03/transcription-services-for-the-visually-impaired/)), and a 2023 survey found almost half of the teachers making tactile graphics had never been trained to do so ([British Journal of Visual Impairment](https://experts.arizona.edu/en/publications/creating-tactile-graphics-in-school-settings-a-survey-of-training/)).
+## Intended workflow
 
-Tracing the picture automatically does not work: edge detection turns every printed label into raised squiggles and every shading gradient into noise. TouchSight-NG reads the labels and leader lines first, segments the parts the labels name, and only then redraws the structure for touch.
+The primary user is a braille transcriber or teacher of students with visual impairments (TVI) preparing tactile graphics from labeled science, geography, and other instructional diagrams.
 
-## What it does
+A typical job begins with a diagram from a textbook, worksheet, or other instructional source. The application analyzes the diagram and creates a first-draft tactile page. The transcriber reviews the detected wording, part boundaries, braille, spacing, textures, and overall readability; makes corrections in the editor; and exports the result for production and final quality assurance.
 
-1. **Reads the diagram's own labels.** PaddleOCR's detector and recognizer run in the browser through ONNX Runtime; Tesseract is the fallback.
-2. **Follows each leader line to the part it names**, including broken and dotted leaders.
-3. **Segments that part** with SlimSAM (a distilled Segment Anything) prompted by the leader tips.
-4. **Redraws the structure for touch** in a Detailed or Simplified outline style, with a label-guided line hierarchy (bold 1.5 mm edges for named parts, fine 0.8 mm detail).
-5. **Lays out a tactile page in millimetres** per the BANA *Guidelines and Standards for Tactile Graphics* (2022): textures (at most 5), uncontracted UEB braille to Spec 800 dot dimensions, full words or two-letter keys on a key page, 3 mm clearance around braille.
-6. **Repairs OCR slips** (`Atriym` to `Atrium`, `Leff Atrium` to `Left Atrium`) against a science vocabulary, with every correction shown to the teacher.
-7. **Checks the result** with automated BANA-derived checks, side by side with an edge-tracing baseline.
-8. **Lets the teacher fix it.** Edit, merge or remove labels; the layout updates instantly.
-9. **Shows how it will feel.** A 3D relief view under raking light, plus an STL export for 3D printing.
-10. **Exports.** Tactile SVG (pure black, ready for swell paper), key page, or print / PDF at true page size.
+The goal is not to automate professional judgment. It is to provide a consistent, standards-informed starting point that a transcriber can inspect, correct, and finish.
 
-Full walkthroughs live in the [documentation](docs/index.md): [getting started](docs/getting-started.md), [review workflow](docs/review-workflow.md), [printing](docs/printing.md), [architecture](docs/architecture.md), [pipeline](docs/pipeline.md), [guidelines](docs/guidelines.md), [module reference](docs/modules.md), [evaluation](docs/evaluation.md), [deployment](docs/deployment.md).
+## Processing workflow
 
-## Results (16 Wikimedia Commons diagrams, same checker throughout)
+The image-analysis stages are deliberately ordered. The diagram's labels provide semantic anchors: the system reads the text, follows the leaders to the parts being named, and uses those locations to guide segmentation and tactile rendering. It does not simply convert every visible edge into a raised line.
 
-| Metric | Detailed (default) | Simplified | Edge tracing | Edge tracing, text erased |
-|---|---|---|---|---|
-| Label recall vs hand-counted labels (10 diagrams, 151 labels) | **148 of 151 (98%)** | same | n/a | n/a |
-| Labels placed in braille | **all but 1 of 233** | same | none | none |
-| Print text traced as raised marks | **none** | none | all 233 labels | none |
-| Short fragments (< 12.5 mm) | 66 | **14** | 763 | 336 |
-| Mean figure area where lines < 3 mm apart | 3.5% | **1.0%** | 6.4% | 4.8% |
-| Braille labels with full 3 mm clearance | 165 of 232 (71%) | 172 of 231 (74%) | n/a | n/a |
+```mermaid
+flowchart TD
+    A["Source diagram<br/>PNG, JPG, or WebP"] --> B["Image preparation"]
+    B --> C["OCR<br/>PaddleOCR; Tesseract fallback"]
+    C --> D["Label grouping and text correction"]
+    D --> E["Leader-line detection and tracing"]
+    E --> F["Point prompts from leader tips or in-figure labels"]
+    F --> G["SlimSAM segmentation<br/>named diagram parts"]
+    B --> H["Foreground and contour analysis"]
+    G --> I["Label-guided line hierarchy"]
+    H --> I
+    I --> J["Tactile page layout<br/>millimetres, spacing, textures, UEB braille"]
+    D --> J
+    J --> K["Automated guideline checks"]
+    K --> L["Transcriber review and editing"]
+    L --> M["Tactile SVG / print PDF / key page / STL"]
+    M --> N["Production and final quality assurance"]
+```
 
-Method, per-diagram numbers and reproduction steps are in [docs/evaluation.md](docs/evaluation.md).
+The optional **Autotrace / Potrace first pass** is an image-preprocessing stage, not a replacement for OCR or segmentation: when enabled in a build that includes the Autotrace control, Potrace reconstructs a cleaner raster image first, and the downstream OCR, leader detection, foreground analysis, and segmentation operate on that prepared image. When disabled, analysis uses the source raster. The original source is retained for reference. See [Pipeline stages](docs/pipeline.md) for the current processing details and [the Autotrace implementation work](https://github.com/mrhunsaker/touchsight-NG/pull/4) for the integration status.
 
-**Limitations.** These are automated checks derived from BANA guidelines, not a substitute for a qualified transcriber. Not yet formally tested with blind readers or printed on physical swell paper. Labels are uncontracted braille. Diagrams without printed labels (or only math symbols) get outlines only. OCR misses some text on busy fills; teachers can fix wrong words but cannot yet add a missed label.
+## What the application produces
 
-## Why on-device
+- **Tactile graphic:** a page laid out in physical millimetres, with a bold/fine line hierarchy, optional textures, and uncontracted UEB Grade 1 braille.
+- **Key page:** a legend for two-letter label keys when full braille labels do not fit.
+- **3D relief preview:** a view of the raised lines and braille, plus STL export for 3D printing.
+- **Production files:** tactile SVG (pure black, suitable for swell-paper workflows), key page, and print/PDF at true page size.
+- **Review information:** detected labels, OCR corrections, leader-line and segmentation overlays, and automated checks alongside a simple edge-tracing baseline.
 
-- **Free for schools:** no API bills.
-- **Private:** school materials never leave the computer.
-- **Easy to try:** no account; open the URL and run a sample.
+## Transcriber review is part of the process
 
-The models are small enough (PaddleOCR ~18 MB, SlimSAM ~40 MB) to run on a laptop CPU through WebAssembly. Measured on a desktop (i9-14900KF, Chrome headless): 10-30 s per diagram once the models are cached.
+The generated page is a draft that must be checked against the source diagram. In particular:
+
+1. Verify every label and its relationship to the correct diagram part.
+2. Correct OCR errors and remove labels that should not appear; merge labels split across lines.
+3. Inspect leader paths, segmentation boundaries, and the named-part line hierarchy.
+4. Check braille placement, clearance, line spacing, texture distinctions, and the key page.
+5. Review the 3D relief preview where available, then export and follow the applicable production and quality-assurance process.
+
+See [The transcriber review workflow](docs/review-workflow.md), [Tactile layout and BANA guidelines](docs/guidelines.md), and [Printing and swell paper](docs/printing.md).
+
+## Standards, evaluation, and limitations
+
+Layout and checking are informed by the BANA *Guidelines and Standards for Tactile Graphics* (2022), ICEB *Rules of Unified English Braille*, and Library of Congress Spec 800 braille dimensions. The application uses physical page dimensions and checks including braille clearance, short fragments, and areas where lines are closer than 3 mm.
+
+In an evaluation of 16 Wikimedia Commons diagrams, the current benchmark reported 148 of 151 hand-counted labels found (98%). The evaluation also measured braille placement, short fragments, and close-line areas against an edge-tracing baseline. See [Evaluation and benchmarks](docs/evaluation.md) for the method, per-diagram results, and reproduction instructions.
+
+These measurements are automated checks, not evidence of validated tactile usability. TouchSight-NG has not yet been formally tested with blind readers or systematically validated on physical swell-paper output. Labels are uncontracted UEB. Diagrams without printed labels (or with only math symbols) may receive outlines without named-part labels. OCR can miss text on busy fills; the transcriber can correct detected wording but cannot currently add a label the system failed to detect. Professional review remains necessary.
+
+## Privacy and deployment
+
+TouchSight-NG is a static, browser-based application. OCR, segmentation, layout, checking, rendering, and 3D preview run on the user's device. There is no application backend, account, or image-upload service; source diagrams are not sent to a server. Model and library assets are prepared during the deployment build and served with the application.
+
+This design supports use with school and student materials while keeping source images on the transcriber's computer. See [Architecture](docs/architecture.md) and [Deployment](docs/deployment.md).
 
 ## Run locally
 
+Requirements: Node.js 24 or newer.
+
 ```bash
 npm ci
-npm run vendor   # fetches OpenCV.js, Tesseract.js, transformers.js, ONNX Runtime, three.js, SlimSAM and PaddleOCR weights into generated dirs
-npm run serve    # http://localhost:5173
-npm run eval     # runs every sample in headless Chromium (needs: npx playwright install chromium)
+npm run vendor
+npm run serve
 ```
 
-## Code map
+Open http://localhost:5173. The vendor step prepares the browser libraries and model assets locally. To run the automated evaluation harness:
 
-```
-src/           the application: index.html, css/, js/ (the pipeline modules), samples/, precomputed/
-scripts/       Node.js tooling: vendor, dev server, Playwright evaluation and QA harnesses
-docs/          MkDocs documentation, published to GitHub Pages
+```bash
+npm run eval
 ```
 
-Key modules under `src/js/`: `paddle.js` (PaddleOCR on ONNX Runtime), `ocr.js` (labels), `leaders.js` (leader lines), `segment.js` (SlimSAM), `lineart.js` (Simplified tracing), `tactile.js` (millimetre layout), `braille.js` (UEB Grade 1), `render.js` (SVG), `check.js` (BANA-derived checker + Canny baseline), `relief.js` (3D relief + STL), `ui.js` (the app). Details in [docs/modules.md](docs/modules.md).
+The evaluation harness uses Playwright; install its Chromium browser if it is not already available:
 
-## Contributing
+```bash
+npx playwright install chromium
+```
 
-Contributions are welcome, especially from anyone using TouchSight-NG in real transcription work: what broke, what was slow, what the checks missed. See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_STYLE.md](CODE_STYLE.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md), and [CHANGES.md](CHANGES.md) for recent changes.
+See [Getting started](docs/getting-started.md) for input formats, application options, and output details.
 
-## Credits
+## Project structure
 
-- **Models and libraries:**
-  - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv6 detector + PP-OCRv5 English recognizer (Apache-2.0), via RapidOCR's ONNX conversions
-  - [Tesseract.js](https://github.com/naptha/tesseract.js) (Apache-2.0) with the `eng` LSTM model (fallback)
-  - [SlimSAM](https://huggingface.co/Xenova/slimsam-77-uniform) (Apache-2.0), a distilled [Segment Anything](https://segment-anything.com/)
-  - [transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0) and ONNX Runtime Web (MIT)
-  - [OpenCV.js](https://opencv.org/) (Apache-2.0)
-  - [three.js](https://threejs.org/) (MIT) for the 3D relief view
-  - [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) font by the Braille Institute (OFL), self-hosted
-  - [ESM Potrace](https://github.com/tomayac/esm-potrace-wasm) (GPL 2)
-  - Playwright for evaluation
-- **Standards:** BANA *Guidelines and Standards for Tactile Graphics* (2022); ICEB *Rules of Unified English Braille*; Library of Congress Spec 800 braille dimensions. See [docs/guidelines.md](docs/guidelines.md).
+```
+src/                  browser application
+  index.html          application shell
+  css/                application styles
+  js/                 OCR, leaders, segmentation, layout, rendering, UI
+  samples/            sample diagrams and source attributions
+  precomputed/        precomputed sample outputs
+  fonts/              self-hosted fonts
+scripts/              vendor build, local server, evaluation and QA tooling
+docs/                 user and technical documentation (MkDocs)
+.github/workflows/    documentation and application deployment automation
+```
 
-## Prior work
+Key implementation modules are documented in [docs/modules.md](docs/modules.md). The processing sequence is described in [docs/pipeline.md](docs/pipeline.md).
 
-The University of Washington [Tactile Graphics Assistant](https://tactilegraphics.cs.washington.edu/) (Jayant et al., ASSETS 2007) automated text removal and braille replacement for textbook figures. TouchSight-NG adds leader-line tracing to the part each label names, Segment Anything prompted by those leaders, and BANA-derived layout and checks, all in the browser.
+## Contributing and project maintenance
 
-## License
+Contributions are welcome, particularly bug reports and improvements grounded in actual transcription work. Please include a representative source diagram when possible (with permission to share it), describe the expected tactile result, and explain what the current output gets wrong. Changes to OCR, tracing, segmentation, layout, or export should include before-and-after evaluation results where practical.
 
-Code: GPL 3.0. Sample images keep their original licenses; the precomputed SVGs in `src/precomputed/` keep their source diagram's license (see the note there).
+- [Contributing guide](CONTRIBUTING.md)
+- [Code style](CODE_STYLE.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+- [Security policy](SECURITY.md)
+- [Change history](CHANGES.md)
+- [Documentation contribution guide](docs/contributing.md)
+
+## Credits and licensing
+
+TouchSight-NG builds on open-source OCR, computer-vision, segmentation, and rendering libraries, including PaddleOCR, Tesseract.js, SlimSAM, Transformers.js, ONNX Runtime Web, OpenCV.js, three.js, and Potrace. See the project dependency manifests and relevant upstream projects for their respective licenses.
+
+The application code is licensed under **GPL-3.0-or-later**. Sample diagrams retain their source licenses; attribution is maintained in [src/samples/CREDITS.md](src/samples/CREDITS.md). The precomputed tactile SVGs retain the licenses of their source diagrams.
