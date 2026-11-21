@@ -1,48 +1,71 @@
 # Module reference
 
-A short reference for each ES module under `src/js/`. Each module is self-contained and imports only what it needs.
+This page maps the current browser application source under `src/js/`. It describes the implementation in the inspected main-branch source; planned features are called out separately rather than listed as active modules.
 
-## ui.js
-App shell and state. Owns the DOM, the tab system, the review rail, export buttons, deep links (`?sample=heart`), and `window.__touchsight` (read by the Playwright evaluation harness).
+## Application orchestration
 
-## pipeline.js
-The analysis stage: loads engines, runs OCR, leader tracing, segmentation, builds label records and exposes timings per stage.
+### `ui.js`
 
-## paddle.js
-Standalone PaddleOCR on ONNX Runtime Web: DB text detection with unclip, quad cropping, CTC recognition with batching (height 48, batch 6, score 0.5), including vertical text (two 90-degree reads). Reads the recognizer's character dictionary from ONNX metadata.
+Owns browser UI state, image input, tabs, review rail, export actions, and the deep-link sample parameter. It decodes and normalizes the image, invokes `analyze()`, builds the tactile layout, runs checks, and updates the views.
 
-## ocr.js
-Turns words into lines and labels. Multi-line labels are merged unless each line owns a leader line.
+### `pipeline.js`
 
-## leaders.js
-Leader-line detection: thin-stroke mask, probabilistic Hough segments, assignment to labels, chaining of broken and dotted leaders, tip extraction.
+Coordinates the analysis stage: loads OpenCV.js, SlimSAM, and attempts PaddleOCR initialization; runs PaddleOCR with Tesseract fallback; filters and groups OCR words into labels; applies vocabulary corrections; detects label/leader relationships; builds foreground and structural line representations; computes SlimSAM image embeddings; and segments label anchors.
 
-## segment.js
-SlimSAM point prompting: image embedding once per diagram, per-part `segmentPoint` with area bounds and tightest-confident-mask selection.
+## Recognition and geometry
 
-## libs.js
-Lazy loaders with progress callbacks: OpenCV.js (vendored, pinned CDN fallback without data), Tesseract.js worker (PSM 11, sparse text), transformers.js + ONNX Runtime WASM configured for local model paths.
+### `paddle.js`
 
-## lineart.js
-Colour-region outline tracing for the Simplified style: sharp colour-region boundaries, shading ignored, thin drawn strokes included.
+Loads PP-OCRv6 detection-small and PP-OCRv5 English recognition-mobile ONNX models using ONNX Runtime Web. The detector proposes text regions; the recognizer reads their content. The implementation uses the WASM execution provider, crops candidate quadrilaterals, batches recognition, and can return line or word-level records. Word boxes are approximated from line boxes using character counts.
 
-## tracing-config.js
-Shared tracing sensitivity configuration so UI and pipeline agree.
+### `ocr.js`
 
-## tactile.js
-The heart of the output: builds the page layout in millimetres for the chosen paper size and style, places braille and keys, assigns textures, applies knockouts and clearance rules.
+Normalizes OCR output into words, filters implausible tokens using confidence and size, groups words into baselines, and merges stacked lines into labels. It uses leader associations and a small science vocabulary to avoid incorrectly merging separate labels.
 
-## braille.js
-UEB Grade 1 (uncontracted) encoder, Unicode braille output, two-letter key generation (avoids aa/ac/cc/ca, requires dot 3 or 6).
+### `leaders.js`
 
-## render.js
-Renders the tactile page and key page as SVG: pure black, Spec 800 dots, texture patterns, optional preview helpers (label pills, highlight, underlay image).
+Creates a thin-stroke mask using morphological black-hat/top-hat operations, finds line segments with probabilistic Hough transform, assigns candidate segments to text lines, and chains nearby collinear segments to estimate leader tips.
 
-## check.js
-Guideline checker measuring print-text traces, short fragments, narrow-gap area and braille clearance, plus the Canny edge-tracing baseline used for comparison.
+### `lineart.js`
 
-## vocab.js
-Science vocabulary for OCR slip repair and the known-terms list; drives the visible corrections in the review rail.
+Builds structural line art from colour-region boundaries and thin strokes. It uses image smoothing, Lab colour space, k-means clustering, component-size filtering, and edge tests to suppress shading gradients and small decorative marks.
 
-## relief.js
-three.js relief preview with a sweeping raking light, and the STL plate export for 3D printing.
+### `segment.js`
+
+Uses Transformers.js and SlimSAM. It computes one image embedding, applies point prompts for each label, evaluates candidate masks by score and area, and returns a mask for each label where possible.
+
+### `libs.js`
+
+Provides lazy loaders for OpenCV.js, Tesseract.js, Transformers.js, and ONNX Runtime WASM. It configures local model paths and disables remote model resolution for Transformers.js. OpenCV has a pinned CDN fallback if the local bundle is missing.
+
+## Tactile output and quality
+
+### `tracing-config.js`
+
+Centralizes tracing-sensitivity settings shared by the UI and analysis pipeline.
+
+### `tactile.js`
+
+Builds a page layout in physical units, places braille labels and keys, assigns textures, and applies spacing/clearance and knockout rules.
+
+### `braille.js`
+
+Encodes uncontracted UEB Grade 1 and generates two-letter label keys.
+
+### `render.js`
+
+Renders the tactile page and key page as SVG, including line geometry, texture patterns, braille dots, and preview-only presentation elements.
+
+### `check.js`
+
+Measures selected layout properties and computes a Canny edge-tracing baseline for comparison. The checker does not establish tactile readability.
+
+### `relief.js`
+
+Uses three.js to display a 3D relief preview and generate an STL plate model.
+
+## Planned / not currently wired into the main pipeline
+
+- **Potrace Autotrace:** the package dependency is present, and integration is being developed separately in [PR #4](https://github.com/mrhunsaker/touchsight-NG/pull/4). The inspected `pipeline.js` does not yet call it.
+- **Inkscape-ready editable SVG:** planned as a separate export specification and implementation phase after Potrace verification and PR #4 merge. The existing tactile SVG remains the production-oriented export.
+- **Larger vision-language or segmentation models:** discussed as research directions in [Advanced model options](advanced-model-options.md); none are enabled in the current app.

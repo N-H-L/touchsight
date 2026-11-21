@@ -1,37 +1,66 @@
 # Evaluation and benchmarks
 
-## Harness
+## What the current evaluation measures
 
-`scripts/eval.mjs` runs the real app in headless Chromium over every sample in `src/samples/samples.json`, records the guideline-check metrics for TouchSight-NG versus the edge-tracing baseline, and writes `eval-out/eval.json` and `eval-out/eval.md`. `scripts/recall.mjs` then scores detected labels against hand-counted ground truth (`src/samples/labels_truth.json`) with fuzzy matching (normalized Levenshtein similarity >= 0.8).
+The evaluation harness runs the browser application against repository sample diagrams and records selected geometric guideline metrics. A separate recall script compares recognized labels with hand-counted ground truth. This is useful for regression testing; it is not a formal usability study.
+
+## Run the harness
+
+Requirements: Node.js 24+, installed npm dependencies, generated runtime assets, and Playwright Chromium.
 
 ```bash
 npm ci
 npm run vendor
 npx playwright install chromium
-npm run serve &        # http://localhost:5173
-npm run eval           # writes eval-out/eval.json, eval.md
+npm run serve
+```
+
+In another terminal:
+
+```bash
+npm run eval
 node scripts/recall.mjs
 ```
 
-Additional harnesses: `scripts/ocrbench.mjs` (label recall for Tesseract vs PaddleOCR), `scripts/lab.mjs` (per-stage overlays and JSON), `scripts/qa.mjs` and `scripts/edge.mjs` (interaction and edge-case QA), `scripts/shot*.mjs` (screenshots).
+The scripts write evaluation output under `eval-out/`. Other tools include `scripts/ocrbench.mjs` (Tesseract vs PaddleOCR label recall), `scripts/lab.mjs` (per-stage overlays and JSON), `scripts/qa.mjs` and `scripts/edge.mjs` (interaction and edge-case QA), and screenshot scripts.
 
-## Results: 16 Wikimedia Commons diagrams, same checker throughout
+**Setup note:** vendor output paths and browser-loader paths are inconsistent in the inspected source. Resolve that mismatch before interpreting a failed clean-checkout run as a model-quality failure.
 
-| Metric | Detailed (default) | Simplified | Edge tracing | Edge tracing, text erased |
-|---|---|---|---|---|
-| Label recall vs hand-counted labels (10 diagrams, 151 labels) | **148 of 151 (98%)** | same | n/a | n/a |
-| Labels placed in braille | **232 of 233** | same | none | none |
-| Print text traced as raised marks | **none** (erased before tracing) | none | all 233 labels | none |
-| Short fragments (< 12.5 mm) | 66 | **14** | 763 | 336 |
-| Mean figure area where lines < 3 mm apart | 3.5% | **1.0%** | 6.4% | 4.8% |
-| Braille labels with full 3 mm clearance | 165 of 232 (71%) | 172 of 231 (74%) | n/a | n/a |
+## Snapshot results
 
-Detailed keeps the original's look; Simplified follows BANA spacing more strictly; teachers pick per diagram. The last column is the strongest simple baseline: the Detailed style starts from that tracing and adds braille labels, redrawn leaders, speck removal and the label-guided line hierarchy (66 fragments vs 336).
+The current documentation snapshot reports results on 16 Wikimedia Commons diagrams:
 
-## Performance
+| Metric | Detailed | Simplified | Canny edge baseline | Canny, text erased |
+|---|---:|---:|---:|---:|
+| Label recall (10 diagrams, 151 hand-counted labels) | 148/151 (98%) | same | n/a | n/a |
+| Labels placed in braille | 232/233 | same | none | none |
+| Print text traced as raised marks | 0 | 0 | all 233 labels | 0 |
+| Short fragments under 12.5 mm | 66 | 14 | 763 | 336 |
+| Mean figure area with lines under 3 mm apart | 3.5% | 1.0% | 6.4% | 4.8% |
+| Braille labels with full 3 mm clearance | 165/232 (71%) | 172/231 (74%) | n/a | n/a |
 
-PaddleOCR detector + recognizer (~18 MB) and SlimSAM (~40 MB) run on laptop CPUs through WebAssembly. Measured on a desktop (i9-14900KF, Chrome headless): **10-30 s per diagram** once models are cached. The first run downloads about 90 MB of models.
+These are historical snapshots. Re-run the harness after code or model changes; do not assume they describe an untested branch or new build.
 
-## Practice
+## OCR engine comparison
 
-Every change to tracing, segmentation or layout should be scored with the harness before merging. The numbers above are snapshots; rerun `npm run eval` to compare against a change.
+The repository includes `scripts/ocrbench.mjs` to compare label recall between PaddleOCR and Tesseract. The intended path is PaddleOCR first, Tesseract fallback. Changes to detector thresholds, recognizer models, image preprocessing, or fallback behavior should be measured against the same hand-counted labels.
+
+## Performance and model size
+
+Earlier project measurements report roughly 10–30 seconds per diagram on an i9-14900KF desktop running Chromium, once model assets are cached. The documentation has described first-run model downloads as approximately 90 MB. Actual time and transfer size vary with browser, cache state, network, image dimensions, and asset compression; measure on representative target hardware.
+
+## What is not measured
+
+The automated harness does not establish tactile readability, semantic correctness of every label-to-part association, texture discrimination on physical swell paper, transcription time savings, or compatibility with every printer and production workflow. Those require transcriber review, physical production tests, and structured evaluation with tactile readers.
+
+## Regression practice
+
+For changes to OCR, leader detection, segmentation, tracing, or layout:
+
+1. Run the full evaluation on the same sample set.
+2. Compare label recall and false positives.
+3. Inspect overlays for leader endpoint and mask errors.
+4. Compare Detailed and Simplified geometry metrics.
+5. Review braille placement and clearances.
+6. Record browser, hardware, model versions, and cache state.
+7. Keep before/after examples for diagrams where behavior changed.

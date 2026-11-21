@@ -9,6 +9,9 @@ The transcriber remains responsible for the finished graphic. TouchSight-NG is a
 - **Application:** Run locally; the application is not hosted on GitHub Pages.
 - **User and technical documentation:** https://mrhunsaker.github.io/touchsight-NG/
 - **Getting started:** [docs/getting-started.md](docs/getting-started.md)
+- **Theory and pipeline:** [docs/architecture.md](docs/architecture.md), [docs/pipeline.md](docs/pipeline.md)
+- **Models and inference engines:** [docs/models-and-engines.md](docs/models-and-engines.md)
+- **Advanced, not-yet-implemented AI options:** [docs/advanced-model-options.md](docs/advanced-model-options.md)
 - **Review workflow:** [docs/review-workflow.md](docs/review-workflow.md)
 
 ## Intended workflow
@@ -42,7 +45,7 @@ flowchart TD
     M --> N["Production and final quality assurance"]
 ```
 
-The optional **Autotrace / Potrace first pass** is an image-preprocessing stage, not a replacement for OCR or segmentation: when enabled in a build that includes the Autotrace control, Potrace reconstructs a cleaner raster image first, and the downstream OCR, leader detection, foreground analysis, and segmentation operate on that prepared image. When disabled, analysis uses the source raster. The original source is retained for reference. See [Pipeline stages](docs/pipeline.md) for the current processing details and [the Autotrace implementation work](https://github.com/mrhunsaker/touchsight-NG/pull/4) for the integration status.
+**Potrace / Autotrace is not yet part of the active pipeline on `main`.** The optional first-pass preprocessing design is being developed in [PR #4](https://github.com/mrhunsaker/touchsight-NG/pull/4). Once verified and merged, it is intended to prepare an alternate raster for OCR, leader detection, foreground analysis, and segmentation—not replace those stages or directly generate the final tactile page. See [Pipeline stages](docs/pipeline.md).
 
 ## What the application produces
 
@@ -88,7 +91,7 @@ npm run vendor
 npm run serve
 ```
 
-Open http://localhost:5173. The vendor step prepares the browser libraries and model assets locally. To run the automated evaluation harness:
+Open http://localhost:5173 if the local app runtime has been assembled. Note that the current checkout has an incomplete `src/` to `app/` transition: the server and vendor script target `app/`, but the tracked application source is under `src/` and no build/copy step currently populates `app/`. See [Getting started](docs/getting-started.md#asset-path-check) before treating this as a verified clean-checkout setup. To run the automated evaluation harness:
 
 ```bash
 npm run eval
@@ -100,7 +103,7 @@ The evaluation harness uses Playwright; install its Chromium browser if it is no
 npx playwright install chromium
 ```
 
-See [Getting started](docs/getting-started.md) for input formats, application options, and output details.
+See [Getting started](docs/getting-started.md) for setup and use, [Models and inference engines](docs/models-and-engines.md) for the model inventory, and [Advanced model options](docs/advanced-model-options.md) for clearly marked research directions.
 
 ## Project structure
 

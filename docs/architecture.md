@@ -1,52 +1,117 @@
-# Architecture
+# Architecture and design theory
 
-## Everything on-device
+## The problem TouchSight-NG is designed to solve
 
-TouchSight-NG is a browser-only application. There is no backend: the site is static files, and all compute (OCR, leader-line tracing, segmentation, layout, checking, rendering, 3D) happens in the user's browser via WebAssembly. This is a deliberate requirement:
+A printed diagram is designed for vision. It communicates through colour, shading, fine lines, spatial proximity, typography, and visual conventions that do not transfer directly to touch. A tactile graphic must be a deliberate reinterpretation rather than a literal tracing.
 
-- **Free for schools**: no API bills, no subscriptions.
-- **Private**: school materials never leave the computer.
-- **Easy to try**: no accounts; open the URL and go.
+A useful tactile transcription has to answer several questions: What text is present? What does each label refer to? Which shapes carry meaning? How should visual information be encoded for touch? How can the result be checked?
 
-Models are small enough for laptop CPUs: PaddleOCR detector + recognizer (~18 MB), SlimSAM (~40 MB), Tesseract eng. They are vendored into the deployed site by `npm run vendor`, so there are no runtime CDN dependencies (with a pinned, data-free OpenCV.js fallback for dev setups).
+TouchSight-NG is organized around those questions. It attempts to create a reviewable first draft, not an autonomous final transcription.
+
+## Browser-only architecture
+
+The application is a static browser application. There is no application backend or image-upload service. Image decoding, OCR, leader analysis, segmentation, tactile layout, checking, SVG rendering, and 3D preview execute on the user's device.
+
+This architecture is intentional:
+
+- **Privacy:** source diagrams are processed locally rather than uploaded to an application server.
+- **Cost control:** inference does not require a paid hosted inference API.
+- **Deployment simplicity:** the app can be served as static files from a local development server.
+- **Hardware reach:** the current implementation favors WebAssembly inference on ordinary CPU hardware over a GPU-only requirement.
+
+GitHub Pages hosts the MkDocs documentation only. It does not host the application. See [Documentation deployment](deployment.md).
+
+## Conceptual processing architecture
+
+```mermaid
+flowchart TD
+  A[Source image] --> B[Decode, orient, resize, composite transparency]
+  B --> C[OCR engines]
+  C --> D[Word boxes and confidence]
+  D --> E[Filter, group into lines and labels]
+  E --> F[Correct likely OCR slips]
+  E --> G[Detect leader lines]
+  G --> H[Associate label with leader tip]
+  F --> I[Foreground and structure analysis]
+  H --> J[Point prompts for named parts]
+  I --> J
+  J --> K[SlimSAM masks]
+  K --> L[Line hierarchy and tactile layout]
+  I --> L
+  F --> L
+  L --> M[Guideline checks]
+  M --> N[Transcriber review]
+  N --> O[SVG, key page, print/PDF, STL]
+```
+
+The diagram shows conceptual dependencies. OCR, line analysis, and foreground analysis share the prepared source image; segmentation uses label anchors and an image embedding; layout consumes the analysis records.
+
+## Why labels drive the geometry
+
+Generic edge detection answers “where does contrast change?” It does not answer “which boundaries describe a named scientific part?” A textbook diagram may contain text, stipple, gradients, arrows, borders, and decorative marks. A naive edge detector can turn all of these into raised clutter.
+
+TouchSight-NG uses labels as semantic anchors:
+
+- OCR proposes label text and a bounding box.
+- Leader analysis attempts to find the line connecting the label to a part.
+- The leader endpoint becomes a point prompt for segmentation.
+- A label printed directly on a part can instead use nearby in-figure points.
+- The segmentation mask helps identify which boundaries should receive stronger tactile emphasis.
+
+This is a hybrid system: learned models handle text recognition and part segmentation; deterministic image processing handles geometric masks, leader-line chaining, contour extraction, and layout constraints.
+
+## Runtime engines and downloaded assets
+
+| Component | Role | Runtime |
+|---|---|---|
+| OpenCV.js | Image operations, morphology, Hough line detection, contours, masks, checks | WebAssembly / JavaScript |
+| PaddleOCR detector + recognizer | Primary printed-text detection and recognition | ONNX Runtime Web, WASM |
+| Tesseract.js + English traineddata | Fallback OCR when PaddleOCR cannot load or run | WebAssembly |
+| SlimSAM | Point-prompted segmentation of labeled parts | Transformers.js + ONNX Runtime WASM |
+| ONNX Runtime Web | Executes OCR and segmentation ONNX models | WebAssembly |
+| three.js | Interactive 3D relief preview | WebGL |
+| Potrace WASM | Optional vector-tracing/preprocessing experiment; not active in the inspected main-branch pipeline | WebAssembly package dependency |
+
+See [Models and inference engines](models-and-engines.md) for model identities, files, roles, and caveats.
 
 ## Source layout
 
 ```
-src/                the application (served as-is; generated vendor/ and model dirs are not committed)
-  index.html        the single-page app shell
-  css/app.css       styling
-  js/               ES modules (see below)
-  samples/          16 Wikimedia Commons sample diagrams, samples.json, labels_truth.json
-  precomputed/      fallback tactile SVGs computed earlier with the same pipeline
-  fonts/            Atkinson Hyperlegible (OFL), self-hosted
-scripts/            Node.js tooling: vendor, dev server, Playwright evaluation
-docs/               this documentation (MkDocs); published to GitHub Pages
+src/                browser application source
+  index.html        application shell
+  css/              application styles
+  js/               OCR, leaders, segmentation, layout, rendering, UI
+  samples/          sample diagrams and source attributions
+  precomputed/      fallback tactile SVGs for selected samples
+  fonts/            self-hosted fonts
+scripts/            vendor setup, local server, evaluation and QA tooling
+docs/               MkDocs documentation (published to GitHub Pages)
 ```
+
+Generated vendor libraries and model weights are not committed as application source. The repository currently has an incomplete `src/` to `app/` runtime transition: the local server and vendor script target `app/`, while the application source tree is `src/`, and no build/copy step currently populates the served directory. Resolve this before treating a clean checkout as runnable; see [Getting started](getting-started.md#asset-path-check).
 
 ## Module map
 
 | Module | Responsibility |
 |---|---|
-| `src/js/ui.js` | The app: state, views, tabs, review rail, exports, deep links (`?sample=...`) |
-| `src/js/pipeline.js` | The analysis stage: orchestrates the steps below |
-| `src/js/paddle.js` | PaddleOCR detector + recognizer on ONNX Runtime Web (WASM) |
-| `src/js/ocr.js` | Words to lines to labels; multi-line labels merged unless each line owns a leader |
-| `src/js/leaders.js` | Leader-line detection and chaining (broken or dotted leaders) |
-| `src/js/segment.js` | SlimSAM point prompts and mask selection |
-| `src/js/libs.js` | Lazy loaders for OpenCV.js, Tesseract.js, transformers.js + ONNX Runtime |
-| `src/js/lineart.js` | Colour-region outline tracer (Simplified style) |
-| `src/js/tracing-config.js` | Shared tracing sensitivity configuration |
-| `src/js/tactile.js` | Millimetre layout, textures, braille placement |
-| `src/js/braille.js` | UEB Grade 1 encoder and two-letter keys |
-| `src/js/render.js` | SVG rendering (tactile page, key page, textures) |
-| `src/js/check.js` | Automated guideline checker + Canny edge-tracing baseline |
-| `src/js/vocab.js` | Science vocabulary used to repair OCR slips |
-| `src/js/relief.js` | 3D relief view (three.js) and STL export |
+| `src/js/ui.js` | App state, views, review rail, controls, exports, deep links |
+| `src/js/pipeline.js` | Orchestrates OCR, leader detection, foreground/line analysis, segmentation |
+| `src/js/paddle.js` | PaddleOCR detector and recognizer using ONNX Runtime Web |
+| `src/js/ocr.js` | Word filtering, line grouping, multi-line label grouping |
+| `src/js/leaders.js` | Thin-stroke masks, probabilistic Hough segments, leader assignment and chaining |
+| `src/js/segment.js` | SlimSAM image embeddings and point-prompted masks |
+| `src/js/libs.js` | Lazy loaders for OpenCV, Tesseract, Transformers.js, and ONNX Runtime |
+| `src/js/lineart.js` | Colour-region boundaries and thin structural strokes |
+| `src/js/tactile.js` | Physical page layout, textures, braille placement, clearance |
+| `src/js/braille.js` | UEB Grade 1 encoding and two-letter keys |
+| `src/js/render.js` | SVG output and preview rendering |
+| `src/js/check.js` | Automated geometric checks and edge-tracing baseline |
+| `src/js/relief.js` | three.js relief preview and STL export |
 
-## Key design decisions
+## Design trade-offs
 
-- **WASM everywhere.** The SlimSAM embed runs on the CPU instead of WebGPU: it costs a few seconds and works on every student and judge machine, not just modern GPUs. ONNX inference runs in a worker so the page stays responsive.
-- **Labels drive everything.** A diagram's own labels, not generic saliency, decide which parts are segmented and which edges are bold. That is what keeps text out of the tracing.
-- **Millimetres, not pixels.** The layout stage works in physical units against BANA spacing rules, so the printed page behaves like the preview.
-- **Checkable output.** The same checker measures both the tool's output and the naive baseline, so every change is scored.
+- **WASM over mandatory GPU inference:** improves compatibility but constrains model size and speed.
+- **Small specialist models over one large multimodal model:** keeps downloads and inference requirements manageable; the trade-off is explicit hand-offs between OCR, geometry, and segmentation.
+- **Label-guided segmentation over whole-image segmentation:** narrows the task to named parts, but errors in OCR or leader detection propagate downstream.
+- **Physical units over pixel-only layout:** tactile spacing is a physical constraint.
+- **Human review over automatic acceptance:** geometric checks cannot establish tactile readability.

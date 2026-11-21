@@ -1,49 +1,91 @@
 # Getting started
 
-## Run it locally
+This guide covers a local developer setup. GitHub Pages hosts the documentation only; it does not host the TouchSight-NG application.
 
-TouchSight-NG is a static browser application with on-device models. The application is **not hosted on GitHub Pages**; GitHub Pages hosts this project's documentation only. Run the application locally:
+## Requirements
 
-Requirements: Node.js 24 or newer.
+- Node.js 24 or newer (npm is included with Node.js).
+- A current desktop browser with WebAssembly support. WebGL is needed for the 3D relief preview.
+- Internet access for initial dependency and model-asset setup.
+- Enough memory for in-browser image processing and neural-network inference.
+
+## Get the source and install dependencies
 
 ```bash
+git clone https://github.com/mrhunsaker/touchsight-NG.git
+cd touchsight-NG
 npm ci
-npm run vendor   # fetches browser libraries and model assets into src/
-npm run serve    # http://localhost:5173
 ```
 
-Open [http://localhost:5173](http://localhost:5173). The first vendor setup downloads the required model and library assets; the browser caches model assets after they are loaded.
+`npm ci` installs exact dependency versions recorded in `package-lock.json`. It does not by itself download model weights.
 
-The documentation site is hosted at [https://mrhunsaker.github.io/touchsight-NG/](https://mrhunsaker.github.io/touchsight-NG/). That site does not contain a hosted copy of the application.
+## Prepare browser libraries and model files
 
-## Input
+```bash
+npm run vendor
+```
 
-- Upload a PNG, JPG or WebP diagram, or drop it onto the drop zone.
-- Or pick one of the built-in samples (heart diagram, volcano, plant cell, and more).
-- The pipeline is tuned for **labeled diagrams with leader lines**: biology, earth science, simple physics.
+The vendor script is intended to prepare local browser assets: OpenCV.js, Tesseract.js and English traineddata, Transformers.js, ONNX Runtime Web, three.js, SlimSAM weights, and PaddleOCR ONNX weights. The model files are downloaded into generated local folders and then served by the local app. See [Models and inference engines](models-and-engines.md) for the file inventory and each component's role.
 
-## Output options (left rail)
+### Asset path check
 
-| Option | Choices | Notes |
-|---|---|---|
-| Paper | Letter 8.5x11, Tabloid 11x17, Braille 11.5x11 | Page size in millimetres; layout adapts. |
-| Outline style | Detailed, Simplified | Detailed keeps the original's look; Simplified enforces 3 mm spacing more strictly. |
-| Tracing sensitivity | 0-100 | Higher recovers lighter contours; tactile spacing is still enforced. |
-| Title | free text | Rendered in braille at the top of the page. |
-| Textures | on/off | Up to 5 distinct textures fill labeled parts. |
-| Letter keys | on/off | Force two-letter keys with a key page instead of full braille. |
+**Important current source caveat:** the inspected `scripts/vendor.mjs` writes generated assets to `app/vendor` and `app/models`, while browser loaders in `src/js/libs.js` and `src/js/paddle.js` resolve assets relative to `src/` (under `src/vendor` and `src/models`). These paths do not currently agree in the checked-in source. Do not assume that a successful vendor command means the application can find every asset. This mismatch must be reconciled in code and verified before the clean-checkout setup can be considered reproducible.
 
-## Reviewing the result
+## Start the local application
 
-The app shows five tabs: **Tactile graphic**, **What the AI saw**, **vs. edge tracing**, **Key page**, and **3D relief**. The right rail lists every detected label with its braille, its placement status, and the automated guideline check. See [The transcriber review workflow](review-workflow.md).
+```bash
+npm run serve
+```
 
-## Exports
+Open the local address printed by the server (the current script defaults to `http://localhost:5173`). Keep the terminal running while using the app.
 
-- **Download tactile SVG**: pure black, ready for photocopying onto swell paper.
-- **Key page**: the braille key legend when keys are in use.
-- **Print / PDF**: prints at true page size (Letter, Tabloid, or braille page).
-- From the 3D relief tab: **STL** for 3D printing the plate.
+## Process a diagram
 
-## Privacy
+1. Choose a built-in sample or upload a PNG, JPG/JPEG, or WebP image.
+2. The app normalizes the image and loads its on-device engines.
+3. OCR finds printed labels. PaddleOCR is primary; Tesseract is the fallback.
+4. Leader-line detection attempts to associate labels with parts.
+5. SlimSAM segments parts using point prompts derived from those associations.
+6. The app creates a tactile layout and runs geometric checks.
+7. Review and correct labels and diagram structure before exporting.
 
-Image analysis runs in your browser. OCR, segmentation, layout and checks do not send source diagrams to an application backend. The only third-party load is a version-pinned OpenCV.js script for development setups where the vendored copy has not been generated; image data is never sent to it.
+Input files larger than 15 MB are rejected by the current UI. The app scales the longest side to at most 1,400 pixels for analysis.
+
+## Review and export
+
+Use the review rail to correct OCR text, merge split labels, or remove incorrect detections. Inspect the **Tactile graphic**, **What the AI saw**, and **vs. edge tracing** views. Check braille, part boundaries, line spacing, textures, and the key page. The relief tab requires WebGL.
+
+Current exports include the tactile SVG, key page SVG, print/PDF through the browser print dialog, and STL from the relief view. See [Review workflow](review-workflow.md), [Guidelines](guidelines.md), and [Printing](printing.md).
+
+## Evaluation and development checks
+
+Install Playwright's Chromium browser if needed:
+
+```bash
+npx playwright install chromium
+npm run serve
+```
+
+In a second terminal:
+
+```bash
+npm run eval
+node scripts/recall.mjs
+```
+
+The harness records metrics for the sample set and compares TouchSight-NG with a Canny edge-tracing baseline. See [Evaluation and benchmarks](evaluation.md).
+
+## Troubleshooting
+
+| Symptom | Likely cause / action |
+|---|---|
+| Models fail to load | Check generated asset paths, network access during vendor setup, and browser console errors. |
+| PaddleOCR fails | The pipeline attempts Tesseract fallback; inspect console output to identify the underlying failure. |
+| SlimSAM fails | Confirm both ONNX files and the Transformers.js/ONNX Runtime WASM files are present at the paths expected by the loaders. |
+| Slow first run | Initial model downloads and WASM initialization are expected; subsequent browser caching may help. |
+| 3D view is blank | Check WebGL support and browser/GPU settings; tactile SVG export does not require WebGL. |
+| Upload rejected | Use PNG, JPG/JPEG, or WebP under the 15 MB UI limit. |
+
+## Privacy and network behavior
+
+Image inference runs in the browser. The current design does not upload source diagrams to an application backend. Initial setup downloads public libraries and model files; after those assets are local, inference uses local browser assets. OpenCV has a pinned jsDelivr fallback in `libs.js` for setups where its vendored copy is unavailable. That request fetches library code, not user image pixels.

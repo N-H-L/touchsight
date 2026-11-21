@@ -26,12 +26,21 @@ Naive tracing does not work: edge detection turns every printed label into raise
 
 In evaluation on 16 Wikimedia Commons diagrams, TouchSight-NG found 148 of 151 hand-counted labels (98%), placed all but 1 of 233 detected labels in braille, and left 66 fragments below the 12.5 mm touch threshold versus 763 for plain edge tracing. See [Evaluation and benchmarks](evaluation.md).
 
+## Learn the theory and technology
+
+- [Architecture](architecture.md): why the system combines OCR, geometric computer vision, and segmentation.
+- [Pipeline stages](pipeline.md): how each stage works and how errors propagate.
+- [Models and inference engines](models-and-engines.md): the exact OCR and segmentation model files, runtime libraries, and their purposes.
+- [Advanced AI model options](advanced-model-options.md): larger models that could improve grounding, segmentation, and diagram reasoning. These are research options, not implemented features.
+
 ## Where to go next
 
 - [Getting started](getting-started.md): run the tool and produce your first page.
 - [The teacher review workflow](review-workflow.md): fixing labels, merging, removing.
 - [Printing and swell paper](printing.md): from SVG to fuser.
 - [Pipeline stages](pipeline.md) and [Architecture](architecture.md): how it works inside.
+- [Models and inference engines](models-and-engines.md): downloaded assets and model responsibilities.
+- [Advanced model options](advanced-model-options.md): future research directions, not currently implemented.
 - [Contributing](contributing.md) if you want to help.
 
 ## Status and honest limits
