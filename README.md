@@ -156,3 +156,39 @@ Recommended post-processing sequence:
 6. Save a separate reviewed SVG, then produce a physical proof on the target printer/swell-paper/fuser system. Inspect the raised output and obtain tactile-reader feedback where possible.
 
 The vector editor is a post-processing and QC option, not an automated validation step. Editing SVG geometry does not update TouchSight-NG's analysis state or its automated guideline report. Re-run or independently perform checks after edits, and retain the unmodified export so changes can be compared or reverted.
+
+## Component licenses
+
+TouchSight-NG application code is licensed under **GPL-3.0-or-later**. The
+third-party components it uses, runs, or downloads carry their own licenses,
+listed here at the component level. Full license texts included in the
+repository are in the `LICENSES/` directory and alongside the downloaded
+model assets; the samples' per-image attribution is in
+[src/samples/CREDITS.md](src/samples/CREDITS.md).
+
+| Component | Role | License | License source |
+|---|---|---|---|
+| Atkinson Hyperlegible (woff2) | Self-hosted accessibility font, `src/fonts/` | SIL Open Font License 1.1 | [Braille Institute](https://www.brailleinstitute.org/freefont/) |
+| esm-potrace-wasm / Potrace | Optional bitmap-to-vector preprocessing (Autotrace) | GPL-2.0-or-later (Potrace) | vendored with its license notice; `LICENSES/GPL-2.0.txt` |
+| Indra OCR models (opt-in engine) | `det.onnx`, `rec.onnx`, `meta.json` | **AI Pub-Open RAIL-M (modified), not GPL** — see note below | `src/models/indra/LICENSE` (downloaded) |
+| ONNX Runtime Web | Executes the OCR and segmentation ONNX models in the browser | MIT | [microsoft/onnxruntime](https://github.com/microsoft/onnxruntime/blob/main/LICENSE) |
+| OpenCV.js | Classical image processing, contours, Hough, checks | Apache-2.0 | [@techstark/opencv-js](https://www.npmjs.com/package/@techstark/opencv-js), OpenCV 4.12.0 |
+| PaddleOCR ONNX (RapidOCR conversions) | Primary OCR detector + English recognizer | Apache-2.0 | [RapidAI/RapidOCR](https://www.modelscope.cn/models/RapidAI/RapidOCR) (upstream PaddleOCR: Apache-2.0) |
+| Playwright (dev only) | Evaluation and QA harness, not shipped to users | Apache-2.0 | [microsoft/playwright](https://github.com/microsoft/playwright/blob/main/LICENSE) |
+| Sample diagrams | `src/samples/` | Per-image: Public domain / CC0 / CC BY / CC BY-SA | `src/samples/CREDITS.md` |
+| SlimSAM (Xenova ONNX port) | Point-prompted segmentation of labeled parts | Apache-2.0 | [Xenova/slimsam-77-uniform](https://huggingface.co/Xenova/slimsam-77-uniform) |
+| Tesseract.js + core + `eng.traineddata` | Fallback OCR engine and English data | Apache-2.0 | [naptha/tesseract.js](https://github.com/naptha/tesseract.js#license); data: Tesseract 4.0.0 tessdata (Apache-2.0) |
+| three.js | 3D relief preview and STL export | MIT | [mrdoob/three.js](https://github.com/mrdoob/three.js/blob/dev/LICENSE) |
+| Transformers.js (Hugging Face) | Loads and runs SlimSAM in the browser | Apache-2.0 | [huggingface/transformers.js](https://github.com/huggingface/transformers.js/blob/main/LICENSE) |
+
+**Note on the Indra weights.** Unlike every other model asset in this project,
+the Indra OCR model files are distributed by Datalab under a modified
+AI Pub-Open RAIL-M license, not a standard open-source license. Vendoring
+them for local use appears consistent with the license's use-and-attach
+terms, but redistribution inside a GPL-3.0-or-later distribution (including
+derivative builds of this project) should be checked against the full text in
+`src/models/indra/LICENSE` before shipping. If redistribution is not
+permitted for your use case, delete `src/models/indra/` and leave the
+"Use Indra OCR" checkbox off: the engine chain falls back to PaddleOCR and
+then Tesseract with no loss of function. See
+[docs/ocr-engines.md](docs/ocr-engines.md#licensing-and-redistribution).
