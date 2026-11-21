@@ -61,6 +61,8 @@
         </label>
         <label class="check"><input id="opt-autotrace" type="checkbox"> Use Autotrace (Potrace)</label>
         <p class="hint">Optional upstream image reconstruction. OCR, leader detection, and segmentation use the reconstructed image; the original remains available for comparison.</p>
+        <label class="check"><input id="opt-indra" type="checkbox"> Use Indra OCR</label>
+        <p class="hint">Experimental: read labels with Datalab's Indra OCR (vendored ONNX, a few extra MB) instead of the default PaddleOCR engine. If Indra is unavailable or finds nothing, PaddleOCR is used, with Tesseract as the last resort.</p>
         <label for="opt-sensitivity">Tracing sensitivity <output id="opt-sensitivity-value" for="opt-sensitivity">55</output>
           <input id="opt-sensitivity" type="range" min="0" max="100" step="5" value="55">
           <small class="hint">Higher values recover lighter contours but may add detail. Tactile spacing and braille clearance remain enforced.</small>

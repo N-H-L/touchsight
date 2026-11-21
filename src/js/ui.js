@@ -112,7 +112,7 @@ async function run(input = {}) {
   const previous = { imageData: state.imageData, sourceImageData: state.sourceImageData, original: state.original, analysis: state.analysis, layout: state.layout, check: state.check, name: state.name };
   state.busy = true;
   document.body.setAttribute('aria-busy', 'true');
-  document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = true; });
+  document.querySelectorAll('#opt-autotrace, #opt-indra, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = true; });
   $('#empty').hidden = true;
   showLoading(true);
   setStatus('Working… everything runs on this device.');
@@ -127,6 +127,7 @@ async function run(input = {}) {
       preparedImageData = await prepareAutotrace(sourceImageData);
     }
     const analysis = await analyze(preparedImageData, { sensitivity: state.sensitivity,
+      preferIndra: $('#opt-indra')?.checked ?? false,
       onStage: (k, msg) => setStep(k, k === 'engines' ? 'Loading on-device models… (first run only)' : msg),
     });
     state.sourceImageData = sourceImageData;
@@ -153,7 +154,7 @@ async function run(input = {}) {
   } finally {
     showLoading(false);
     state.busy = false;
-    document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = false; });
+    document.querySelectorAll('#opt-autotrace, #opt-indra, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = false; });
     document.body.removeAttribute('aria-busy');
   }
 }
@@ -368,13 +369,20 @@ autotraceInput?.addEventListener('change', () => {
   run();
 });
 
+// Switching the OCR engine changes which labels are found: rerun the whole pipeline.
+const indraInput = $('#opt-indra');
+indraInput?.addEventListener('change', () => {
+  if (!state.sourceImageData || state.busy) return;
+  run();
+});
+
 const sensitivityInput = $('#opt-sensitivity');
 const sensitivityValue = $('#opt-sensitivity-value');
 sensitivityInput?.addEventListener('input', () => { sensitivityValue.value = sensitivityInput.value; sensitivityValue.textContent = sensitivityInput.value; });
 sensitivityInput?.addEventListener('change', async () => {
   if (!state.analysis || state.busy) return;
   state.busy = true;
-  document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = true; });
+  document.querySelectorAll('#opt-autotrace, #opt-indra, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = true; });
   setStatus('Updating tracing sensitivity…');
   try {
     const cv = await loadOpenCV();
@@ -386,7 +394,7 @@ sensitivityInput?.addEventListener('change', async () => {
     console.error(e);
     setStatus('Could not update tracing: ' + (e.message || e), true);
   } finally {
-    document.querySelectorAll('#opt-autotrace, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = false; });
+    document.querySelectorAll('#opt-autotrace, #opt-indra, #opt-sensitivity, #opt-page, #opt-style, #opt-textures, #opt-keys, #opt-title, #file').forEach((el) => { el.disabled = false; });
     state.busy = false;
   }
 });

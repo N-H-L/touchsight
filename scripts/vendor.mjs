@@ -66,4 +66,13 @@ const rapid = 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.10.0
 for (const f of ['PP-OCRv6/det/PP-OCRv6_det_small.onnx', 'PP-OCRv5/rec/en_PP-OCRv5_rec_mobile.onnx']) {
   await fetchTo(rapid + f, join(root, 'src', 'models', 'paddleocr', f.split('/').pop()));
 }
+// Indra OCR v1.1.0 (Datalab) - experimental alternative text engine, run by
+// src/js/indra.js. Latin detector + CTC recognizer in plain ONNX plus the meta.json
+// character vocabulary. Pinned to the v1.1.0 commit so the recognizer and its
+// vocabulary always match. Requires onnxruntime-web, already vendored above.
+// Skipped automatically by fetchTo when already present.
+const indra = 'https://huggingface.co/datalab-to/indra-ocr/resolve/bd02167/';
+for (const f of ['det.onnx', 'rec.onnx', 'meta.json', 'LICENSE']) {
+  await fetchTo(indra + f, join(root, 'src', 'models', 'indra', f));
+}
 console.log('vendor done');

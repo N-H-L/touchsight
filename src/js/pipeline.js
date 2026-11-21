@@ -5,10 +5,11 @@ import { thinStrokeMask, houghSegments, assignLeaders } from './leaders.js';
 import { embedImage, segmentPoint } from './segment.js';
 import { correctWord, correctPhrase } from './vocab.js';
 import { loadPaddle, detectText } from './paddle.js';
+import { loadIndra, detectText as detectTextIndra } from './indra.js';
 import { structureLines } from './lineart.js';
 import { DEFAULT_TRACING_SENSITIVITY, tracingConfig } from './tracing-config.js';
 
-export async function analyze(imageData, { onStage = () => {}, sensitivity = DEFAULT_TRACING_SENSITIVITY } = {}) {
+export async function analyze(imageData, { onStage = () => {}, sensitivity = DEFAULT_TRACING_SENSITIVITY, preferIndra = false } = {}) {
   const timings = {};
   const timed = async (k, f) => { const t0 = performance.now(); const r = await f(); timings[k] = Math.round(performance.now() - t0); return r; };
   const W = imageData.width, H = imageData.height;
@@ -24,8 +25,19 @@ export async function analyze(imageData, { onStage = () => {}, sensitivity = DEF
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
   let ocrEngine = 'paddle';
   const words = await timed('ocr', async () => {
-    // PaddleOCR (text detector + recognizer) finds labels on coloured fills and small
-    // text far better than Tesseract; Tesseract stays as the fallback.
+    // Engine chain: Indra (opt-in from the UI checkbox) -> PaddleOCR -> Tesseract.
+    // Each stage only runs if the previous one threw or produced nothing, so an
+    // experimental engine can never leave the pipeline worse than the default.
+    if (preferIndra) {
+      try {
+        await loadIndra({ proxy: true });
+        const indraWords = await detectTextIndra(imageData, { cv, level: 'word' });
+        if (indraWords.length) { console.info('OCR engine: indra'); ocrEngine = 'indra'; return indraWords; }
+        console.warn('Indra OCR found no text, falling back to PaddleOCR');
+      } catch (e) {
+        console.warn('Indra OCR unavailable, falling back to PaddleOCR', e);
+      }
+    }
     try {
       await loadPaddle({ proxy: true });
       return await detectText(imageData, { cv, level: 'word' });
