@@ -1,7 +1,7 @@
 // Devpost thumbnails (3:2, 1500x1000): big logo + wordmark, light and dark versions.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
-const font = (w) => `data:font/woff2;base64,${readFileSync(`app/fonts/atkinson-${w}.woff2`).toString('base64')}`;
+const font = (w) => `data:font/woff2;base64,${readFileSync(`src/fonts/atkinson-${w}.woff2`).toString('base64')}`;
 const logo = (tile, dot, size) => `<svg width="${size}" height="${size}" viewBox="0 0 32 32"><defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0.35" stdDeviation="0.35" flood-opacity=".35"/></filter></defs><rect width="32" height="32" rx="8" fill="${tile}"/><g fill="${dot}" filter="url(#s)"><circle cx="11" cy="9" r="2.6"/><circle cx="11" cy="16" r="2.6"/><circle cx="21" cy="16" r="2.6"/><circle cx="21" cy="23" r="2.6"/></g></svg>`;
 const page = ({ bg, fg, sub, tile, dot, grid }) => `<html><head><style>
 @font-face{font-family:A;src:url(${font(400)})format('woff2');font-weight:400}

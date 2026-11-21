@@ -1,4 +1,4 @@
-// Dev: render app/dev/la.html for some samples and screenshot it.
+// Dev: render src/dev/la.html for some samples and screenshot it.
 import { chromium } from 'playwright';
 const ids = process.argv[2] || 'heart', o = process.argv[3] || '{}', tag = process.argv[4] || '';
 const b = await chromium.launch();

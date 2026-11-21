@@ -1,4 +1,4 @@
-// Runs app/dev/lab.html in headless Chromium for each sample and saves overlays + JSON.
+// Runs src/dev/lab.html in headless Chromium for each sample and saves overlays + JSON.
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 const ids = process.argv.slice(2);

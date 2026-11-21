@@ -1,11 +1,11 @@
-// Copies browser builds of dependencies and downloads model weights into app/vendor
-// so the deployed static site has no runtime CDN dependencies.
+// Copies browser builds of dependencies and downloads model weights into src/vendor
+// for local browser execution without runtime CDN dependencies.
 import { mkdir, copyFile, readdir, writeFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
 const nm = join(root, 'node_modules');
-const out = join(root, 'app', 'vendor');
+const out = join(root, 'src', 'vendor');
 
 async function cp(src, dst) {
   await mkdir(join(dst, '..'), { recursive: true });
@@ -49,13 +49,13 @@ for (const f of ['build/three.module.js', 'build/three.core.js', 'examples/jsm/c
 // SlimSAM (Segment Anything, distilled) weights
 const hf = 'https://huggingface.co/Xenova/slimsam-77-uniform/resolve/main/';
 for (const f of ['config.json', 'preprocessor_config.json', 'onnx/vision_encoder.onnx', 'onnx/prompt_encoder_mask_decoder.onnx']) {
-  await fetchTo(hf + f, join(root, 'app', 'models', 'Xenova', 'slimsam-77-uniform', f));
+  await fetchTo(hf + f, join(root, 'src', 'models', 'Xenova', 'slimsam-77-uniform', f));
 }
 // PaddleOCR text detector + English recognizer (ONNX conversions by RapidOCR, Apache-2.0),
-// run by app/js/paddle.js on the WebGPU build of ORT, which loads the asyncify WASM above.
+// run by src/js/paddle.js on the WebGPU build of ORT, which loads the asyncify WASM above.
 await cp(join(nm, 'onnxruntime-web/dist/ort.webgpu.min.mjs'), join(out, 'ort', 'ort.webgpu.min.mjs'));
 const rapid = 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.10.0/onnx/';
 for (const f of ['PP-OCRv6/det/PP-OCRv6_det_small.onnx', 'PP-OCRv5/rec/en_PP-OCRv5_rec_mobile.onnx']) {
-  await fetchTo(rapid + f, join(root, 'app', 'models', 'paddleocr', f.split('/').pop()));
+  await fetchTo(rapid + f, join(root, 'src', 'models', 'paddleocr', f.split('/').pop()));
 }
 console.log('vendor done');

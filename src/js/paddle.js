@@ -9,7 +9,7 @@
 // Word boxes are split from the detected line box in proportion to character counts.
 // That is good enough for ocr.js wordsToLines(), which regroups them into lines anyway.
 
-const base = new URL('..', import.meta.url).href; // .../app/
+const base = new URL('..', import.meta.url).href; // .../src/
 const MODELS = base + 'models/paddleocr/';
 const DET = 'PP-OCRv6_det_small.onnx';
 const REC = 'en_PP-OCRv5_rec_mobile.onnx';

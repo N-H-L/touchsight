@@ -1,5 +1,5 @@
 // Label recall/precision of the app's detected labels (eval-out/eval.json) against
-// hand-counted ground truth (app/samples/labels_truth.json). Fuzzy match: normalised
+// hand-counted ground truth (src/samples/labels_truth.json). Fuzzy match: normalised
 // Levenshtein similarity >= 0.8, or one contains the other with similar length.
 import { readFile, writeFile } from 'node:fs/promises';
 
@@ -21,7 +21,7 @@ export function match(det, truth) {
 }
 
 const rows = JSON.parse(await readFile(process.argv[2] || 'eval-out/eval.json', 'utf8'));
-const truth = JSON.parse(await readFile('app/samples/labels_truth.json', 'utf8'));
+const truth = JSON.parse(await readFile('src/samples/labels_truth.json', 'utf8'));
 const out = ['| Sample | True labels | Found (matched) | Recall | Extra detections | Missed |', '|---|---|---|---|---|---|'];
 let T = 0, M = 0;
 for (const r of rows) {

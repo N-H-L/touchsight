@@ -1,14 +1,14 @@
 // Runs the real app in headless Chromium on every sample and records the
 // guideline-check metrics for TouchSight vs. the edge-tracing baseline.
-// Writes eval-out/eval.json, eval-out/eval.md and app/precomputed/<id>.svg (fallback gallery).
+// Writes eval-out/eval.json, eval-out/eval.md and src/precomputed/<id>.svg (fallback gallery).
 import { chromium } from 'playwright';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 
 const base = process.env.BASE || 'http://localhost:5173';
-const samples = JSON.parse(await readFile('app/samples/samples.json', 'utf8'));
+const samples = JSON.parse(await readFile('src/samples/samples.json', 'utf8'));
 const only = process.argv.slice(2);
 await mkdir('eval-out', { recursive: true });
-await mkdir('app/precomputed', { recursive: true });
+await mkdir('src/precomputed', { recursive: true });
 const browser = await chromium.launch();
 const rows = [];
 for (const s of samples) {
@@ -26,7 +26,7 @@ for (const s of samples) {
         labels: st.analysis.labels.map((L) => L.text), svg: null };
     });
     const svg = await page.evaluate(() => document.querySelector('#ours-small').innerHTML);
-    if (svg) await writeFile(`app/precomputed/${s.id}.svg`, svg);
+    if (svg) await writeFile(`src/precomputed/${s.id}.svg`, svg);
     rows.push({ id: s.id, category: s.category, status, wall_s: (Date.now() - t0) / 1000, ...r });
     console.log(s.id, status);
   } catch (e) {

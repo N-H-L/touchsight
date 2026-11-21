@@ -1,9 +1,9 @@
-// Minimal static server for local development and the evaluation harness.
+// Minimal static server for the browser application rooted in src/.
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 
-const root = join(new URL('..', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'), 'app');
+const root = join(new URL('..', import.meta.url).pathname.replace(/^\\/(\\w:)/, '$1'), 'src');
 const port = Number(process.env.PORT || 5173);
 const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript',
@@ -14,7 +14,7 @@ const types = {
 
 createServer(async (req, res) => {
   try {
-    let p = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^[\/]+/, '');
+    let p = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^[\\/]+/, '');
     if (p.includes('..')) throw new Error('bad path');
     let file = join(root, p);
     if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
@@ -24,4 +24,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404); res.end('not found');
   }
-}).listen(port, () => console.log(`serving app/ on http://localhost:${port}`));
+}).listen(port, () => console.log(`serving src/ on http://localhost:${port}`));
