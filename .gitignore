@@ -1,6 +1,8 @@
 node_modules/
 app/vendor/
+src/vendor
 app/models/
+src/models/
 .env
 *.log
 eval-out/
