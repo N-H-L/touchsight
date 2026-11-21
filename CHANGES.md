@@ -2,6 +2,22 @@
 
 All notable changes to TouchSight-NG are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses calendar-style versions (`YYYY.M.D-stage`).
 
+## [Unreleased]
+
+### Added
+- Optional Indra OCR engine (Datalab, v1.1.0): detector and recognizer ONNX
+  models vendored from the official Hugging Face repository (pinned commit)
+  and run in the browser on onnxruntime-web. Opt-in via a "Use Indra OCR"
+  checkbox; on error or empty output the pipeline falls back to PaddleOCR
+  and then Tesseract, so the default behavior is unchanged.
+- `src/js/indra.js`: the engine port (DB text detection, batched CTC
+  recognition, load-time input-shape probing, documented detector channel
+  order and vocabulary handling).
+- `docs/ocr-engines.md`: engine chain documentation, port architecture,
+  validation recipe against the `indra-ocr` Python reference, and licensing
+  notes; plus cross-references throughout the documentation and a changelog
+  entry.
+
 ## [2026.11.20-beta] - 2026-11-20
 
 ### Added

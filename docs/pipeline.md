@@ -7,11 +7,15 @@ TouchSight-NG is a hybrid computer-vision pipeline. OCR and segmentation use tra
 ```mermaid
 flowchart TD
   A[Input: PNG, JPG, WebP] --> B[Decode and normalize]
-  B --> C{Primary OCR available?}
+  B --> I0{Use Indra OCR checked?}
+  I0 -->|Yes| I1[Indra detection and recognition]
+  I1 -->|error or no text| C{PaddleOCR available?}
+  I0 -->|No| C
   C -->|Yes| D[PaddleOCR detection and recognition]
   C -->|No / error| E[Tesseract fallback]
   D --> F[Normalize word boxes]
   E --> F
+  I1 --> F
   F --> G[Filter low-confidence / implausible words]
   G --> H[Group words into text lines]
   H --> I[Merge stacked lines into semantic labels]
@@ -47,7 +51,22 @@ The original image is retained in the UI for comparison. Analysis operates on th
 
 ## 2. OCR: find printed labels
 
-### PaddleOCR is primary
+### Engine chain
+
+The engines are tried in a fixed order, and only a failure or an empty result
+moves the pipeline down the chain:
+
+1. **Indra OCR** (Datalab, v1.1.0), only when the "Use Indra OCR" checkbox is
+   set; experimental, Latin-script only.
+2. **PaddleOCR**, the default.
+3. **Tesseract.js**, if the ONNX path itself cannot run.
+
+The purpose is resilience, not ensembling: engines are not voting on the
+same label. Which engine answered is recorded in the analysis result
+("ocrEngine") so evaluation runs can compare them. See
+[OCR engines](ocr-engines.md).
+
+### PaddleOCR is the default
 
 The pipeline attempts PaddleOCR first. Its two ONNX models have separate jobs:
 

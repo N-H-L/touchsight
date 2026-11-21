@@ -11,6 +11,7 @@ The transcriber remains responsible for the finished graphic. TouchSight-NG is a
 - **Getting started:** [docs/getting-started.md](docs/getting-started.md)
 - **Theory and pipeline:** [docs/architecture.md](docs/architecture.md), [docs/pipeline.md](docs/pipeline.md)
 - **Models and inference engines:** [docs/models-and-engines.md](docs/models-and-engines.md)
+- **OCR engines (optional Indra engine):** [docs/ocr-engines.md](docs/ocr-engines.md)
 - **Advanced, not-yet-implemented AI options:** [docs/advanced-model-options.md](docs/advanced-model-options.md)
 - **Review workflow:** [docs/review-workflow.md](docs/review-workflow.md)
 
@@ -29,7 +30,7 @@ The image-analysis stages are deliberately ordered. The diagram's labels provide
 ```mermaid
 flowchart TD
     A["Source diagram<br/>PNG, JPG, or WebP"] --> B["Image preparation"]
-    B --> C["OCR<br/>PaddleOCR; Tesseract fallback"]
+    B --> C["OCR<br/>Indra opt-in; PaddleOCR; Tesseract fallback"]
     C --> D["Label grouping and text correction"]
     D --> E["Leader-line detection and tracing"]
     E --> F["Point prompts from leader tips or in-figure labels"]
@@ -135,7 +136,7 @@ Contributions are welcome, particularly bug reports and improvements grounded in
 
 ## Credits and licensing
 
-TouchSight-NG builds on open-source OCR, computer-vision, segmentation, and rendering libraries, including PaddleOCR, Tesseract.js, SlimSAM, Transformers.js, ONNX Runtime Web, OpenCV.js, three.js, and Potrace. See the project dependency manifests and relevant upstream projects for their respective licenses.
+TouchSight-NG builds on open-source OCR, computer-vision, segmentation, and rendering libraries, including Indra OCR (optional engine), PaddleOCR, Tesseract.js, SlimSAM, Transformers.js, ONNX Runtime Web, OpenCV.js, three.js, and Potrace. See the project dependency manifests and relevant upstream projects for their respective licenses.
 
 The application code is licensed under **GPL-3.0-or-later**. Sample diagrams retain their source licenses; attribution is maintained in [src/samples/CREDITS.md](src/samples/CREDITS.md). The precomputed tactile SVGs retain the licenses of their source diagrams.
 

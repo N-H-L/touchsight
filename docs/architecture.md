@@ -66,6 +66,7 @@ This is a hybrid system: learned models handle text recognition and part segment
 |---|---|---|
 | OpenCV.js | Image operations, morphology, Hough line detection, contours, masks, checks | WebAssembly / JavaScript |
 | PaddleOCR detector + recognizer | Primary printed-text detection and recognition | ONNX Runtime Web, WASM |
+| Indra OCR det + rec (opt-in) | Experimental alternative printed-text engine, Latin script | ONNX Runtime Web, WASM |
 | Tesseract.js + English traineddata | Fallback OCR when PaddleOCR cannot load or run | WebAssembly |
 | SlimSAM | Point-prompted segmentation of labeled parts | Transformers.js + ONNX Runtime WASM |
 | ONNX Runtime Web | Executes OCR and segmentation ONNX models | WebAssembly |

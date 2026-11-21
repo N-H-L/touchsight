@@ -12,6 +12,7 @@ The file names below come from the checked-in `scripts/vendor.mjs`, `package.jso
 | PaddleOCR detector | `PP-OCRv6_det_small.onnx` | Locates text regions in the image | Primary OCR |
 | PaddleOCR recognizer | `en_PP-OCRv5_rec_mobile.onnx` | Converts detected text crops into English text | Primary OCR |
 | Tesseract.js | Tesseract.js 7 browser worker/core | Independent OCR fallback | Only if PaddleOCR fails |
+| Indra OCR (opt-in) | `det.onnx` + `rec.onnx` + `meta.json` (Datalab Indra v1.1.0) | Experimental alternative printed-text engine | Only when "Use Indra OCR" is checked, before the PaddleOCR default |
 | Tesseract language data | `eng.traineddata.gz` (4.0.0_best_int) | English LSTM character/language model | Tesseract fallback |
 | SlimSAM | `Xenova/slimsam-77-uniform` ONNX files | Segments the part indicated by a point prompt | After labels and anchors are found |
 | Transformers.js | `@huggingface/transformers@4.3.0` | Loads and runs SlimSAM in the browser | Segmentation |
@@ -44,6 +45,27 @@ The detector and recognizer are complementary: a detector can locate a label wit
 `src/js/paddle.js` loads ONNX Runtime Web and creates detector and recognizer sessions with the WASM execution provider. It downloads the two ONNX files from the RapidOCR ModelScope repository configured in `scripts/vendor.mjs`. The app uses a small batch for recognition and converts recognized line boxes into approximate word boxes so the shared OCR post-processing can group words into labels.
 
 **Failure behavior:** if PaddleOCR initialization or recognition throws, `src/js/pipeline.js` logs the error and attempts Tesseract. This fallback is resilience, not an ensemble: the two engines are not routinely voting on each label in the normal path.
+
+## Indra OCR: opt-in experimental alternative OCR
+
+File: `src/models/indra/det.onnx`, `rec.onnx`, and `meta.json`, downloaded by
+the vendor script from Datalab's official Hugging Face repository and pinned to
+the v1.1.0 commit, with the repository LICENSE copied alongside.
+
+Indra is a small OCR model family that runs on plain ONNX Runtime (no PyTorch,
+no GPU in the reference implementation), which makes its artifacts portable to
+onnxruntime-web. `src/js/indra.js` runs the same DB text-detection and
+batched CTC recognition pattern as PaddleOCR and emits word records in the
+shared format, so the rest of the pipeline is unchanged whatever the engine.
+
+It is **opt-in** ("Use Indra OCR" under Output options) and **experimental**:
+the JS port covers the Latin recognizer only, and where the reference
+implementation was ambiguous (recognizer input shape, detector channel order,
+vocabulary layout) the port probes or exposes a documented constant instead of
+guessing. On any error, or when it finds no text, the chain falls back to
+PaddleOCR, then Tesseract. See [OCR engines](ocr-engines.md) for the
+architecture, the validation recipe against the `indra-ocr` Python package,
+and the licensing notes.
 
 ## Tesseract.js: fallback OCR
 

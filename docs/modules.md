@@ -10,9 +10,19 @@ Owns browser UI state, image input, tabs, review rail, export actions, and the d
 
 ### `pipeline.js`
 
-Coordinates the analysis stage: loads OpenCV.js, SlimSAM, and attempts PaddleOCR initialization; runs PaddleOCR with Tesseract fallback; filters and groups OCR words into labels; applies vocabulary corrections; detects label/leader relationships; builds foreground and structural line representations; computes SlimSAM image embeddings; and segments label anchors.
+Coordinates the analysis stage: loads OpenCV.js, SlimSAM, and OCR engines; runs the engine chain (opt-in Indra, then PaddleOCR, then Tesseract); filters and groups OCR words into labels; applies vocabulary corrections; detects label/leader relationships; builds foreground and structural line representations; computes SlimSAM image embeddings; and segments label anchors.
 
 ## Recognition and geometry
+
+### `indra.js`
+
+Experimental, opt-in engine (Datalab Indra OCR v1.1.0) that runs the vendored
+`det.onnx` / `rec.onnx` ONNX models on ONNX Runtime Web. DB-style text
+detection with OpenCV post-processing, batched CTC recognition using the
+`meta.json` vocabulary, and shape/blank-index handling documented inline.
+Emits the same word records as `paddle.js`; the pipeline uses it before
+PaddleOCR only when "Use Indra OCR" is checked, and falls back on error or
+empty output. See [OCR engines](ocr-engines.md).
 
 ### `paddle.js`
 

@@ -25,7 +25,7 @@ npm ci
 npm run vendor
 ```
 
-The vendor script is intended to prepare local browser assets: OpenCV.js, Tesseract.js and English traineddata, Transformers.js, ONNX Runtime Web, three.js, SlimSAM weights, and PaddleOCR ONNX weights. The model files are downloaded into generated local folders and then served by the local app. See [Models and inference engines](models-and-engines.md) for the file inventory and each component's role.
+The vendor script is intended to prepare local browser assets: OpenCV.js, Tesseract.js and English traineddata, Transformers.js, ONNX Runtime Web, three.js, SlimSAM weights, PaddleOCR ONNX weights, and the optional Indra OCR ONNX weights (used only when "Use Indra OCR" is enabled; see [OCR engines](ocr-engines.md)). The model files are downloaded into generated local folders and then served by the local app. See [Models and inference engines](models-and-engines.md) for the file inventory and each component's role.
 
 ### Asset path check
 
@@ -43,7 +43,10 @@ Open the local address printed by the server (the current script defaults to `ht
 
 1. Choose a built-in sample or upload a PNG, JPG/JPEG, or WebP image.
 2. The app normalizes the image and loads its on-device engines.
-3. OCR finds printed labels. PaddleOCR is primary; Tesseract is the fallback.
+3. OCR finds printed labels through the engine chain: the experimental Indra
+   engine (only when "Use Indra OCR" is checked under Output options), then
+   PaddleOCR by default, then Tesseract if the ONNX path fails.
+   See [OCR engines](ocr-engines.md).
 4. Leader-line detection attempts to associate labels with parts.
 5. SlimSAM segments parts using point prompts derived from those associations.
 6. The app creates a tactile layout and runs geometric checks.
